@@ -460,27 +460,35 @@ async function loadData() {
 }
 
 
-// -------------------- Floor Tabs --------------------
+// -------------------- Floor Select --------------------
 function updateFloorTabs() {
-  const floorTabs = document.getElementById('floorTabs');
-  floorTabs.innerHTML = '';
+  const floorSelect = document.getElementById('floorSelect');
+  floorSelect.innerHTML = '';
   if (!buildings || !buildings[currentBuilding]) return;
   const building = buildings[currentBuilding];
   building.floors.forEach(floor => {
-    const button = document.createElement('button');
-    button.className = `floor-tab ${floor.floor === currentFloor ? 'active' : ''}`;
-    button.textContent = `Floor ${floor.floor}`;
-    button.onclick = () => selectFloor(floor.floor);
-    floorTabs.appendChild(button);
+    const option = document.createElement('option');
+    option.value = floor.floor;
+    option.textContent = `Floor ${floor.floor}`;
+    if (floor.floor === currentFloor) option.selected = true;
+    floorSelect.appendChild(option);
   });
 }
 
+// Attach floor select change event
+document.addEventListener('DOMContentLoaded', function () {
+  const floorSelect = document.getElementById('floorSelect');
+  if (floorSelect) {
+    floorSelect.addEventListener('change', function () {
+      selectFloor(parseInt(this.value, 10));
+    });
+  }
+});
+
 function selectFloor(floor) {
   currentFloor = floor;
-  document.querySelectorAll('.floor-tab').forEach(btn => btn.classList.remove('active'));
-  const activeBtn = Array.from(document.querySelectorAll('.floor-tab'))
-                         .find(btn => btn.textContent.includes(floor));
-  if (activeBtn) activeBtn.classList.add('active');
+  const floorSelect = document.getElementById('floorSelect');
+  if (floorSelect) floorSelect.value = floor;
   updateDisplay();
 }
 
@@ -492,12 +500,9 @@ function selectBuilding(letter) {
   // Reset to first floor of this building
   const firstFloor = (buildings[b].floors[0] || {}).floor || 1;
   currentFloor = firstFloor;
-  // Update active tab styles
-  document.querySelectorAll('.building-tab').forEach(btn => btn.classList.remove('active'));
-  const btn = Array.from(document.querySelectorAll('.building-tab')).find(x =>
-    (x.getAttribute('data-building') || '').toUpperCase() === b
-  );
-  if (btn) btn.classList.add('active');
+  // Sync building select
+  const buildingSelect = document.getElementById('buildingSelect');
+  if (buildingSelect) buildingSelect.value = b;
   updateFloorTabs();
   updateDisplay();
 }

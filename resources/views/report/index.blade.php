@@ -43,6 +43,10 @@
     }
     .section-card-header i { color: var(--primary); font-size: 1rem; }
     .section-card-body { padding: 1.25rem; }
+    @media (max-width: 768px) {
+        .section-card-header { flex-wrap: wrap; gap: 0.4rem; }
+        .card-filter { width: 100%; text-align: left; }
+    }
 
     /* Donut layout */
     .donut-section { display: flex; gap: 1.5rem; align-items: center; flex-direction: column; }

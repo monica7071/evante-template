@@ -35,6 +35,9 @@
     .s-card-hdr-left { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.88rem; color: var(--text-dark); }
     .s-card-hdr-left i { color: var(--primary); }
     .s-card-body { padding: 1.25rem; }
+    @media (max-width: 768px) {
+        .s-card-hdr { flex-wrap: wrap; gap: 0.4rem; }
+    }
 
     /* Toggle pills */
     .pill-toggle { display: inline-flex; gap: 2px; background: rgba(0,0,0,0.04); border-radius: 999px; padding: 2px; }

@@ -64,6 +64,8 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
     .page-top h4 {
         font-family: 'Playfair Display', serif;
@@ -196,6 +198,11 @@
         gap: 0.75rem;
         margin-top: 0.5rem;
         padding-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .page-top { flex-wrap: wrap; gap: 0.5rem; }
+        .page-top .d-flex.align-items-center.gap-2 { width: 100%; justify-content: flex-end; }
     }
 </style>
 @endsection

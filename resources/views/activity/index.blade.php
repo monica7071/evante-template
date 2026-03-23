@@ -114,6 +114,13 @@
         .cal-table td { height: 60px; padding: 0.2rem; }
         .cal-event { font-size: 0.55rem; }
     }
+    @media (max-width: 480px) {
+        .cal-table th { font-size: 0.6rem; padding: 0.3rem 0.1rem; }
+        .cal-table td { min-height: 44px; height: auto; padding: 0.15rem; }
+        .cal-day-num { font-size: 0.62rem; }
+        .cal-event { font-size: 0.58rem; padding: 1px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block; }
+        .cal-more { font-size: 0.52rem; }
+    }
 
     /* ── Calendar Event Popup ── */
     .cal-popup-overlay {

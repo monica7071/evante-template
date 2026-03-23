@@ -11,6 +11,7 @@
     .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     @media (max-width: 1199px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 575px) { .kpi-grid { grid-template-columns: 1fr; } }
+    @media (min-width: 480px) and (max-width: 575px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
     .kpi-mini {
         background: var(--surface); border: 1px solid var(--border);
         border-radius: var(--radius); padding: 1rem 1.25rem;
@@ -31,6 +32,9 @@
     }
     .section-card-header i { color: var(--primary); font-size: 1rem; }
     .section-card-body { padding: 1.25rem; }
+    @media (max-width: 768px) {
+        .section-card-header { flex-wrap: wrap; gap: 0.4rem; }
+    }
 
     /* Year nav */
     .year-nav {

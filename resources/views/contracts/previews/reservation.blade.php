@@ -72,7 +72,6 @@
     /* ── Top Bar ── */
     .cpv-topbar {
         border-bottom: 1px solid #e5e7eb;
-        position: sticky;
         top: 0;
         z-index: 20;
     }

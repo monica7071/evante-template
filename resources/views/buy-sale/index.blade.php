@@ -138,12 +138,27 @@
         display: none;
         position: absolute;
         top: 0;
-        left: 100%;
-        margin-left: 2px;
+        left: auto;
+        right: 100%;
+        margin-right: 2px;
         z-index: 1060;
     }
-    .dropdown-submenu:hover > .dropdown-menu { display: block; }
+    /* Desktop (non-touch): hover to open */
+    @media (hover: hover) and (pointer: fine) {
+        .dropdown-submenu:hover > .dropdown-menu { display: block; }
+    }
+    /* Touch / non-hover: click to toggle via .open class */
+    .dropdown-submenu.open > .dropdown-menu { display: block; }
     .dropdown-menu > li:first-child > .dropdown-divider { display: none; }
+    @media (max-width: 768px) {
+        .dropdown-submenu > .dropdown-menu {
+            position: static;
+            box-shadow: none;
+            border: none;
+            padding-left: 1rem;
+            margin: 0;
+        }
+    }
 
     /* Card content */
     .card-label {
@@ -941,6 +956,30 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Dropdown submenu: click toggle for touch devices ──
+    document.querySelectorAll('.dropdown-submenu > .dropdown-item').forEach(function (trigger) {
+        trigger.addEventListener('click', function (e) {
+            // On touch devices, toggle submenu; on desktop hover handles it
+            if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+                e.preventDefault();
+                e.stopPropagation();
+                const parent = this.closest('.dropdown-submenu');
+                // Close other open submenus
+                document.querySelectorAll('.dropdown-submenu.open').forEach(function (el) {
+                    if (el !== parent) el.classList.remove('open');
+                });
+                parent.classList.toggle('open');
+            }
+        });
+    });
+    // Close submenu when parent dropdown closes
+    document.addEventListener('hide.bs.dropdown', function () {
+        document.querySelectorAll('.dropdown-submenu.open').forEach(function (el) {
+            el.classList.remove('open');
+        });
+    });
+
     const floorsEndpointTemplate = "{{ route('buy-sale.api.floors', ['project' => '__PROJECT__'], false) }}";
     const unitsEndpointTemplate = "{{ route('buy-sale.api.units', ['project' => '__PROJECT__', 'floor' => '__FLOOR__'], false) }}";
 
