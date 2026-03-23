@@ -26,6 +26,38 @@
         font-size: 1rem;
     }
 
+    /* ── ID Type toggle ── */
+    .id-type-toggle {
+        display: inline-flex;
+        background: var(--cream, #f5f5f0);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 3px;
+    }
+    .id-type-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--text-mid, #666);
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+        margin: 0;
+    }
+    .id-type-option input[type="radio"] { display: none; }
+    .id-type-option:hover { color: var(--text-dark, #333); }
+    .id-type-option.active {
+        background: #fff;
+        color: var(--primary, #2A8B92);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        font-weight: 600;
+    }
+    .id-type-option i { font-size: 0.9rem; }
+
     /* ── Page header ── */
     .page-top {
         display: flex;
@@ -243,9 +275,75 @@
                                 <label class="form-label">Last Name <span class="text-danger">*</span></label>
                                 <input type="text" name="reservation_last_name" class="form-control" value="{{ old('reservation_last_name', $sale->reservation_data['last_name'] ?? '') }}" required>
                             </div>
-                            <div class="col-md-6">
+                            @php
+                                $idType = old('reservation_id_type', $sale->reservation_data['id_type'] ?? 'id_card');
+                            @endphp
+                            <div class="col-12">
                                 <label class="form-label">ID / Passport <span class="text-danger">*</span></label>
-                                <input type="text" name="reservation_id_number" class="form-control" value="{{ old('reservation_id_number', $sale->reservation_data['id_number'] ?? '') }}" required>
+                                <div class="id-type-toggle mb-2">
+                                    <label class="id-type-option {{ $idType === 'id_card' ? 'active' : '' }}">
+                                        <input type="radio" name="reservation_id_type" id="id_type_card" value="id_card" {{ $idType === 'id_card' ? 'checked' : '' }}>
+                                        <i class="bi bi-person-vcard"></i> Identification Number
+                                    </label>
+                                    <label class="id-type-option {{ $idType === 'passport' ? 'active' : '' }}">
+                                        <input type="radio" name="reservation_id_type" id="id_type_passport" value="passport" {{ $idType === 'passport' ? 'checked' : '' }}>
+                                        <i class="bi bi-globe2"></i> Passport Number
+                                    </label>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="{{ $idType === 'passport' ? 'col-md-6' : 'col-12' }}" id="id_number_col">
+                                        <input type="text" name="reservation_id_number" id="reservation_id_number" class="form-control"
+                                               value="{{ old('reservation_id_number', $sale->reservation_data['id_number'] ?? '') }}"
+                                               maxlength="{{ $idType === 'passport' ? 8 : 13 }}"
+                                               placeholder="{{ $idType === 'passport' ? 'e.g. AB123456' : 'e.g. 1234567890123' }}" required>
+                                    </div>
+                                    @php
+                                        $nationalities = [
+                                            'Afghan' => '🇦🇫', 'Albanian' => '🇦🇱', 'Algerian' => '🇩🇿', 'American' => '🇺🇸', 'Andorran' => '🇦🇩',
+                                            'Angolan' => '🇦🇴', 'Argentine' => '🇦🇷', 'Armenian' => '🇦🇲', 'Australian' => '🇦🇺', 'Austrian' => '🇦🇹',
+                                            'Azerbaijani' => '🇦🇿', 'Bahamian' => '🇧🇸', 'Bahraini' => '🇧🇭', 'Bangladeshi' => '🇧🇩', 'Barbadian' => '🇧🇧',
+                                            'Belarusian' => '🇧🇾', 'Belgian' => '🇧🇪', 'Belizean' => '🇧🇿', 'Beninese' => '🇧🇯', 'Bhutanese' => '🇧🇹',
+                                            'Bolivian' => '🇧🇴', 'Bosnian' => '🇧🇦', 'Brazilian' => '🇧🇷', 'British' => '🇬🇧', 'Bruneian' => '🇧🇳',
+                                            'Bulgarian' => '🇧🇬', 'Burkinabe' => '🇧🇫', 'Burmese' => '🇲🇲', 'Burundian' => '🇧🇮', 'Cambodian' => '🇰🇭',
+                                            'Cameroonian' => '🇨🇲', 'Canadian' => '🇨🇦', 'Cape Verdean' => '🇨🇻', 'Central African' => '🇨🇫', 'Chadian' => '🇹🇩',
+                                            'Chilean' => '🇨🇱', 'Chinese' => '🇨🇳', 'Colombian' => '🇨🇴', 'Comorian' => '🇰🇲', 'Congolese' => '🇨🇬',
+                                            'Costa Rican' => '🇨🇷', 'Croatian' => '🇭🇷', 'Cuban' => '🇨🇺', 'Cypriot' => '🇨🇾', 'Czech' => '🇨🇿',
+                                            'Danish' => '🇩🇰', 'Djiboutian' => '🇩🇯', 'Dominican' => '🇩🇴', 'Dutch' => '🇳🇱', 'Ecuadorian' => '🇪🇨',
+                                            'Egyptian' => '🇪🇬', 'Emirati' => '🇦🇪', 'Equatorial Guinean' => '🇬🇶', 'Eritrean' => '🇪🇷', 'Estonian' => '🇪🇪',
+                                            'Ethiopian' => '🇪🇹', 'Fijian' => '🇫🇯', 'Filipino' => '🇵🇭', 'Finnish' => '🇫🇮', 'French' => '🇫🇷',
+                                            'Gabonese' => '🇬🇦', 'Gambian' => '🇬🇲', 'Georgian' => '🇬🇪', 'German' => '🇩🇪', 'Ghanaian' => '🇬🇭',
+                                            'Greek' => '🇬🇷', 'Grenadian' => '🇬🇩', 'Guatemalan' => '🇬🇹', 'Guinean' => '🇬🇳', 'Guyanese' => '🇬🇾',
+                                            'Haitian' => '🇭🇹', 'Honduran' => '🇭🇳', 'Hungarian' => '🇭🇺', 'Icelandic' => '🇮🇸', 'Indian' => '🇮🇳',
+                                            'Indonesian' => '🇮🇩', 'Iranian' => '🇮🇷', 'Iraqi' => '🇮🇶', 'Irish' => '🇮🇪', 'Israeli' => '🇮🇱',
+                                            'Italian' => '🇮🇹', 'Ivorian' => '🇨🇮', 'Jamaican' => '🇯🇲', 'Japanese' => '🇯🇵', 'Jordanian' => '🇯🇴',
+                                            'Kazakh' => '🇰🇿', 'Kenyan' => '🇰🇪', 'Kiribati' => '🇰🇮', 'Korean' => '🇰🇷', 'Kuwaiti' => '🇰🇼',
+                                            'Kyrgyz' => '🇰🇬', 'Lao' => '🇱🇦', 'Latvian' => '🇱🇻', 'Lebanese' => '🇱🇧', 'Liberian' => '🇱🇷',
+                                            'Libyan' => '🇱🇾', 'Lithuanian' => '🇱🇹', 'Luxembourgish' => '🇱🇺', 'Malagasy' => '🇲🇬', 'Malawian' => '🇲🇼',
+                                            'Malaysian' => '🇲🇾', 'Maldivian' => '🇲🇻', 'Malian' => '🇲🇱', 'Maltese' => '🇲🇹', 'Mauritanian' => '🇲🇷',
+                                            'Mauritian' => '🇲🇺', 'Mexican' => '🇲🇽', 'Moldovan' => '🇲🇩', 'Mongolian' => '🇲🇳', 'Montenegrin' => '🇲🇪',
+                                            'Moroccan' => '🇲🇦', 'Mozambican' => '🇲🇿', 'Namibian' => '🇳🇦', 'Nepalese' => '🇳🇵', 'New Zealander' => '🇳🇿',
+                                            'Nicaraguan' => '🇳🇮', 'Nigerian' => '🇳🇬', 'North Korean' => '🇰🇵', 'Norwegian' => '🇳🇴', 'Omani' => '🇴🇲',
+                                            'Pakistani' => '🇵🇰', 'Panamanian' => '🇵🇦', 'Paraguayan' => '🇵🇾', 'Peruvian' => '🇵🇪', 'Polish' => '🇵🇱',
+                                            'Portuguese' => '🇵🇹', 'Qatari' => '🇶🇦', 'Romanian' => '🇷🇴', 'Russian' => '🇷🇺', 'Rwandan' => '🇷🇼',
+                                            'Saudi' => '🇸🇦', 'Senegalese' => '🇸🇳', 'Serbian' => '🇷🇸', 'Singaporean' => '🇸🇬', 'Slovak' => '🇸🇰',
+                                            'Slovenian' => '🇸🇮', 'Somali' => '🇸🇴', 'South African' => '🇿🇦', 'Spanish' => '🇪🇸', 'Sri Lankan' => '🇱🇰',
+                                            'Sudanese' => '🇸🇩', 'Surinamese' => '🇸🇷', 'Swedish' => '🇸🇪', 'Swiss' => '🇨🇭', 'Syrian' => '🇸🇾',
+                                            'Taiwanese' => '🇹🇼', 'Tajik' => '🇹🇯', 'Tanzanian' => '🇹🇿', 'Thai' => '🇹🇭', 'Togolese' => '🇹🇬',
+                                            'Trinidadian' => '🇹🇹', 'Tunisian' => '🇹🇳', 'Turkish' => '🇹🇷', 'Turkmen' => '🇹🇲', 'Ugandan' => '🇺🇬',
+                                            'Ukrainian' => '🇺🇦', 'Uruguayan' => '🇺🇾', 'Uzbek' => '🇺🇿', 'Venezuelan' => '🇻🇪', 'Vietnamese' => '🇻🇳',
+                                            'Yemeni' => '🇾🇪', 'Zambian' => '🇿🇲', 'Zimbabwean' => '🇿🇼',
+                                        ];
+                                        $selectedNat = old('reservation_nationality', $sale->reservation_data['nationality'] ?? '');
+                                    @endphp
+                                    <div class="col-md-6 {{ $idType === 'passport' ? '' : 'd-none' }}" id="nationality_field">
+                                        <select name="reservation_nationality" id="reservation_nationality" class="form-select">
+                                            <option value="">-- Select Nationality --</option>
+                                            @foreach($nationalities as $nat => $flag)
+                                                <option value="{{ $nat }}" {{ $selectedNat === $nat ? 'selected' : '' }}>{{ $flag }} {{ $nat }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Phone <span class="text-danger">*</span></label>
@@ -672,6 +770,30 @@
                     input.setAttribute('autocomplete', 'off');
                 }
             });
+
+            // ── ID Type toggle ──
+            const idTypeRadios = document.querySelectorAll('input[name="reservation_id_type"]');
+            const idNumberInput = document.getElementById('reservation_id_number');
+            const idNumberCol = document.getElementById('id_number_col');
+            const nationalityField = document.getElementById('nationality_field');
+
+            if (idTypeRadios.length && idNumberInput) {
+                idTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function () {
+                        document.querySelectorAll('.id-type-option').forEach(el => el.classList.remove('active'));
+                        this.closest('.id-type-option').classList.add('active');
+
+                        const isPassport = this.value === 'passport';
+                        idNumberInput.maxLength = isPassport ? 8 : 13;
+                        idNumberInput.placeholder = isPassport ? 'e.g. AB123456' : 'e.g. 1234567890123';
+                        idNumberCol.className = isPassport ? 'col-md-6' : 'col-12';
+                        nationalityField.classList.toggle('d-none', !isPassport);
+
+                        idNumberInput.value = '';
+                        idNumberInput.focus();
+                    });
+                });
+            }
 
             const unformatNumber = (value) => {
                 if (value === null || value === undefined) return '';

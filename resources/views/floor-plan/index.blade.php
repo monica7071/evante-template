@@ -69,10 +69,43 @@
 
   {{-- ── Room Modal ── --}}
   <div class="modal" id="roomModal">
-    <div class="modal-content">
-      <h3 id="modalTitle">Room Details</h3>
+    <div class="modal-content room-modal-card">
+      <button class="room-modal-close" onclick="closeModal()">&times;</button>
       <div id="roomDetails"></div>
-      <button onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  {{-- ── Quotation Visitor Modal (Bootstrap) ── --}}
+  <div class="modal fade" id="fpQuotationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Visitor Information</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="fpQvSaleId">
+          <input type="hidden" id="fpQvListingId">
+          <input type="hidden" id="fpQvLanguage">
+          <div class="mb-3">
+            <label for="fpQvName" class="form-label">Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="fpQvName" placeholder="Enter visitor name">
+            <div class="invalid-feedback" id="fpQvNameError"></div>
+          </div>
+          <div class="mb-3">
+            <label for="fpQvPhone" class="form-label">Phone <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="fpQvPhone" placeholder="Enter phone number">
+            <div class="invalid-feedback" id="fpQvPhoneError"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="fpQvSubmitBtn">
+            <span class="spinner-border spinner-border-sm d-none me-1" id="fpQvSpinner"></span>
+            Save & Preview
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 @endsection

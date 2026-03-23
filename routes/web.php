@@ -30,6 +30,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\ReservationSignatureController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\SuperAdminOrganizationController;
 use App\Http\Controllers\SuperAdmin\SuperAdminPlanController;
@@ -92,6 +93,14 @@ Route::middleware('auth')->group(function () {
         ->name('contracts.reservation-agreement.preview');
     Route::get('/contracts/reservation-agreement/{sale}/download', [ReservationAgreementContractController::class, 'download'])
         ->name('contracts.reservation-agreement.download');
+    // Reservation Signatures
+    Route::get('/contracts/reservation-agreement/{sale}/signature/{type}', [ReservationSignatureController::class, 'show'])
+        ->where('type', 'buyer|witness1|witness2')
+        ->name('contracts.reservation-agreement.signature');
+    Route::post('/contracts/reservation-agreement/{sale}/signature/{type}', [ReservationSignatureController::class, 'save'])
+        ->where('type', 'buyer|witness1|witness2')
+        ->name('contracts.reservation-agreement.signature.save');
+
     Route::get('/contracts/addendum/{sale}/preview-page', [ContractPreviewPageController::class, 'addendum'])
         ->name('contracts.addendum.preview-page');
     Route::get('/contracts/addendum/{sale}/preview', [ReservationAgreementContractController::class, 'previewAddendum'])

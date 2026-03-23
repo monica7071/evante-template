@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Listing;
+use App\Models\Sale;
 use App\Models\SalePurchaseAgreement;
 use Illuminate\Http\JsonResponse;
 
@@ -54,6 +55,9 @@ class FloorPlanController extends Controller
             }
         }
 
+        // Find the related sale for quotation feature
+        $sale = Sale::where('listing_id', $listing->id)->latest()->first();
+
         return response()->json([
             'unit_code'          => $listing->unit_code,
             'project_name'       => $listing->project_name ?? $unitCode,
@@ -64,6 +68,14 @@ class FloorPlanController extends Controller
             'price'              => $listing->price_per_room
                 ? number_format((float) $listing->price_per_room, 2)
                 : null,
+            'price_per_sqm'      => $listing->price_per_sqm
+                ? number_format((float) $listing->price_per_sqm, 2)
+                : null,
+            'room_layout_image'  => $listing->room_layout_image,
+            'listing_id'         => $listing->id,
+            'sale_id'            => $sale?->id,
+            'avail_name'         => $sale?->avail_name,
+            'avail_tel'          => $sale?->avail_tel,
             // Contract details — null when not yet filled
             'installment_count'  => $agreement?->total_term ?: null,
             'installment_total'  => $agreement?->installment_total_number

@@ -24,7 +24,9 @@ class Reservation extends Model
         'buyer_first_name',
         'buyer_last_name',
         'buyer_full_name',
+        'buyer_id_type',
         'buyer_id_number',
+        'buyer_nationality',
         'buyer_address',
         'buyer_phone',
         'buyer_email',
@@ -41,6 +43,9 @@ class Reservation extends Model
         'witness_one_signature_path',
         'witness_two_name',
         'witness_two_signature_path',
+        'buyer_signed_at',
+        'witness_one_signed_at',
+        'witness_two_signed_at',
     ];
 
     protected $casts = [
@@ -48,6 +53,9 @@ class Reservation extends Model
         'contract_start_date' => 'date',
         'reservation_amount' => 'decimal:2',
         'amount_paid_number' => 'decimal:2',
+        'buyer_signed_at' => 'datetime',
+        'witness_one_signed_at' => 'datetime',
+        'witness_two_signed_at' => 'datetime',
     ];
 
     public function listing(): BelongsTo

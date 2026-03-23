@@ -565,12 +565,14 @@ function updateDisplay() {
 }
 
 // -------------------- Modal --------------------
+let currentDbData = null;
+
 async function showRoomModal(room) {
   currentRoom = room;
   const modal = document.getElementById('roomModal');
   const roomDetails = document.getElementById('roomDetails');
-  document.getElementById('modalTitle').textContent = `Room ${room.unit_no} Details`;
-  roomDetails.innerHTML = '<p>Loading...</p>';
+  roomDetails.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8"><i class="bi bi-arrow-repeat spin"></i> Loading...</div>';
+  modal.classList.add('active');
 
   // Fetch DB details
   let db = null;
@@ -578,51 +580,172 @@ async function showRoomModal(room) {
     const url = `/api/floorplan/unit/${encodeURIComponent(room.project_name || '')}`;
     const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) {
-      // Show not found/error feedback in modal
-      roomDetails.innerHTML = `<p><strong>Unit No:</strong> ${room.unit_no}</p>` +
-                              `<p style="color:#b91c1c">Unit not found in database.</p>`;
-      modal.classList.add('active');
+      roomDetails.innerHTML =
+        '<div style="padding:32px 24px;text-align:center">' +
+          `<p style="font-weight:600;font-size:1.1rem;color:#1e293b">Room ${room.unit_no}</p>` +
+          '<p style="color:#b91c1c;font-size:0.88rem">Unit not found in database.</p>' +
+        '</div>';
       return;
     }
     db = await res.json();
-  } catch (e) { /* fallback */ }
+  } catch (e) {
+    roomDetails.innerHTML = '<div style="padding:32px 24px;text-align:center;color:#b91c1c">Failed to load data.</div>';
+    return;
+  }
 
-  const areaRaw = db?.approximate_area ?? '-';
-  const areaText = (areaRaw !== null && areaRaw !== undefined && String(areaRaw).trim() !== '') && areaRaw !== '-' ? `${areaRaw} sqm.` : '-';
+  currentDbData = db;
 
-  // Always-shown fields
-  const always = [
-    ['Unit No',       room.unit_no],
-    ['Project Name',  room.project_name || db?.project_name || '-'],
-    ['Status',        db?.process_status ?? (dbUnitStatusMap[room.project_name] || 'Available')],
-    ['Unit Type',     db?.unit_type ?? '-'],
-    ['Approx. Area',  areaText],
-    ['Price',         db?.price ?? '-'],
+  const status = db?.process_status ?? (dbUnitStatusMap[room.project_name] || 'Available');
+  const statusClass = status.toLowerCase();
+  const area = db?.approximate_area;
+  const areaText = area ? `${area} sqm` : '-';
+  const storageBase = '/storage/';
+
+  const imgSrc = db?.room_layout_image ? `${storageBase}${db.room_layout_image}` : null;
+
+  // Build modal HTML
+  let html = '';
+
+  // Header
+  html += '<div class="rm-header">';
+  html += `<div class="rm-unit-code">${db?.unit_code || room.unit_no}</div>`;
+  html += `<span class="rm-status ${statusClass}">${status}</span>`;
+  html += '</div>';
+
+  // Body: left details + right image
+  html += '<div class="rm-body">';
+
+  // Left: detail grid
+  const details = [
+    ['Unit Type', db?.unit_type ?? '-'],
+    ['Bedrooms', db?.bedrooms ?? '-'],
+    ['Area', areaText],
+    ['Price', db?.price ? `฿ ${db.price}` : '-'],
+    ['Price/SQM', db?.price_per_sqm ? `฿ ${db.price_per_sqm}` : '-'],
   ];
 
-  // Conditional fields — only shown when the API returns a value
-  const conditional = [
-    ['Customer Type',           db?.customer_type],
-    ['Total Installments',      db?.installment_count ? `${db.installment_count} terms` : null],
-    ['Total Installment Amount', db?.installment_total ? `฿ ${db.installment_total}` : null],
-  ];
+  html += '<div class="rm-details">';
+  details.forEach(([label, value]) => {
+    html += '<div class="rm-detail-item">';
+    html += `<div class="rm-detail-label">${label}</div>`;
+    html += `<div class="rm-detail-value">${value}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
 
-  const rows = [
-    ...always,
-    ...conditional.filter(([, v]) => v != null && v !== ''),
-  ];
+  // Right: image
+  if (imgSrc) {
+    html += '<div class="rm-image-wrap">';
+    html += `<a href="${imgSrc}" target="_blank" title="View full image">`;
+    html += `<img src="${imgSrc}" alt="Unit Type">`;
+    html += '<div class="rm-image-zoom"><i class="bi bi-arrows-fullscreen"></i></div>';
+    html += '</a>';
+    html += '</div>';
+  }
 
-  roomDetails.innerHTML = rows
-    .map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`)
-    .join('');
+  html += '</div>'; // .rm-body
 
-  modal.classList.add('active');
+  // Quotation buttons — only for Available status
+  if (db?.sale_id && statusClass === 'available') {
+    html += '<div class="rm-actions">';
+    html += `<button class="btn rm-btn-th" onclick="openFpQuotation('th')"><i class="bi bi-file-earmark-text me-1"></i>Quotation TH</button>`;
+    html += `<button class="btn rm-btn-en" onclick="openFpQuotation('en')"><i class="bi bi-file-earmark-text me-1"></i>Quotation EN</button>`;
+    html += '</div>';
+  }
+
+  roomDetails.innerHTML = html;
 }
 
 function closeModal() {
   document.getElementById('roomModal').classList.remove('active');
   currentRoom = null;
+  currentDbData = null;
 }
+
+// -------------------- Quotation Visitor --------------------
+function openFpQuotation(language) {
+  if (!currentDbData) return;
+  const fpModal = document.getElementById('fpQuotationModal');
+  if (!fpModal) return;
+
+  document.getElementById('fpQvSaleId').value = currentDbData.sale_id;
+  document.getElementById('fpQvListingId').value = currentDbData.listing_id;
+  document.getElementById('fpQvLanguage').value = language;
+  document.getElementById('fpQvName').value = currentDbData.avail_name || '';
+  document.getElementById('fpQvPhone').value = currentDbData.avail_tel || '';
+  document.getElementById('fpQvName').classList.remove('is-invalid');
+  document.getElementById('fpQvPhone').classList.remove('is-invalid');
+
+  const bsModal = new bootstrap.Modal(fpModal);
+  bsModal.show();
+}
+
+(function () {
+  const submitBtn = document.getElementById('fpQvSubmitBtn');
+  if (!submitBtn) return;
+
+  const spinner = document.getElementById('fpQvSpinner');
+  const nameInput = document.getElementById('fpQvName');
+  const phoneInput = document.getElementById('fpQvPhone');
+  const nameError = document.getElementById('fpQvNameError');
+  const phoneError = document.getElementById('fpQvPhoneError');
+  const saleIdInput = document.getElementById('fpQvSaleId');
+  const languageInput = document.getElementById('fpQvLanguage');
+
+  submitBtn.addEventListener('click', () => {
+    let hasError = false;
+    nameInput.classList.remove('is-invalid');
+    phoneInput.classList.remove('is-invalid');
+
+    if (!nameInput.value.trim()) {
+      nameInput.classList.add('is-invalid');
+      nameError.textContent = 'Please enter visitor name.';
+      hasError = true;
+    }
+    if (!phoneInput.value.trim()) {
+      phoneInput.classList.add('is-invalid');
+      phoneError.textContent = 'Please enter phone number.';
+      hasError = true;
+    }
+    if (hasError) return;
+
+    submitBtn.disabled = true;
+    spinner.classList.remove('d-none');
+
+    fetch(`/buy-sale/${saleIdInput.value}/quotation-visitor`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        visitor_name: nameInput.value.trim(),
+        visitor_phone: phoneInput.value.trim(),
+        language: languageInput.value,
+      }),
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Update cached data so next open shows new values
+        if (currentDbData) {
+          currentDbData.avail_name = nameInput.value.trim();
+          currentDbData.avail_tel = phoneInput.value.trim();
+        }
+        window.open(data.redirect_url, '_blank');
+        bootstrap.Modal.getInstance(document.getElementById('fpQuotationModal')).hide();
+      } else {
+        alert('Failed to save visitor information.');
+      }
+    })
+    .catch(() => alert('An error occurred. Please try again.'))
+    .finally(() => {
+      submitBtn.disabled = false;
+      spinner.classList.add('d-none');
+    });
+  });
+})();
 
 // -------------------- Init --------------------
 loadData();
