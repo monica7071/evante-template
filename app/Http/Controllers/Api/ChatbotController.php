@@ -94,12 +94,11 @@ class ChatbotController extends Controller
         $sale = Sale::where('listing_id', $listing->id)->latest()->first();
 
         $appointmentInfo = null;
-        if ($sale?->status === 'appointment') {
+        if ($sale?->status === 'appointment' && $sale->appointment) {
             $appointmentInfo = [
-                'date'  => $sale->appointment_date?->format('Y-m-d'),
-                'time'  => $sale->appointment_time ? substr($sale->appointment_time, 0, 5) : null,
-                'name'  => $sale->appointment_name,
-                'phone' => $sale->appointment_phone,
+                'date'  => $sale->appointment->appointment_date?->format('Y-m-d'),
+                'time'  => $sale->appointment->appointment_time ? substr($sale->appointment->appointment_time, 0, 5) : null,
+                'remark' => $sale->appointment->remark,
             ];
         }
 
@@ -168,11 +167,16 @@ class ChatbotController extends Controller
         $sale->update([
             'status'           => 'appointment',
             'previous_status'  => $previousStatus,
-            'appointment_date' => $validated['appointment_date'],
-            'appointment_time' => $validated['appointment_time'] . ':00',
-            'appointment_name' => $validated['visitor_name'],
-            'appointment_phone'=> $validated['visitor_phone'],
         ]);
+
+        $sale->appointment()->updateOrCreate(
+            ['sale_id' => $sale->id],
+            [
+                'appointment_date' => $validated['appointment_date'],
+                'appointment_time' => $validated['appointment_time'] . ':00',
+                'remark' => $validated['visitor_name'] . ' / ' . $validated['visitor_phone'],
+            ]
+        );
 
         $sale->statusHistories()->create([
             'status'          => 'appointment',
@@ -221,13 +225,11 @@ class ChatbotController extends Controller
             ], 422);
         }
 
+        $sale->appointment?->delete();
+
         $sale->update([
             'status'           => 'available',
             'previous_status'  => 'appointment',
-            'appointment_date' => null,
-            'appointment_time' => null,
-            'appointment_name' => null,
-            'appointment_phone'=> null,
         ]);
 
         $sale->statusHistories()->create([

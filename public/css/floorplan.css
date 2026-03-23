@@ -137,8 +137,8 @@
 .status-box.contract .status-label  { background: #3b82f6; }
 .status-box.contract span           { background: #eff6ff; color: #1d4ed8; }
 
-.status-box.installment .status-label { background: #f97316; }
-.status-box.installment span          { background: #fff7ed; color: #c2410c; }
+.status-box.installment .status-label { background: dimgray; }
+.status-box.installment span          { background: #e4e4e4; color: #565656; }
 
 .status-box.transferred .status-label { background: #ef4444; }
 .status-box.transferred span          { background: #fee2e2; color: #b91c1c; }
@@ -194,7 +194,7 @@
 .hotspot.reserved    { background: #facc15e6; }
 .hotspot.contract    { background: #3b82f6e6; }
 .hotspot.installment { background: #f97316e6; }
-.hotspot.transferred { background: #ef4444e6; }
+.hotspot.transferred { background: dimgray; }
 
 /* ---- Modal ---- */
 .modal {

@@ -66,23 +66,23 @@ class ActivityController extends Controller
 
         // ── Upcoming Appointments ────────────────────────────────
         $appointments = DB::table('sales')
-            ->join('listings', 'sales.listing_id', '=', 'listings.id')
+            ->join('sale_appointments', 'sales.id', '=', 'sale_appointments.sale_id')
+            ->leftJoin('listings', 'sales.listing_id', '=', 'listings.id')
             ->leftJoin('users', 'sales.user_id', '=', 'users.id')
             ->where('sales.status', 'appointment')
-            ->whereNotNull('sales.appointment_date')
-            ->where('sales.appointment_date', '>=', $now->toDateString())
+            ->whereNotNull('sale_appointments.appointment_date')
+            ->where('sale_appointments.appointment_date', '>=', $now->toDateString())
             ->select(
                 'sales.id as sale_id',
                 'sales.sale_number',
-                'sales.appointment_date',
-                'sales.appointment_time',
-                'sales.appointment_name',
-                'sales.appointment_phone',
+                'sale_appointments.appointment_date',
+                'sale_appointments.appointment_time',
+                'sale_appointments.remark as appointment_remark',
                 'listings.unit_code',
                 'users.name as user_name',
             )
-            ->orderBy('sales.appointment_date')
-            ->orderBy('sales.appointment_time')
+            ->orderBy('sale_appointments.appointment_date')
+            ->orderBy('sale_appointments.appointment_time')
             ->limit(15)
             ->get();
 

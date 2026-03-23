@@ -89,6 +89,8 @@ class TemplateMappingController extends Controller
             'listing_room_layout_image' => 'image',
             'user_name' => 'text',
             'user_phone' => 'text',
+            'sale_avail_name' => 'text',
+            'sale_avail_tel' => 'text',
         ];
     }
 
@@ -176,6 +178,8 @@ class TemplateMappingController extends Controller
             'listing_room_layout_image' => ProjectImage::where('type', 'room_layout')->value('image_path'),
             'user_name' => auth()->user()?->name ?? 'Sales Name',
             'user_phone' => auth()->user()?->phone ?? '081-234-5678',
+            'sale_avail_name' => 'John Doe',
+            'sale_avail_tel' => '089-999-9999',
         ];
     }
 
@@ -265,6 +269,8 @@ class TemplateMappingController extends Controller
             'listing_room_layout_image' => 'Room Layout Image',
             'user_name' => 'Sales Name',
             'user_phone' => 'Sales Phone',
+            'sale_avail_name' => 'Visitor Name',
+            'sale_avail_tel' => 'Visitor Phone',
         ];
     }
 

@@ -143,6 +143,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{sale}/cancel', [SalePipelineController::class, 'cancel'])->name('cancel');
         Route::get('/{sale}/installments', [SalePipelineController::class, 'installments'])->name('installments');
         Route::post('/{sale}/installments/{installment}/proof', [SalePipelineController::class, 'uploadProof'])->name('installments.proof');
+        Route::post('/{sale}/quotation-visitor', [SalePipelineController::class, 'saveQuotationVisitor'])->name('quotation-visitor');
         Route::get('/api/projects/{location}', [SalePipelineController::class, 'getProjects'])->name('api.projects');
         Route::get('/api/floors/{project}', [SalePipelineController::class, 'getFloors'])->name('api.floors');
         Route::get('/api/units/{project}/{floor}', [SalePipelineController::class, 'getUnits'])->name('api.units');

@@ -294,7 +294,7 @@
     <div class="page-header">
         <h3>Buy/Sale</h3>
         <button class="btn-create" data-bs-toggle="modal" data-bs-target="#createSaleModal">
-            <i class="bi bi-plus me-1"></i> Create Sale
+            <i class="bi bi-plus me-1"></i> Create Appointment
         </button>
     </div>
 
@@ -303,9 +303,9 @@
         <div class="filter-card-title">Search by Project / Unit</div>
         <form action="{{ route('buy-sale.index') }}" method="GET" class="row g-3 align-items-end" id="pipelineFilterForm">
             <input type="hidden" name="status" value="{{ $status }}">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label fw-semibold small text-uppercase text-muted">Project</label>
-                <select name="project" class="form-select" data-filter-project>
+                <select name="project" class="form-select" data-filter-select>
                     <option value="">All Projects</option>
                     @foreach($projects as $project)
                         <option value="{{ $project->id }}" {{ (string)$projectId === (string)$project->id ? 'selected' : '' }}>
@@ -314,9 +314,31 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label fw-semibold small text-uppercase text-muted">Unit Code</label>
                 <input type="text" name="unit_code" class="form-control" placeholder="Search unit code" value="{{ $unitCode }}" data-filter-unit>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-uppercase text-muted">Unit Type</label>
+                <select name="unit_type" class="form-select" data-filter-select>
+                    <option value="">All Types</option>
+                    @foreach($unitTypes as $type)
+                        <option value="{{ $type }}" {{ $unitType === $type ? 'selected' : '' }}>
+                            {{ $type }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small text-uppercase text-muted">Bedroom</label>
+                <select name="bedrooms" class="form-select" data-filter-select>
+                    <option value="">All Bedrooms</option>
+                    @foreach($bedroomOptions as $bed)
+                        <option value="{{ $bed }}" {{ (string)$bedrooms === (string)$bed ? 'selected' : '' }}>
+                            {{ $bed }} Bedroom{{ $bed > 1 ? 's' : '' }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
         </form>
     </div>
@@ -326,11 +348,12 @@
         <div class="filter-card-title">Project Status</div>
         <div class="d-flex flex-wrap gap-2">
             @php $sequence = array_keys($statusFlow); @endphp
-            <a href="{{ route('buy-sale.index', array_filter(['unit_code' => request('unit_code'), 'project' => $projectId])) }}" class="status-chip {{ !$status ? 'active' : '' }}">
+            @php $filterParams = array_filter(['project' => $projectId, 'unit_code' => $unitCode, 'unit_type' => $unitType, 'bedrooms' => $bedrooms]); @endphp
+            <a href="{{ route('buy-sale.index', $filterParams) }}" class="status-chip {{ !$status ? 'active' : '' }}">
                 <i class="bi bi-grid"></i> All
             </a>
             @foreach($sequence as $key)
-                <a href="{{ route('buy-sale.index', array_filter(['status' => $key, 'project' => $projectId, 'unit_code' => $unitCode])) }}"
+                <a href="{{ route('buy-sale.index', array_merge($filterParams, ['status' => $key])) }}"
                    class="status-chip {{ $status === $key ? 'active' : '' }}">
                     <i class="bi {{ $statusFlow[$key]['icon'] }}"></i> {{ $statusFlow[$key]['label'] }}
                 </a>
@@ -349,12 +372,13 @@
                     : null;
                 $statusMeta = $statusFlow[$sale->status] ?? null;
                 $listing = $sale->listing;
-                $buildingName = $listing->project->name ?? '-';
-                $floorLabel = $listing->floor ? 'Floor ' . $listing->floor : null;
-                $roomLabel = $listing->room_number ? 'Room ' . $listing->room_number : null;
-                $unitCodeLabel = $listing->unit_code ? '(' . $listing->unit_code . ')' : null;
-                $unitInfo = trim(collect([$buildingName, $floorLabel, $roomLabel])->filter()->join(' • ') . ' ' . ($unitCodeLabel ?? ''));
-                $price = $listing->price_per_room;
+                $hasListing = $listing !== null;
+                $buildingName = $hasListing ? ($listing->project->name ?? '-') : '-';
+                $floorLabel = $hasListing && $listing->floor ? 'Floor ' . $listing->floor : null;
+                $roomLabel = $hasListing && $listing->room_number ? 'Room ' . $listing->room_number : null;
+                $unitCodeLabel = $hasListing && $listing->unit_code ? '(' . $listing->unit_code . ')' : null;
+                $unitInfo = $hasListing ? trim(collect([$buildingName, $floorLabel, $roomLabel])->filter()->join(' • ') . ' ' . ($unitCodeLabel ?? '')) : '';
+                $price = $hasListing ? $listing->price_per_room : null;
                 $hasCustomer = !empty($sale->reservation_data);
                 $customerName = $hasCustomer
                     ? ($sale->reservation_data['first_name'] ?? '') . ' ' . ($sale->reservation_data['last_name'] ?? '')
@@ -362,7 +386,7 @@
 
                 $nextLabel = $nextStatus ? $statusFlow[$nextStatus]['label'] : null;
                 $formStatuses = ['reserved' => 'Reservation', 'contract' => 'Contract'];
-                $appointmentStatuses = ['appointment'];
+                $availableStatuses = ['available'];
             @endphp
             <div class="col-xl-4 col-lg-6" id="sale-{{ $sale->id }}">
                 <div class="pipeline-card h-100 {{ request('highlight') == $sale->id ? 'highlight' : '' }}">
@@ -379,15 +403,13 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 {{-- 1. Make / Advance action --}}
                                 @if($nextStatus && $sale->status !== 'transferred')
-                                    @if(in_array($nextStatus, $appointmentStatuses))
+                                    @if(in_array($nextStatus, $availableStatuses))
                                         <li>
-                                            <button type="button" class="dropdown-item appointment-trigger"
+                                            <button type="button" class="dropdown-item advance-available-trigger"
                                                     data-sale-id="{{ $sale->id }}"
-                                                    data-route="{{ route('buy-sale.advance', $sale) }}"
-                                                    data-date="{{ $sale->appointment_date?->format('Y-m-d') ?? '' }}"
-                                                    data-time="{{ $sale->appointment_time ?? '' }}">
-                                                <i class="bi bi-calendar-check me-2" style="color:#7c3aed;"></i>
-                                                Make Appointment
+                                                    data-route="{{ route('buy-sale.advance', $sale) }}">
+                                                <i class="bi bi-check-circle me-2" style="color:#12b76a;"></i>
+                                                Advance to Available (Select Unit)
                                             </button>
                                         </li>
                                     @elseif(isset($formStatuses[$nextStatus]))
@@ -473,18 +495,18 @@
                                             data-route="{{ route('buy-sale.remarks', $sale) }}"
                                             data-status="{{ $sale->status }}"
                                             data-status-label="{{ $statusMeta['label'] ?? ucfirst($sale->status) }}"
-                                            data-remark="{{ $sale->{$remarkColumns[$sale->status]} ?? '' }}">
+                                            data-remark="{{ $sale->status === 'appointment' ? ($sale->appointment?->remark ?? '') : ($sale->{$remarkColumns[$sale->status] ?? ''} ?? '') }}">
                                         <i class="bi bi-journal-text me-2 text-secondary"></i>
                                         Note / Remark
                                     </button>
                                 </li>
 
                                 {{-- 5. Cancel --}}
-                                @if($sale->status !== 'available' && $sale->status !== 'transferred')
+                                @if($sale->status !== 'appointment' && $sale->status !== 'transferred')
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form action="{{ route('buy-sale.cancel', $sale) }}" method="POST"
-                                              onsubmit="return confirm('ยืนยันการยกเลิก? ข้อมูลในฟอร์มทั้งหมดจะถูกลบและสถานะจะกลับเป็น Available')">
+                                              onsubmit="return confirm('ยืนยันการยกเลิก? ข้อมูลในฟอร์มทั้งหมดจะถูกลบและสถานะจะกลับเป็น Appointment')">
                                             @csrf
                                             <button type="submit" class="dropdown-item text-danger">
                                                 <i class="bi bi-x-circle me-2"></i>
@@ -498,46 +520,50 @@
                     </div>
 
                     {{-- Unit Details --}}
-                    <div class="card-label">ตึก / Tower</div>
-                    <div class="card-project-name">{{ $unitInfo ?: $buildingName }}</div>
-                    <div class="card-metrics">
-                        <div>
-                            <div class="card-label text-uppercase mb-1">พื้นที่ / Area</div>
-                            <div class="card-metric-value">
-                                {{ $listing->area ? number_format($listing->area, 2) . ' sqm' : '-' }}
+                    @if($hasListing)
+                        <div class="card-label">ตึก / Tower</div>
+                        <div class="card-project-name">{{ $unitInfo ?: $buildingName }}</div>
+                        <div class="card-metrics">
+                            <div>
+                                <div class="card-label text-uppercase mb-1">พื้นที่ / Area</div>
+                                <div class="card-metric-value">
+                                    {{ $listing->area ? number_format($listing->area, 2) . ' sqm' : '-' }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="card-label text-uppercase mb-1">Unit Type</div>
+                                <div class="card-metric-value">{{ $listing->unit_type ?? '-' }}</div>
                             </div>
                         </div>
-                        <div>
-                            <div class="card-label text-uppercase mb-1">Unit Type</div>
-                            <div class="card-metric-value">{{ $listing->unit_type ?? '-' }}</div>
+                    @endif
+
+                    {{-- Appointment Info --}}
+                    @if($sale->appointment?->appointment_date)
+                        <div class="mt-2">
+                            <div class="card-label text-uppercase mb-1">วันนัดหมาย</div>
+                            <div class="card-metric-value" style="color:#7c3aed;">
+                                <i class="bi bi-calendar-check me-1"></i>
+                                {{ $sale->appointment->appointment_date->format('d M Y') }}
+                                @if($sale->appointment->appointment_time)
+                                    {{ \Carbon\Carbon::createFromFormat('H:i:s', $sale->appointment->appointment_time)->format('H:i') }}
+                                @endif
+                            </div>
                         </div>
-                    </div>
+                    @endif
+
+                    @if($sale->appointment?->remark && $sale->status === 'appointment')
+                        <div class="mt-2">
+                            <div class="card-label text-uppercase mb-1">หมายเหตุ</div>
+                            <div class="small" style="color:#667085; white-space:pre-line;">{{ $sale->appointment->remark }}</div>
+                        </div>
+                    @endif
 
                     {{-- Price + Contract Info --}}
                     <div class="mt-3 d-flex flex-wrap gap-4 align-items-end">
-                        <div>
-                            <div class="card-label">Price</div>
-                            <div class="card-price">{{ $price ? '฿' . number_format($price, 0) : '-' }}</div>
-                        </div>
-
-                        @if($sale->status === 'appointment' && $sale->appointment_date)
+                        @if($hasListing)
                             <div>
-                                <div class="card-label text-uppercase mb-1">วันนัดหมาย</div>
-                                <div class="card-metric-value" style="color:#7c3aed;">
-                                    <i class="bi bi-calendar-check me-1"></i>
-                                    {{ $sale->appointment_date->format('d M Y') }}
-                                    @if($sale->appointment_time)
-                                        {{ \Carbon\Carbon::createFromFormat('H:i:s', $sale->appointment_time)->format('H:i') }}
-                                    @endif
-                                </div>
-                                @if($sale->appointment_name)
-                                    <div class="small mt-1" style="color:#667085;">
-                                        <i class="bi bi-person me-1"></i>{{ $sale->appointment_name }}
-                                        @if($sale->appointment_phone)
-                                            &nbsp;·&nbsp;<i class="bi bi-telephone me-1"></i>{{ $sale->appointment_phone }}
-                                        @endif
-                                    </div>
-                                @endif
+                                <div class="card-label">Price</div>
+                                <div class="card-price">{{ $price ? '฿' . number_format($price, 0) : '-' }}</div>
                             </div>
                         @endif
 
@@ -585,20 +611,27 @@
                     @endif
 
                     @php
-                        $currentRemark = $sale->{$remarkColumns[$sale->status]} ?? null;
-                        $remarkEntries = collect($remarkColumns)
-                            ->map(function ($column, $statusKey) use ($sale, $statusFlow) {
-                                $remarkText = $sale->{$column};
-                                return [
-                                    'status' => $statusKey,
-                                    'label' => $statusFlow[$statusKey]['label'] ?? ucfirst($statusKey),
-                                    'remark' => $remarkText,
-                                    'hasRemark' => filled($remarkText),
-                                ];
-                            })
-                            ->values()
-                            ->all();
-                        $remarkUnitLabel = $listing->unit_code
+                        $currentRemark = $sale->status === 'appointment'
+                            ? ($sale->appointment?->remark ?? null)
+                            : ($sale->{$remarkColumns[$sale->status] ?? null} ?? null);
+
+                        $appointmentRemarkText = $sale->appointment?->remark;
+                        $remarkEntries = collect(array_merge(
+                            [['status' => 'appointment', 'label' => $statusFlow['appointment']['label'] ?? 'Appointment', 'remark' => $appointmentRemarkText, 'hasRemark' => filled($appointmentRemarkText)]],
+                            collect($remarkColumns)
+                                ->map(function ($column, $statusKey) use ($sale, $statusFlow) {
+                                    $remarkText = $sale->{$column};
+                                    return [
+                                        'status' => $statusKey,
+                                        'label' => $statusFlow[$statusKey]['label'] ?? ucfirst($statusKey),
+                                        'remark' => $remarkText,
+                                        'hasRemark' => filled($remarkText),
+                                    ];
+                                })
+                                ->values()
+                                ->all()
+                        ))->all();
+                        $remarkUnitLabel = $hasListing && $listing->unit_code
                             ? 'Unit ' . $listing->unit_code
                             : ($unitInfo ?: 'Sale #' . $sale->id);
                     @endphp
@@ -609,15 +642,27 @@
                             <span class="badge-completed">
                                 <i class="bi bi-check-circle-fill"></i> Transferred
                             </span>
-                        @elseif($sale->status === 'available')
-                            <a href="{{ route('contracts.quotation.preview-listing', ['listing' => $sale->listing_id, 'language' => 'th']) }}"
-                               class="btn btn-sm btn-outline-secondary" style="border-radius:8px; font-size:0.8rem;">
+                        @elseif($sale->status === 'available' && $hasListing)
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary btn-quotation-visitor"
+                                    style="border-radius:8px; font-size:0.8rem;"
+                                    data-sale-id="{{ $sale->id }}"
+                                    data-listing-id="{{ $sale->listing_id }}"
+                                    data-language="th"
+                                    data-avail-name="{{ $sale->avail_name }}"
+                                    data-avail-tel="{{ $sale->avail_tel }}">
                                 <i class="bi bi-file-earmark-text me-1"></i>Quotation (TH)
-                            </a>
-                            <a href="{{ route('contracts.quotation.preview-listing', ['listing' => $sale->listing_id, 'language' => 'en']) }}"
-                               class="btn btn-sm btn-outline-secondary" style="border-radius:8px; font-size:0.8rem;">
+                            </button>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary btn-quotation-visitor"
+                                    style="border-radius:8px; font-size:0.8rem;"
+                                    data-sale-id="{{ $sale->id }}"
+                                    data-listing-id="{{ $sale->listing_id }}"
+                                    data-language="en"
+                                    data-avail-name="{{ $sale->avail_name }}"
+                                    data-avail-tel="{{ $sale->avail_tel }}">
                                 <i class="bi bi-file-earmark-text me-1"></i>Quotation (EN)
-                            </a>
+                            </button>
                         @endif
 
                         <button type="button"
@@ -690,20 +735,76 @@
         </div>
     @endif
 
-    {{-- Create Sale Modal --}}
+    {{-- Create Appointment Modal --}}
     <div class="modal fade" id="createSaleModal" tabindex="-1" aria-labelledby="createSaleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form action="{{ route('buy-sale.store') }}" method="POST">
+                <form action="{{ route('buy-sale.store') }}" method="POST" id="createAppointmentForm">
                     @csrf
+                    <input type="hidden" name="appointment_time" id="createAppointmentTimeInput">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="createSaleModalLabel">Create Sale — Select Unit</h5>
+                        <h5 class="modal-title" id="createSaleModalLabel">
+                            <i class="bi bi-calendar-check me-2" style="color:#7c3aed;"></i>Create Appointment
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="project_id" class="form-label">Building (Project)</label>
-                            <select id="project_id" class="form-select" required>
+                            <label class="form-label fw-semibold">วันที่นัดหมาย <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="appointment_date" id="createAppointmentDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">เวลานัดหมาย <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-2 align-items-center">
+                                <select class="form-select" id="createAppointmentHour" style="max-width:110px;">
+                                    @for($h = 0; $h <= 23; $h++)
+                                        <option value="{{ str_pad($h, 2, '0', STR_PAD_LEFT) }}" {{ $h === 9 ? 'selected' : '' }}>
+                                            {{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00 น.
+                                        </option>
+                                    @endfor
+                                </select>
+                                <span class="text-muted fw-semibold">:</span>
+                                <select class="form-select" id="createAppointmentMinute" style="max-width:100px;">
+                                    @for($m = 0; $m <= 59; $m++)
+                                        <option value="{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}">
+                                            {{ str_pad($m, 2, '0', STR_PAD_LEFT) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">หมายเหตุ</label>
+                            <textarea class="form-control" name="remark_appointment" rows="3" placeholder="ชื่อลูกค้า, เบอร์โทร, รายละเอียดเพิ่มเติม..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-check-lg me-1"></i> Create Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Advance to Available Modal (Select Listing) --}}
+    <div class="modal fade" id="advanceAvailableModal" tabindex="-1" aria-labelledby="advanceAvailableModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" id="advanceAvailableForm">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="advanceAvailableModalLabel">
+                            <i class="bi bi-check-circle me-2" style="color:#12b76a;"></i>Advance to Available — Select Unit
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="adv_project_id" class="form-label">Building (Project)</label>
+                            <select id="adv_project_id" class="form-select" required>
                                 <option value="">-- Select Building --</option>
                                 @foreach($projects as $project)
                                     <option value="{{ $project->id }}">{{ $project->name }}</option>
@@ -711,33 +812,33 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="floor_select" class="form-label">Floor</label>
-                            <select id="floor_select" class="form-select" disabled required>
+                            <label for="adv_floor_select" class="form-label">Floor</label>
+                            <select id="adv_floor_select" class="form-select" disabled required>
                                 <option value="">-- Select Floor --</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="listing_id" class="form-label">Room</label>
-                            <select id="listing_id" name="listing_id" class="form-select" disabled required>
+                            <label for="adv_listing_id" class="form-label">Room</label>
+                            <select id="adv_listing_id" name="listing_id" class="form-select" disabled required>
                                 <option value="">-- Select Room --</option>
                             </select>
                         </div>
-                        <div id="unitPreview" class="card bg-light d-none">
+                        <div id="advUnitPreview" class="card bg-light d-none">
                             <div class="card-body py-2">
                                 <h6 class="card-title mb-2">Unit Details</h6>
                                 <div class="row small">
-                                    <div class="col-6 mb-1"><strong>Room:</strong> <span id="prevRoom">-</span></div>
-                                    <div class="col-6 mb-1"><strong>Unit Code:</strong> <span id="prevCode">-</span></div>
-                                    <div class="col-6 mb-1"><strong>Type:</strong> <span id="prevType">-</span></div>
-                                    <div class="col-6 mb-1"><strong>Area:</strong> <span id="prevArea">-</span> sqm</div>
-                                    <div class="col-6 mb-1"><strong>Price:</strong> <span id="prevPrice">-</span></div>
+                                    <div class="col-6 mb-1"><strong>Room:</strong> <span id="advPrevRoom">-</span></div>
+                                    <div class="col-6 mb-1"><strong>Unit Code:</strong> <span id="advPrevCode">-</span></div>
+                                    <div class="col-6 mb-1"><strong>Type:</strong> <span id="advPrevType">-</span></div>
+                                    <div class="col-6 mb-1"><strong>Area:</strong> <span id="advPrevArea">-</span> sqm</div>
+                                    <div class="col-6 mb-1"><strong>Price:</strong> <span id="advPrevPrice">-</span></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-dark" id="btnCreateSale" disabled>Create Sale</button>
+                        <button type="submit" class="btn btn-dark" id="btnAdvanceAvailable" disabled>Advance to Available</button>
                     </div>
                 </form>
             </div>
@@ -774,57 +875,6 @@
         </div>
     </div>
 
-    {{-- Appointment Modal --}}
-    <div class="modal fade" id="appointmentModal" tabindex="-1" aria-labelledby="appointmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form method="POST" id="appointmentForm">
-                    @csrf
-                    <input type="hidden" name="appointment_date" id="appointmentDateInput">
-                    <input type="hidden" name="appointment_time" id="appointmentTimeInput">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="appointmentModalLabel">
-                            <i class="bi bi-calendar-check me-2" style="color:#7c3aed;"></i>Make Appointment
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">วันที่นัดหมาย <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="appointmentDatePicker" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">เวลานัดหมาย <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-2 align-items-center">
-                                <select class="form-select" id="appointmentHour" style="max-width:110px;">
-                                    @for($h = 0; $h <= 23; $h++)
-                                        <option value="{{ str_pad($h, 2, '0', STR_PAD_LEFT) }}">
-                                            {{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00 น.
-                                        </option>
-                                    @endfor
-                                </select>
-                                <span class="text-muted fw-semibold">:</span>
-                                <select class="form-select" id="appointmentMinute" style="max-width:100px;">
-                                    @foreach([0,5,10,15,20,25,30,35,40,45,50,55] as $m)
-                                        <option value="{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}">
-                                            {{ str_pad($m, 2, '0', STR_PAD_LEFT) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-dark">
-                            <i class="bi bi-check-lg me-1"></i> Confirm Appointment
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     {{-- Remark History Modal --}}
     <div class="modal fade" id="remarkHistoryModal" tabindex="-1" aria-labelledby="remarkHistoryModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -852,107 +902,171 @@
             </div>
         </div>
     </div>
+
+    {{-- Quotation Visitor Modal --}}
+    <div class="modal fade" id="quotationVisitorModal" tabindex="-1" aria-labelledby="quotationVisitorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quotationVisitorModalLabel">Visitor Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="qvSaleId">
+                    <input type="hidden" id="qvListingId">
+                    <input type="hidden" id="qvLanguage">
+                    <div class="mb-3">
+                        <label for="qvVisitorName" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="qvVisitorName" placeholder="Enter visitor name">
+                        <div class="invalid-feedback" id="qvVisitorNameError"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="qvVisitorPhone" class="form-label">Phone <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="qvVisitorPhone" placeholder="Enter phone number">
+                        <div class="invalid-feedback" id="qvVisitorPhoneError"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="qvSubmitBtn">
+                        <span class="spinner-border spinner-border-sm d-none me-1" id="qvSpinner"></span>
+                        Save & Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const projectSelect = document.getElementById('project_id');
-    const floorSelect = document.getElementById('floor_select');
-    const listingSelect = document.getElementById('listing_id');
-    const unitPreview = document.getElementById('unitPreview');
-    const btnCreate = document.getElementById('btnCreateSale');
     const floorsEndpointTemplate = "{{ route('buy-sale.api.floors', ['project' => '__PROJECT__'], false) }}";
     const unitsEndpointTemplate = "{{ route('buy-sale.api.units', ['project' => '__PROJECT__', 'floor' => '__FLOOR__'], false) }}";
 
-    if (!projectSelect || !floorSelect || !listingSelect) {
-        return;
+    // ── Create Appointment form submit ──
+    const createForm = document.getElementById('createAppointmentForm');
+    const createTimeInput = document.getElementById('createAppointmentTimeInput');
+    const createHour = document.getElementById('createAppointmentHour');
+    const createMinute = document.getElementById('createAppointmentMinute');
+
+    if (createForm && createTimeInput && createHour && createMinute) {
+        createForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            createTimeInput.value = createHour.value + ':' + createMinute.value + ':00';
+            createForm.submit();
+        });
     }
 
-    let unitsData = [];
+    // ── Advance to Available modal (Building/Floor/Room picker) ──
+    function setupListingPicker(projectId, floorId, listingId, previewId, btnId, prefixId) {
+        const projectSelect = document.getElementById(projectId);
+        const floorSelect = document.getElementById(floorId);
+        const listingSelect = document.getElementById(listingId);
+        const unitPreview = document.getElementById(previewId);
+        const btnSubmit = document.getElementById(btnId);
 
-    projectSelect.addEventListener('change', function () {
-        floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
-        floorSelect.disabled = true;
-        listingSelect.innerHTML = '<option value="">-- Select Room --</option>';
-        listingSelect.disabled = true;
-        unitPreview.classList.add('d-none');
-        btnCreate.disabled = true;
-        if (!this.value) return;
+        if (!projectSelect || !floorSelect || !listingSelect) return;
 
-        const floorsUrl = floorsEndpointTemplate.replace('__PROJECT__', encodeURIComponent(this.value));
+        let unitsData = [];
 
-        fetch(floorsUrl)
-            .then(r => r.json())
-            .then(floors => {
-                floors.forEach(f => {
-                    const opt = document.createElement('option');
-                    opt.value = f;
-                    opt.textContent = 'Floor ' + f;
-                    floorSelect.appendChild(opt);
-                });
-                floorSelect.disabled = false;
-            })
-            .catch(() => {
-                floorSelect.disabled = true;
+        projectSelect.addEventListener('change', function () {
+            floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
+            floorSelect.disabled = true;
+            listingSelect.innerHTML = '<option value="">-- Select Room --</option>';
+            listingSelect.disabled = true;
+            if (unitPreview) unitPreview.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+            if (!this.value) return;
+
+            fetch(floorsEndpointTemplate.replace('__PROJECT__', encodeURIComponent(this.value)))
+                .then(r => r.json())
+                .then(floors => {
+                    floors.forEach(f => {
+                        const opt = document.createElement('option');
+                        opt.value = f;
+                        opt.textContent = 'Floor ' + f;
+                        floorSelect.appendChild(opt);
+                    });
+                    floorSelect.disabled = false;
+                })
+                .catch(() => { floorSelect.disabled = true; });
+        });
+
+        floorSelect.addEventListener('change', function () {
+            listingSelect.innerHTML = '<option value="">-- Select Room --</option>';
+            listingSelect.disabled = true;
+            if (unitPreview) unitPreview.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+            unitsData = [];
+            if (!this.value) return;
+
+            fetch(unitsEndpointTemplate
+                .replace('__PROJECT__', encodeURIComponent(projectSelect.value))
+                .replace('__FLOOR__', encodeURIComponent(this.value)))
+                .then(r => r.json())
+                .then(units => {
+                    unitsData = units;
+                    units.forEach(u => {
+                        const opt = document.createElement('option');
+                        opt.value = u.id;
+                        opt.textContent = u.room_number + (u.unit_code ? ' - ' + u.unit_code : '');
+                        listingSelect.appendChild(opt);
+                    });
+                    listingSelect.disabled = false;
+                })
+                .catch(() => { listingSelect.disabled = true; });
+        });
+
+        listingSelect.addEventListener('change', function () {
+            if (unitPreview) unitPreview.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+            if (!this.value) return;
+            const unit = unitsData.find(u => u.id == this.value);
+            if (unit && unitPreview) {
+                document.getElementById(prefixId + 'Room').textContent = unit.room_number || '-';
+                document.getElementById(prefixId + 'Code').textContent = unit.unit_code || '-';
+                document.getElementById(prefixId + 'Type').textContent = unit.unit_type || '-';
+                document.getElementById(prefixId + 'Area').textContent = unit.area ? Number(unit.area).toLocaleString('en', {minimumFractionDigits: 2}) : '-';
+                document.getElementById(prefixId + 'Price').textContent = unit.price_per_room ? Number(unit.price_per_room).toLocaleString('en', {minimumFractionDigits: 2}) : '-';
+                unitPreview.classList.remove('d-none');
+            }
+            if (btnSubmit) btnSubmit.disabled = false;
+        });
+
+        return { projectSelect, floorSelect, listingSelect, unitPreview, btnSubmit, reset() {
+            projectSelect.value = '';
+            floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
+            floorSelect.disabled = true;
+            listingSelect.innerHTML = '<option value="">-- Select Room --</option>';
+            listingSelect.disabled = true;
+            if (unitPreview) unitPreview.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+            unitsData = [];
+        }};
+    }
+
+    // Setup advance-to-available picker
+    const advPicker = setupListingPicker('adv_project_id', 'adv_floor_select', 'adv_listing_id', 'advUnitPreview', 'btnAdvanceAvailable', 'advPrev');
+
+    const advModalEl = document.getElementById('advanceAvailableModal');
+    const advForm = document.getElementById('advanceAvailableForm');
+
+    if (advModalEl && advForm && window.bootstrap) {
+        const advModal = new bootstrap.Modal(advModalEl);
+
+        document.querySelectorAll('.advance-available-trigger').forEach((trigger) => {
+            trigger.addEventListener('click', () => {
+                advForm.action = trigger.dataset.route;
+                if (advPicker) advPicker.reset();
+                advModal.show();
             });
-    });
+        });
 
-    floorSelect.addEventListener('change', function () {
-        listingSelect.innerHTML = '<option value="">-- Select Room --</option>';
-        listingSelect.disabled = true;
-        unitPreview.classList.add('d-none');
-        btnCreate.disabled = true;
-        unitsData = [];
-        if (!this.value) return;
-
-        const unitsUrl = unitsEndpointTemplate
-            .replace('__PROJECT__', encodeURIComponent(projectSelect.value))
-            .replace('__FLOOR__', encodeURIComponent(this.value));
-
-        fetch(unitsUrl)
-            .then(r => r.json())
-            .then(units => {
-                unitsData = units;
-                units.forEach(u => {
-                    const opt = document.createElement('option');
-                    opt.value = u.id;
-                    opt.textContent = u.room_number + (u.unit_code ? ' - ' + u.unit_code : '');
-                    listingSelect.appendChild(opt);
-                });
-                listingSelect.disabled = false;
-            })
-            .catch(() => {
-                listingSelect.disabled = true;
-            });
-    });
-
-    listingSelect.addEventListener('change', function () {
-        unitPreview.classList.add('d-none');
-        btnCreate.disabled = true;
-        if (!this.value) return;
-        const unit = unitsData.find(u => u.id == this.value);
-        if (unit) {
-            document.getElementById('prevRoom').textContent = unit.room_number || '-';
-            document.getElementById('prevCode').textContent = unit.unit_code || '-';
-            document.getElementById('prevType').textContent = unit.unit_type || '-';
-            document.getElementById('prevArea').textContent = unit.area ? Number(unit.area).toLocaleString('en', {minimumFractionDigits: 2}) : '-';
-            document.getElementById('prevPrice').textContent = unit.price_per_room ? Number(unit.price_per_room).toLocaleString('en', {minimumFractionDigits: 2}) : '-';
-            unitPreview.classList.remove('d-none');
-            btnCreate.disabled = false;
-        }
-    });
-
-    document.getElementById('createSaleModal').addEventListener('hidden.bs.modal', function () {
-        projectSelect.value = '';
-        floorSelect.innerHTML = '<option value="">-- Select Floor --</option>';
-        floorSelect.disabled = true;
-        listingSelect.innerHTML = '<option value="">-- Select Room --</option>';
-        listingSelect.disabled = true;
-        unitPreview.classList.add('d-none');
-        btnCreate.disabled = true;
-        unitsData = [];
-    });
+        advModalEl.addEventListener('hidden.bs.modal', () => {
+            if (advPicker) advPicker.reset();
+        });
+    }
 
     // Scroll to highlighted card
     const highlight = document.querySelector('.pipeline-card.highlight');
@@ -962,10 +1076,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 300);
     }
 
-    // Auto-submit filters when project changes or unit code typing pauses
+    // Auto-submit filters when selects change or unit code typing pauses
     const filterForm = document.getElementById('pipelineFilterForm');
     if (filterForm) {
-        const projectFilter = filterForm.querySelector('[data-filter-project]');
+        const selectFilters = filterForm.querySelectorAll('[data-filter-select]');
         const unitFilter = filterForm.querySelector('[data-filter-unit]');
         const submitFilters = () => {
             if (filterForm.requestSubmit) {
@@ -975,9 +1089,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        if (projectFilter) {
-            projectFilter.addEventListener('change', submitFilters);
-        }
+        selectFilters.forEach(sel => {
+            sel.addEventListener('change', submitFilters);
+        });
 
         if (unitFilter) {
             let debounceId = null;
@@ -1128,56 +1242,91 @@ document.addEventListener('DOMContentLoaded', function () {
             remarkHistoryUnit.textContent = '';
         });
     }
-
-    // Appointment modal
-    const appointmentModalEl = document.getElementById('appointmentModal');
-    const appointmentForm = document.getElementById('appointmentForm');
-    const appointmentDatePicker = document.getElementById('appointmentDatePicker');
-    const appointmentHour = document.getElementById('appointmentHour');
-    const appointmentMinute = document.getElementById('appointmentMinute');
-    const appointmentDateInput = document.getElementById('appointmentDateInput');
-    const appointmentTimeInput = document.getElementById('appointmentTimeInput');
-
-    if (appointmentModalEl && appointmentForm && window.bootstrap) {
-        const appointmentModal = new bootstrap.Modal(appointmentModalEl);
-
-        document.querySelectorAll('.appointment-trigger').forEach((trigger) => {
-            trigger.addEventListener('click', () => {
-                appointmentForm.action = trigger.dataset.route;
-                appointmentDatePicker.value = trigger.dataset.date || '';
-
-                // Pre-fill hour/minute from saved time (HH:MM:SS)
-                const savedTime = trigger.dataset.time || '';
-                if (savedTime) {
-                    const parts = savedTime.split(':');
-                    appointmentHour.value = parts[0] || '09';
-                    // snap minute to nearest 5
-                    const rawMin = parseInt(parts[1] || '0', 10);
-                    const snapped = String(Math.round(rawMin / 5) * 5 % 60).padStart(2, '0');
-                    appointmentMinute.value = snapped;
-                } else {
-                    appointmentHour.value = '09';
-                    appointmentMinute.value = '00';
-                }
-
-                appointmentModal.show();
-            });
-        });
-
-        appointmentForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            if (!appointmentDatePicker.value) return;
-            appointmentDateInput.value = appointmentDatePicker.value;
-            appointmentTimeInput.value = appointmentHour.value + ':' + appointmentMinute.value + ':00';
-            appointmentForm.submit();
-        });
-
-        appointmentModalEl.addEventListener('hidden.bs.modal', () => {
-            appointmentDatePicker.value = '';
-            appointmentHour.value = '09';
-            appointmentMinute.value = '00';
-        });
-    }
 });
+
+// ── Quotation Visitor Modal ──
+(function () {
+    const modalEl = document.getElementById('quotationVisitorModal');
+    if (!modalEl) return;
+
+    const modal = new bootstrap.Modal(modalEl);
+    const saleIdInput = document.getElementById('qvSaleId');
+    const listingIdInput = document.getElementById('qvListingId');
+    const languageInput = document.getElementById('qvLanguage');
+    const nameInput = document.getElementById('qvVisitorName');
+    const phoneInput = document.getElementById('qvVisitorPhone');
+    const nameError = document.getElementById('qvVisitorNameError');
+    const phoneError = document.getElementById('qvVisitorPhoneError');
+    const submitBtn = document.getElementById('qvSubmitBtn');
+    const spinner = document.getElementById('qvSpinner');
+
+    document.querySelectorAll('.btn-quotation-visitor').forEach(btn => {
+        btn.addEventListener('click', () => {
+            saleIdInput.value = btn.dataset.saleId;
+            listingIdInput.value = btn.dataset.listingId;
+            languageInput.value = btn.dataset.language;
+            nameInput.value = btn.dataset.availName || '';
+            phoneInput.value = btn.dataset.availTel || '';
+            nameInput.classList.remove('is-invalid');
+            phoneInput.classList.remove('is-invalid');
+            modal.show();
+        });
+    });
+
+    submitBtn.addEventListener('click', () => {
+        let hasError = false;
+        nameInput.classList.remove('is-invalid');
+        phoneInput.classList.remove('is-invalid');
+
+        if (!nameInput.value.trim()) {
+            nameInput.classList.add('is-invalid');
+            nameError.textContent = 'Please enter visitor name.';
+            hasError = true;
+        }
+        if (!phoneInput.value.trim()) {
+            phoneInput.classList.add('is-invalid');
+            phoneError.textContent = 'Please enter phone number.';
+            hasError = true;
+        }
+        if (hasError) return;
+
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+
+        fetch(`/buy-sale/${saleIdInput.value}/quotation-visitor`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                visitor_name: nameInput.value.trim(),
+                visitor_phone: phoneInput.value.trim(),
+                language: languageInput.value,
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Update the data attributes so next open shows new values
+                const btns = document.querySelectorAll(`.btn-quotation-visitor[data-sale-id="${saleIdInput.value}"]`);
+                btns.forEach(b => {
+                    b.dataset.availName = nameInput.value.trim();
+                    b.dataset.availTel = phoneInput.value.trim();
+                });
+                window.open(data.redirect_url, '_blank');
+                modal.hide();
+            } else {
+                alert('Failed to save visitor information.');
+            }
+        })
+        .catch(() => alert('An error occurred. Please try again.'))
+        .finally(() => {
+            submitBtn.disabled = false;
+            spinner.classList.add('d-none');
+        });
+    });
+})();
 </script>
 @endsection

@@ -19,22 +19,18 @@ class Sale extends Model
         'previous_status',
         'reservation_data',
         'contract_data',
-        'appointment_date',
-        'appointment_time',
-        'appointment_name',
-        'appointment_phone',
         'remark_available',
-        'remark_appointment',
         'remark_reserved',
         'remark_contract',
         'remark_installment',
         'remark_transferred',
+        'avail_name',
+        'avail_tel',
     ];
 
     protected $casts = [
         'reservation_data' => 'array',
         'contract_data' => 'array',
-        'appointment_date' => 'date',
     ];
 
     public function listing(): BelongsTo
@@ -60,6 +56,11 @@ class Sale extends Model
             'sale_id',
             'sale_purchase_agreement_id'
         );
+    }
+
+    public function appointment(): HasOne
+    {
+        return $this->hasOne(SaleAppointment::class);
     }
 
     public function statusHistories(): HasMany

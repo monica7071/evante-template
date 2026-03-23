@@ -14,8 +14,10 @@ class ExpireAppointments extends Command
     public function handle(): int
     {
         $expired = Sale::where('status', 'appointment')
-            ->whereNotNull('appointment_date')
-            ->whereDate('appointment_date', '<', now()->toDateString())
+            ->whereHas('appointment', function ($q) {
+                $q->whereDate('appointment_date', '<', now()->toDateString());
+            })
+            ->with('appointment')
             ->get();
 
         if ($expired->isEmpty()) {
@@ -24,13 +26,11 @@ class ExpireAppointments extends Command
         }
 
         foreach ($expired as $sale) {
+            $sale->appointment?->delete();
+
             $sale->update([
                 'status'           => 'available',
                 'previous_status'  => 'appointment',
-                'appointment_date' => null,
-                'appointment_time' => null,
-                'appointment_name' => null,
-                'appointment_phone'=> null,
             ]);
 
             $sale->statusHistories()->create([

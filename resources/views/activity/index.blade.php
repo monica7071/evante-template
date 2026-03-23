@@ -262,11 +262,8 @@
                                             @if($appt->appointment_time)
                                                 <i class="bi bi-clock"></i>{{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}
                                             @endif
-                                            @if($appt->appointment_name)
-                                                <span class="ms-2"><i class="bi bi-person"></i>{{ $appt->appointment_name }}</span>
-                                            @endif
-                                            @if($appt->appointment_phone)
-                                                <span class="ms-2"><i class="bi bi-telephone"></i>{{ $appt->appointment_phone }}</span>
+                                            @if(!empty($appt->appointment_remark))
+                                                <span class="ms-2 text-muted">{{ Str::limit($appt->appointment_remark, 50) }}</span>
                                             @endif
                                         </div>
                                     </div>
