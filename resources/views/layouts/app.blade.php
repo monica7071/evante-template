@@ -389,6 +389,21 @@
 </head>
 <body>
 
+    {{-- Impersonation Banner --}}
+    @if(session('impersonating_as'))
+    <div class="text-center py-2 px-4 fw-medium" style="background:#f59e0b; color:#1a2e35; font-size:0.85rem;">
+        You are impersonating
+        <strong>{{ auth()->user()->name }}</strong>
+        ({{ auth()->user()->organization->name ?? '—' }}).
+        <form method="POST" action="{{ route('super-admin.leave-impersonate') }}" class="d-inline ms-3">
+            @csrf
+            <button type="submit" class="btn btn-link p-0 text-decoration-underline fw-bold" style="color:#1a2e35; font-size:0.85rem;">
+                Leave Impersonation
+            </button>
+        </form>
+    </div>
+    @endif
+
     {{-- ════════════ Top Navbar ════════════ --}}
     @php
         $isListing   = request()->routeIs('locations.*') || request()->routeIs('projects.*') || request()->routeIs('units.*');
@@ -599,6 +614,14 @@
                                     <div class="fw-semibold small text-dark">{{ Auth::user()->name }}</div>
                                     <div class="text-muted" style="font-size:0.72rem;">{{ Auth::user()->email }}</div>
                                 </li>
+                                @if(auth()->user()->isSuperAdmin())
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('super-admin.dashboard') }}">
+                                        <i class="bi bi-shield-lock me-2 text-secondary"></i>Super Admin
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                @endif
                                 <li>
                                     <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                         <i class="bi bi-person-circle me-2 text-secondary"></i>Profile

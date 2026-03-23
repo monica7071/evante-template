@@ -32,6 +32,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\SuperAdminOrganizationController;
+use App\Http\Controllers\SuperAdmin\SuperAdminPlanController;
 use App\Http\Controllers\SuperAdmin\SuperAdminUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -210,6 +211,20 @@ Route::middleware(['auth', 'superadmin'])
     // Dashboard
     Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])
         ->name('dashboard');
+
+    // Plan management
+    Route::get('/plans', [SuperAdminPlanController::class, 'index'])
+        ->name('plans.index');
+    Route::get('/plans/create', [SuperAdminPlanController::class, 'create'])
+        ->name('plans.create');
+    Route::post('/plans', [SuperAdminPlanController::class, 'store'])
+        ->name('plans.store');
+    Route::get('/plans/{plan}/edit', [SuperAdminPlanController::class, 'edit'])
+        ->name('plans.edit');
+    Route::put('/plans/{plan}', [SuperAdminPlanController::class, 'update'])
+        ->name('plans.update');
+    Route::post('/plans/{plan}/toggle-active', [SuperAdminPlanController::class, 'toggleActive'])
+        ->name('plans.toggle-active');
 
     // Organization management
     Route::get('/organizations', [SuperAdminOrganizationController::class, 'index'])
