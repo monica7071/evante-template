@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(echo \"docker_exit:$?\")",
+      "Bash(lsof:*)",
+      "Bash(ls:*)",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysql.server start:*)",
+      "Bash(/Applications/XAMPP/xamppfiles/bin/mysqladmin:*)",
+      "Bash(sudo chown:*)",
+      "Bash(php:*)"
+    ]
+  }
+}

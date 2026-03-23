@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Models;
+
+use App\Scopes\OrganizationScope;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Sale extends Model
+{
+    protected $fillable = [
+        'listing_id',
+        'user_id',
+        'sale_number',
+        'status',
+        'previous_status',
+        'reservation_data',
+        'contract_data',
+        'appointment_date',
+        'appointment_time',
+        'appointment_name',
+        'appointment_phone',
+        'remark_available',
+        'remark_appointment',
+        'remark_reserved',
+        'remark_contract',
+        'remark_installment',
+        'remark_transferred',
+    ];
+
+    protected $casts = [
+        'reservation_data' => 'array',
+        'contract_data' => 'array',
+        'appointment_date' => 'date',
+    ];
+
+    public function listing(): BelongsTo
+    {
+        return $this->belongsTo(Listing::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function purchaseAgreement(): HasOne
+    {
+        return $this->hasOne(SalePurchaseAgreement::class);
+    }
+
+    public function purchaseAgreementInstallments(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            SalePurchaseAgreementInstallment::class,
+            SalePurchaseAgreement::class,
+            'sale_id',
+            'sale_purchase_agreement_id'
+        );
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(StatusHistory::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new OrganizationScope());
+
+        static::creating(function ($sale) {
+            // Auto-generate sale number
+            $today = now()->format('Ymd');
+            $count = static::whereDate('created_at', today())->count() + 1;
+            $sale->sale_number = 'SL-' . $today . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+
+            // Auto-assign organization_id
+            if (auth()->check() && !auth()->user()->isSuperAdmin() && empty($sale->organization_id)) {
+                $sale->organization_id = auth()->user()->organization_id;
+            }
+        });
+    }
+}
