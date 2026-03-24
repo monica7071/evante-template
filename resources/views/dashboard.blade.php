@@ -87,6 +87,42 @@
 
     .empty-state { text-align: center; padding: 2rem; color: var(--text-light); font-size: 0.85rem; }
     .empty-state i { font-size: 1.5rem; display: block; margin-bottom: 0.5rem; }
+
+    /* Questionnaire banner */
+    .questionnaire-banner {
+        display: flex; align-items: center; gap: 1.25rem;
+        background: linear-gradient(135deg, #f59e0b, #d97706, #b45309);
+        border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;
+        text-decoration: none; color: #fff; transition: all 0.25s;
+        position: relative; overflow: hidden;
+        box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+    }
+    .questionnaire-banner::before {
+        content: ''; position: absolute; top: -50%; right: -20%; width: 200px; height: 200px;
+        background: rgba(255,255,255,0.08); border-radius: 50%;
+    }
+    .questionnaire-banner::after {
+        content: ''; position: absolute; bottom: -60%; left: 10%; width: 150px; height: 150px;
+        background: rgba(255,255,255,0.05); border-radius: 50%;
+    }
+    .questionnaire-banner:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(245,158,11,0.4); color: #fff; }
+    .questionnaire-banner > * { position: relative; z-index: 1; }
+    .questionnaire-banner-icon {
+        width: 52px; height: 52px; border-radius: 14px; background: rgba(255,255,255,.22);
+        display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+        backdrop-filter: blur(4px);
+    }
+    .questionnaire-banner-text { flex: 1; min-width: 0; }
+    .questionnaire-banner-title { font-weight: 800; font-size: 1.05rem; letter-spacing: 0.01em; }
+    .questionnaire-banner-desc { font-size: 0.8rem; opacity: 0.9; margin-top: 3px; }
+    .questionnaire-banner-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255,255,255,.22); backdrop-filter: blur(4px);
+        border-radius: 999px; padding: 8px 18px;
+        font-size: 0.78rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+        transition: background 0.2s;
+    }
+    .questionnaire-banner:hover .questionnaire-banner-btn { background: rgba(255,255,255,.32); }
 </style>
 @endsection
 
@@ -98,6 +134,20 @@
     <div class="page-header">
         <h3>Overview</h3>
     </div>
+
+    {{-- ═══ Questionnaire Banner ═══ --}}
+    <a href="/questionnaire" class="questionnaire-banner">
+        <div class="questionnaire-banner-icon">
+            <i class="bi bi-clipboard2-check"></i>
+        </div>
+        <div class="questionnaire-banner-text">
+            <div class="questionnaire-banner-title">Customer Questionnaire</div>
+            <div class="questionnaire-banner-desc">Collect feedback from your customers — create and send questionnaires anytime</div>
+        </div>
+        <div class="questionnaire-banner-btn">
+            Open <i class="bi bi-arrow-right"></i>
+        </div>
+    </a>
 
     {{-- ═══ SECTION 1: KPI Cards ═══ --}}
     <div class="kpi-row">

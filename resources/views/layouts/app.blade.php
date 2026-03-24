@@ -227,6 +227,18 @@
             .user-btn::after { display: none !important; }
         }
 
+        /* ── Desktop: Employee menu icon only ── */
+        @media (min-width: 992px) {
+            .nav-label-employee { display: none; }
+        }
+
+        /* ── Desktop: user button avatar only (all sizes ≥ 992px) ── */
+        @media (min-width: 992px) {
+            .user-btn { padding: 4px !important; border-radius: 50% !important; gap: 0 !important; width: 36px; height: 36px; justify-content: center; }
+            .user-btn-name, .user-btn-role { display: none !important; }
+            .user-btn::after { display: none !important; }
+        }
+
         /* ── Page title bar ── */
         #page-title-bar {
             background: var(--surface);
@@ -552,7 +564,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ $isEmployee ? 'active' : '' }}"
                                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Employee
+                                <i class="bi bi-people-fill me-1"></i><span class="nav-label-employee">Employee</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
@@ -626,6 +638,11 @@
                                 <li>
                                     <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                         <i class="bi bi-person-circle me-2 text-secondary"></i>Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/questionnaire">
+                                        <i class="bi bi-clipboard2-check me-2 text-secondary"></i>Questionnaire
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider my-1"></li>

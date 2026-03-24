@@ -31,6 +31,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ReservationSignatureController;
+use App\Http\Controllers\QuestionnaireController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\SuperAdminOrganizationController;
 use App\Http\Controllers\SuperAdmin\SuperAdminPlanController;
@@ -52,6 +53,11 @@ Route::redirect('/', '/dashboard');
 
 // Public listing view (no auth required)
 Route::get('/listing/{unit}', [PublicListingController::class, 'show'])->name('public.listing.show');
+
+// Public questionnaire (no auth required)
+Route::get('/questionnaire', [QuestionnaireController::class, 'create'])->name('questionnaire.create');
+Route::post('/questionnaire', [QuestionnaireController::class, 'store'])->name('questionnaire.store');
+Route::get('/questionnaire/thank-you', [QuestionnaireController::class, 'thankYou'])->name('questionnaire.thank-you');
 
 // All protected routes
 Route::middleware('auth')->group(function () {
