@@ -50,8 +50,21 @@
 
     /* Donut layout */
     .donut-section { display: flex; gap: 1.5rem; align-items: center; flex-direction: column; }
-    .donut-canvas-wrap { flex-shrink: 0; width: 180px; height: 180px; position: relative; }
+    .donut-canvas-wrap { flex-shrink: 0; width: 220px; height: 220px; position: relative; }
     .donut-canvas-wrap canvas { width: 100% !important; height: 100% !important; }
+    .donut-center {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        text-align: center; pointer-events: none;
+    }
+    .donut-center-value { font-size: 1.15rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
+    .donut-center-sub { font-size: 0.72rem; font-weight: 600; color: var(--text-light); margin-top: 2px; }
+    .donut-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-left: 0.5rem; }
+    .donut-toggle button {
+        border: none; background: var(--surface); color: var(--text-mid); font-size: 0.68rem;
+        font-weight: 600; padding: 0.25rem 0.6rem; cursor: pointer; transition: all 0.15s;
+    }
+    .donut-toggle button:hover { background: rgba(42,139,146,0.06); }
+    .donut-toggle button.active { background: var(--primary); color: #fff; }
     .donut-list { flex: 1; width: 100%; }
     .donut-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.45rem 0; font-size: 0.82rem; justify-content: space-between; }
     .donut-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
@@ -109,6 +122,16 @@
     /* Chart container */
     .chart-container { position: relative; height: 260px; }
 
+    /* Category headers */
+    .category-header {
+        display: flex; align-items: center; gap: 0.5rem;
+        margin: 1.75rem 0 1rem; padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary); font-size: 0.92rem;
+        font-weight: 800; color: var(--text-dark);
+    }
+    .category-header:first-of-type { margin-top: 0; }
+    .category-header i { color: var(--primary); font-size: 1.05rem; }
+
     .empty-state {
         text-align: center; padding: 2rem 1rem; color: var(--text-light); font-size: 0.85rem;
     }
@@ -136,6 +159,9 @@
 @section('content')
     <div class="page-header">
         <h3>Report</h3>
+        <a id="exportPdfBtn" href="#" class="btn btn-sm" style="background: var(--primary); color: #fff; font-size: 0.82rem; font-weight: 600; padding: 0.4rem 1rem; border-radius: var(--radius-sm);">
+            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+        </a>
     </div>
 
     <div class="view-toggle-wrapper">
@@ -145,12 +171,20 @@
         </div>
     </div>
 
+    {{-- ══════════════════════════════════════════════════════ --}}
+    {{-- ── SALES PERFORMANCE ──────────────────────────────── --}}
+    <div class="category-header"><i class="bi bi-bar-chart-line"></i> Sales Performance</div>
+
     <div class="row g-3 mb-3">
         {{-- ── Sale Value by Team (donut) ────────────────────── --}}
         <div class="col-lg-6">
             <div class="section-card mb-0">
                 <div class="section-card-header">
                     <span><i class="bi bi-people"></i> Sale Value by Team</span>
+                    <div class="donut-toggle" data-target="team">
+                        <button type="button" data-mode="value" class="active">Value</button>
+                        <button type="button" data-mode="units">Units</button>
+                    </div>
                     <form class="card-filter" method="GET" action="{{ route('report.index') }}">
                         <select name="team_chart_year" onchange="this.form.submit()" aria-label="Team chart year">
                             <option value="" disabled>Year</option>
@@ -179,10 +213,15 @@
                         <div class="donut-section">
                             <div class="donut-canvas-wrap">
                                 <canvas id="teamDonut"></canvas>
+                                <div class="donut-center" id="teamDonutCenter"
+                                     data-value-text="฿{{ number_format($teamChart->sum('total_value'), 0) }}"
+                                     data-units-text="{{ number_format($teamChart->sum('deal_count')) }} units">
+                                    <div class="donut-center-value">฿{{ number_format($teamChart->sum('total_value'), 0) }}</div>
+                                </div>
                             </div>
-                            <div class="donut-list">
+                            <div class="donut-list" id="teamDonutList">
                                 @foreach($teamChart as $i => $row)
-                                    <div class="donut-item">
+                                    <div class="donut-item" data-value-text="฿{{ number_format($row->total_value, 0) }}" data-units-text="{{ $row->deal_count }} units">
                                         <span class="donut-dot" style="background: {{ $donutColors[$i % count($donutColors)] }};"></span>
                                         <span class="donut-label">{{ $row->team_name }} <small>{{ $row->deal_count }} deals</small></span>
                                         <span class="donut-value">฿{{ number_format($row->total_value, 0) }}</span>
@@ -202,6 +241,10 @@
             <div class="section-card mb-0">
                 <div class="section-card-header">
                     <span><i class="bi bi-person"></i> Sale Value by Person</span>
+                    <div class="donut-toggle" data-target="person">
+                        <button type="button" data-mode="value" class="active">Value</button>
+                        <button type="button" data-mode="units">Units</button>
+                    </div>
                     <form class="card-filter" method="GET" action="{{ route('report.index') }}">
                         <select name="person_chart_year" onchange="this.form.submit()" aria-label="Person chart year">
                             <option value="" disabled>Year</option>
@@ -230,10 +273,15 @@
                         <div class="donut-section">
                             <div class="donut-canvas-wrap">
                                 <canvas id="saleDonut"></canvas>
+                                <div class="donut-center" id="personDonutCenter"
+                                     data-value-text="฿{{ number_format($saleChart->sum('total_value'), 0) }}"
+                                     data-units-text="{{ number_format($saleChart->sum('deal_count')) }} units">
+                                    <div class="donut-center-value">฿{{ number_format($saleChart->sum('total_value'), 0) }}</div>
+                                </div>
                             </div>
-                            <div class="donut-list">
+                            <div class="donut-list" id="personDonutList">
                                 @foreach($saleChart->take(8) as $i => $row)
-                                    <div class="donut-item">
+                                    <div class="donut-item" data-value-text="฿{{ number_format($row->total_value, 0) }}" data-units-text="{{ $row->deal_count }} units">
                                         <span class="donut-dot" style="background: {{ $donutColors[$i % count($donutColors)] }};"></span>
                                         <span class="donut-label">{{ $row->name }} <small>{{ $row->team_name ?? '' }}</small></span>
                                         <span class="donut-value">฿{{ number_format($row->total_value, 0) }}</span>
@@ -308,6 +356,47 @@
         </div>
     </div>
 
+    {{-- ══════════════════════════════════════════════════════ --}}
+    {{-- ── CUSTOMER ANALYSIS ──────────────────────────────── --}}
+    <div class="category-header"><i class="bi bi-people"></i> Customer Analysis</div>
+
+    {{-- ── Customer Nationality (Thai vs Foreign) ─────────── --}}
+    <div class="section-card">
+        <div class="section-card-header">
+            <i class="bi bi-globe-americas"></i> Customer Nationality
+        </div>
+        <div class="section-card-body">
+            @php
+                $thaiNat = $nationalitySplit->get('Thai');
+                $foreignNat = $nationalitySplit->get('Foreign');
+                $thaiCount = $thaiNat->deal_count ?? 0;
+                $thaiValue = $thaiNat->total_value ?? 0;
+                $foreignCount = $foreignNat->deal_count ?? 0;
+                $foreignValue = $foreignNat->total_value ?? 0;
+                $natTotal = $thaiCount + $foreignCount;
+            @endphp
+            <div class="cust-cards">
+                <div class="cust-card" style="background: rgba(42,139,146,0.04);">
+                    <div class="cust-card-value" style="color: var(--primary);">{{ number_format($thaiCount) }}</div>
+                    <div class="cust-card-sub">฿{{ number_format($thaiValue, 0) }}</div>
+                    <div class="cust-card-label">Thai (บัตรประชาชน)</div>
+                </div>
+                <div class="cust-card" style="background: rgba(124,58,237,0.04);">
+                    <div class="cust-card-value" style="color: #7c3aed;">{{ number_format($foreignCount) }}</div>
+                    <div class="cust-card-sub">฿{{ number_format($foreignValue, 0) }}</div>
+                    <div class="cust-card-label">Foreign (Passport)</div>
+                </div>
+            </div>
+            @if($natTotal > 0)
+                <div style="display: flex; justify-content: center;">
+                    <div style="width: 150px; height: 150px; position: relative;">
+                        <canvas id="natDonut"></canvas>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+
     {{-- ── Customer Type Split ───────────────────────────── --}}
     <div class="section-card">
         <div class="section-card-header">
@@ -340,6 +429,119 @@
             @endif
         </div>
     </div>
+
+    {{-- ── Payment by Nationality (donut pair) ─────────── --}}
+    @php
+        $payNatMap = [];
+        foreach ($paymentByNationality as $row) {
+            $payNatMap[$row->nationality][$row->payment_type] = $row;
+        }
+        $thaiBankCnt = $payNatMap['Thai']['Bank Loan']->cnt ?? 0;
+        $thaiBankVal = $payNatMap['Thai']['Bank Loan']->val ?? 0;
+        $thaiCashCnt = $payNatMap['Thai']['Cash Transfer']->cnt ?? 0;
+        $thaiCashVal = $payNatMap['Thai']['Cash Transfer']->val ?? 0;
+        $forBankCnt = $payNatMap['Foreign']['Bank Loan']->cnt ?? 0;
+        $forBankVal = $payNatMap['Foreign']['Bank Loan']->val ?? 0;
+        $forCashCnt = $payNatMap['Foreign']['Cash Transfer']->cnt ?? 0;
+        $forCashVal = $payNatMap['Foreign']['Cash Transfer']->val ?? 0;
+        $payNatTotalCnt = $thaiBankCnt + $thaiCashCnt + $forBankCnt + $forCashCnt;
+        $payNatTotalVal = $thaiBankVal + $thaiCashVal + $forBankVal + $forCashVal;
+    @endphp
+    <div class="row g-3 mb-3">
+        {{-- Left: Units --}}
+        <div class="col-lg-6">
+            <div class="section-card mb-0">
+                <div class="section-card-header">
+                    <span><i class="bi bi-pie-chart"></i> Payment × Nationality (Units)</span>
+                </div>
+                <div class="section-card-body">
+                    @if($payNatTotalCnt > 0)
+                        <div class="donut-section">
+                            <div class="donut-canvas-wrap">
+                                <canvas id="payNatUnitsDonut"></canvas>
+                                <div class="donut-center">
+                                    <div class="donut-center-value">{{ number_format($payNatTotalCnt) }}</div>
+                                    <div class="donut-center-sub">units</div>
+                                </div>
+                            </div>
+                            <div class="donut-list">
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #2A8B92;"></span>
+                                    <span class="donut-label">Thai · Bank Loan</span>
+                                    <span class="donut-value">{{ number_format($thaiBankCnt) }}</span>
+                                </div>
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #7c3aed;"></span>
+                                    <span class="donut-label">Thai · Cash</span>
+                                    <span class="donut-value">{{ number_format($thaiCashCnt) }}</span>
+                                </div>
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #f79009;"></span>
+                                    <span class="donut-label">Foreign · Bank Loan</span>
+                                    <span class="donut-value">{{ number_format($forBankCnt) }}</span>
+                                </div>
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #0ba5ec;"></span>
+                                    <span class="donut-label">Foreign · Cash</span>
+                                    <span class="donut-value">{{ number_format($forCashCnt) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="empty-state"><i class="bi bi-inbox"></i> No data.</div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        {{-- Right: Value --}}
+        <div class="col-lg-6">
+            <div class="section-card mb-0">
+                <div class="section-card-header">
+                    <span><i class="bi bi-pie-chart"></i> Payment × Nationality (Value)</span>
+                </div>
+                <div class="section-card-body">
+                    @if($payNatTotalVal > 0)
+                        <div class="donut-section">
+                            <div class="donut-canvas-wrap">
+                                <canvas id="payNatValueDonut"></canvas>
+                                <div class="donut-center">
+                                    <div class="donut-center-value">฿{{ number_format($payNatTotalVal, 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="donut-list">
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #2A8B92;"></span>
+                                    <span class="donut-label">Thai · Bank Loan</span>
+                                    <span class="donut-value">฿{{ number_format($thaiBankVal, 0) }}</span>
+                                </div>
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #7c3aed;"></span>
+                                    <span class="donut-label">Thai · Cash</span>
+                                    <span class="donut-value">฿{{ number_format($thaiCashVal, 0) }}</span>
+                                </div>
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #f79009;"></span>
+                                    <span class="donut-label">Foreign · Bank Loan</span>
+                                    <span class="donut-value">฿{{ number_format($forBankVal, 0) }}</span>
+                                </div>
+                                <div class="donut-item">
+                                    <span class="donut-dot" style="background: #0ba5ec;"></span>
+                                    <span class="donut-label">Foreign · Cash</span>
+                                    <span class="donut-value">฿{{ number_format($forCashVal, 0) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="empty-state"><i class="bi bi-inbox"></i> No data.</div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════ --}}
+    {{-- ── PRODUCTION ─────────────────────────────────────── --}}
+    <div class="category-header"><i class="bi bi-graph-up-arrow"></i> Production</div>
 
     {{-- ── Production Line Chart ─────────────────────────── --}}
     <div class="section-card">
@@ -375,45 +577,114 @@
         });
     });
 
+    // ── Donut config ──
+    const donutOpts = (fmt) => ({
+        responsive: true, maintainAspectRatio: true, cutout: '78%',
+        plugins: { legend: { display: false }, tooltip: {
+            backgroundColor: '#1a2e35', padding: 10, cornerRadius: 8,
+            callbacks: { label: ctx => fmt === 'value' ? '฿' + Number(ctx.raw).toLocaleString() : ctx.raw + ' units' }
+        }}
+    });
+
+    const chartRefs = {};
+    const chartData = {};
+
     // ── Team Donut ──
     @if($teamChart->count())
-    new Chart(document.getElementById('teamDonut'), {
+    chartData.team = {
+        value: @json($teamChart->pluck('total_value')->toArray()),
+        units: @json($teamChart->pluck('deal_count')->toArray()),
+        labels: @json($teamChart->pluck('team_name')->toArray()),
+        colors: colors.slice(0, {{ $teamChart->count() }})
+    };
+    chartRefs.team = new Chart(document.getElementById('teamDonut'), {
         type: 'doughnut',
         data: {
-            labels: @json($teamChart->pluck('team_name')->toArray()),
-            datasets: [{
-                data: @json($teamChart->pluck('total_value')->toArray()),
-                backgroundColor: colors.slice(0, {{ $teamChart->count() }}),
-                borderWidth: 0, hoverOffset: 4
-            }]
+            labels: chartData.team.labels,
+            datasets: [{ data: chartData.team.value, backgroundColor: chartData.team.colors, borderWidth: 0, hoverOffset: 4 }]
         },
-        options: {
-            responsive: true, maintainAspectRatio: true, cutout: '65%',
-            plugins: { legend: { display: false }, tooltip: {
-                backgroundColor: '#1a2e35', padding: 10, cornerRadius: 8,
-                callbacks: { label: ctx => '฿' + Number(ctx.raw).toLocaleString() }
-            }}
-        }
+        options: donutOpts('value')
     });
     @endif
 
     // ── Sale Donut ──
     @if($saleChart->count())
-    new Chart(document.getElementById('saleDonut'), {
+    chartData.person = {
+        value: @json($saleChart->take(8)->pluck('total_value')->toArray()),
+        units: @json($saleChart->take(8)->pluck('deal_count')->toArray()),
+        labels: @json($saleChart->take(8)->pluck('name')->toArray()),
+        colors: colors.slice(0, {{ min($saleChart->count(), 8) }})
+    };
+    chartRefs.person = new Chart(document.getElementById('saleDonut'), {
         type: 'doughnut',
         data: {
-            labels: @json($saleChart->take(8)->pluck('name')->toArray()),
+            labels: chartData.person.labels,
+            datasets: [{ data: chartData.person.value, backgroundColor: chartData.person.colors, borderWidth: 0, hoverOffset: 4 }]
+        },
+        options: donutOpts('value')
+    });
+    @endif
+
+    // ── Donut Toggle (Value / Units) ──
+    document.querySelectorAll('.donut-toggle').forEach(toggle => {
+        toggle.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const target = toggle.dataset.target; // 'team' or 'person'
+                const mode = this.dataset.mode;       // 'value' or 'units'
+
+                // Update active button
+                toggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update chart data
+                const chart = chartRefs[target];
+                const data = chartData[target];
+                if (chart && data) {
+                    chart.data.datasets[0].data = data[mode];
+                    chart.options.plugins.tooltip.callbacks.label = mode === 'value'
+                        ? ctx => '฿' + Number(ctx.raw).toLocaleString()
+                        : ctx => ctx.raw + ' units';
+                    chart.update();
+                }
+
+                // Update center text
+                const centerId = target === 'team' ? 'teamDonutCenter' : 'personDonutCenter';
+                const center = document.getElementById(centerId);
+                if (center) {
+                    center.querySelector('.donut-center-value').textContent = center.dataset[mode + 'Text'];
+                }
+
+                // Update list values
+                const listId = target === 'team' ? 'teamDonutList' : 'personDonutList';
+                document.querySelectorAll('#' + listId + ' .donut-item').forEach(item => {
+                    item.querySelector('.donut-value').textContent = item.dataset[mode + 'Text'];
+                });
+            });
+        });
+    });
+
+    // ── Nationality Donut ──
+    @php
+        $thaiNat = $nationalitySplit->get('Thai');
+        $foreignNat = $nationalitySplit->get('Foreign');
+        $natThaiCount = $thaiNat->deal_count ?? 0;
+        $natForeignCount = $foreignNat->deal_count ?? 0;
+    @endphp
+    @if(($natThaiCount + $natForeignCount) > 0)
+    new Chart(document.getElementById('natDonut'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Thai', 'Foreign'],
             datasets: [{
-                data: @json($saleChart->take(8)->pluck('total_value')->toArray()),
-                backgroundColor: colors.slice(0, {{ min($saleChart->count(), 8) }}),
+                data: [{{ $natThaiCount }}, {{ $natForeignCount }}],
+                backgroundColor: ['#2A8B92', '#7c3aed'],
                 borderWidth: 0, hoverOffset: 4
             }]
         },
         options: {
-            responsive: true, maintainAspectRatio: true, cutout: '65%',
+            responsive: true, maintainAspectRatio: true, cutout: '60%',
             plugins: { legend: { display: false }, tooltip: {
-                backgroundColor: '#1a2e35', padding: 10, cornerRadius: 8,
-                callbacks: { label: ctx => '฿' + Number(ctx.raw).toLocaleString() }
+                backgroundColor: '#1a2e35', padding: 10, cornerRadius: 8
             }}
         }
     });
@@ -438,6 +709,32 @@
                 backgroundColor: '#1a2e35', padding: 10, cornerRadius: 8
             }}
         }
+    });
+    @endif
+
+    // ── Payment × Nationality Donuts (Units + Value) ──
+    const payNatColors = ['#2A8B92', '#7c3aed', '#f79009', '#0ba5ec'];
+    const payNatLabels = ['Thai · Bank Loan', 'Thai · Cash', 'Foreign · Bank Loan', 'Foreign · Cash'];
+
+    @if($payNatTotalCnt > 0)
+    new Chart(document.getElementById('payNatUnitsDonut'), {
+        type: 'doughnut',
+        data: {
+            labels: payNatLabels,
+            datasets: [{ data: [{{ $thaiBankCnt }}, {{ $thaiCashCnt }}, {{ $forBankCnt }}, {{ $forCashCnt }}], backgroundColor: payNatColors, borderWidth: 0, hoverOffset: 4 }]
+        },
+        options: donutOpts('units')
+    });
+    @endif
+
+    @if($payNatTotalVal > 0)
+    new Chart(document.getElementById('payNatValueDonut'), {
+        type: 'doughnut',
+        data: {
+            labels: payNatLabels,
+            datasets: [{ data: [{{ $thaiBankVal }}, {{ $thaiCashVal }}, {{ $forBankVal }}, {{ $forCashVal }}], backgroundColor: payNatColors, borderWidth: 0, hoverOffset: 4 }]
+        },
+        options: donutOpts('value')
     });
     @endif
 
@@ -474,6 +771,13 @@
             }
         }
     });
+    // ── Export PDF button ──
+    document.getElementById('exportPdfBtn').href =
+        '{{ route("report.export-pdf") }}?month={{ $month }}&year={{ $year }}&view={{ $view }}'
+        + '&team_chart_month={{ $teamChartMonth }}&team_chart_year={{ $teamChartYear }}'
+        + '&person_chart_month={{ $personChartMonth }}&person_chart_year={{ $personChartYear }}'
+        @if($teamId) + '&team_id={{ $teamId }}' @endif
+    ;
 })();
 </script>
 @endsection
