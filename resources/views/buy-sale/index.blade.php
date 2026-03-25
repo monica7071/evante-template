@@ -435,14 +435,29 @@
                                             </a>
                                         </li>
                                     @else
+                                        @php
+                                            $blockAdvance = false;
+                                            if ($sale->status === 'installment') {
+                                                $inst = $sale->purchaseAgreement?->installments ?? collect();
+                                                $blockAdvance = $inst->isEmpty() || $inst->contains(fn($i) => !$i->proof_image);
+                                            }
+                                        @endphp
                                         <li>
-                                            <form action="{{ route('buy-sale.advance', $sale) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="dropdown-item">
-                                                    <i class="bi bi-arrow-right-circle me-2 text-success"></i>
+                                            @if($blockAdvance)
+                                                <button type="button" class="dropdown-item text-muted" disabled title="ต้องชำระค่างวดให้ครบทุกงวดก่อน">
+                                                    <i class="bi bi-lock me-2"></i>
                                                     Advance to {{ $nextLabel }}
+                                                    <span class="d-block small text-danger" style="margin-left:1.5rem;">ผ่อนยังไม่ครบ</span>
                                                 </button>
-                                            </form>
+                                            @else
+                                                <form action="{{ route('buy-sale.advance', $sale) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="bi bi-arrow-right-circle me-2 text-success"></i>
+                                                        Advance to {{ $nextLabel }}
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </li>
                                     @endif
                                 @endif

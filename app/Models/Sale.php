@@ -70,6 +70,11 @@ class Sale extends Model
         return $this->hasMany(StatusHistory::class);
     }
 
+    public function dealSlipApproval(): HasOne
+    {
+        return $this->hasOne(DealSlipApproval::class);
+    }
+
     protected static function booted(): void
     {
         static::creating(function ($sale) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DealSlipApproval;
 use App\Models\Listing;
 use App\Models\Location;
 use App\Models\Project;
@@ -12,6 +13,7 @@ use App\Models\SalePurchaseAgreement;
 use App\Models\SalePurchaseAgreementInstallment;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -74,7 +76,7 @@ class SalePipelineController extends Controller
         $unitType = $request->query('unit_type');
         $bedrooms = $request->query('bedrooms');
 
-        $query = Sale::with(['listing.project.location', 'user', 'purchaseAgreement', 'appointment'])
+        $query = Sale::with(['listing.project.location', 'user', 'purchaseAgreement.installments', 'appointment'])
             ->withSum('purchaseAgreementInstallments', 'amount_number');
 
         if ($status && array_key_exists($status, $this->statusFlow)) {
@@ -455,6 +457,17 @@ class SalePipelineController extends Controller
             }
         }
 
+        // Block advancing from installment → transferred if not all installments are paid
+        if ($sale->status === 'installment' && $nextStatus === 'transferred') {
+            $agreement = $sale->purchaseAgreement;
+            $installments = $agreement?->installments;
+            $allPaid = $installments && $installments->isNotEmpty() && $installments->every(fn($i) => $i->proof_image);
+
+            if (!$allPaid) {
+                return back()->with('error', 'ไม่สามารถเปลี่ยนสถานะได้ — ต้องชำระค่างวดให้ครบทุกงวดก่อน');
+            }
+        }
+
         if (!$isDraft) {
             $previousStatus = $sale->status;
             $sale->previous_status = $previousStatus;
@@ -488,7 +501,7 @@ class SalePipelineController extends Controller
             return redirect()->route('buy-sale.index')->with('error', 'Installment tracking is only available for installment stage.');
         }
 
-        $sale->load(['listing.project', 'purchaseAgreement.installments']);
+        $sale->load(['listing.project', 'purchaseAgreement.installments', 'dealSlipApproval']);
         $agreement = $sale->purchaseAgreement;
         $installments = $agreement?->installments()->orderBy('sequence')->get() ?? collect();
         $today = now()->startOfDay();
@@ -744,5 +757,80 @@ class SalePipelineController extends Controller
                 'witness_two_name' => data_get($source, 'contract_witness_two_name'),
             ],
         ];
+    }
+
+    public function dealSlip(Sale $sale)
+    {
+        $sale->load(['listing.project', 'dealSlipApproval.preparedBy', 'dealSlipApproval.checkedBy', 'dealSlipApproval.approvedBy']);
+
+        return view('buy-sale.deal-slip', [
+            'sale' => $sale,
+            'approval' => $sale->dealSlipApproval,
+        ]);
+    }
+
+    public function dealSlipAction(Request $request, Sale $sale): JsonResponse
+    {
+        $request->validate([
+            'action' => 'required|in:prepare,check,approve',
+            'signer_name' => 'required|string|max:255',
+            'signature_data' => 'required|string',
+        ]);
+
+        $action = $request->input('action');
+        $user = $request->user();
+        $signerName = $request->input('signer_name');
+        $signatureData = $request->input('signature_data');
+
+        if ($action === 'prepare') {
+            $approval = DealSlipApproval::updateOrCreate(
+                ['sale_id' => $sale->id],
+                [
+                    'status' => 'prepare',
+                    'prepared_by' => $user->id,
+                    'prepared_name' => $signerName,
+                    'prepared_signature' => $signatureData,
+                    'prepared_at' => now(),
+                ]
+            );
+        } elseif ($action === 'check') {
+            $approval = $sale->dealSlipApproval;
+            if (!$approval || $approval->status !== 'prepare') {
+                return response()->json(['message' => 'ต้องเริ่มดำเนินการก่อน'], 422);
+            }
+            $approval->update([
+                'status' => 'check',
+                'checked_by' => $user->id,
+                'checked_name' => $signerName,
+                'checked_signature' => $signatureData,
+                'checked_at' => now(),
+            ]);
+        } elseif ($action === 'approve') {
+            if (!$user->isSalesManager() && !$user->isSuperAdmin() && !$user->isAdmin()) {
+                return response()->json(['message' => 'เฉพาะ Sales Manager เท่านั้น'], 403);
+            }
+            $approval = $sale->dealSlipApproval;
+            if (!$approval || $approval->status !== 'check') {
+                return response()->json(['message' => 'ต้องส่งตรวจสอบก่อน'], 422);
+            }
+            $approval->update([
+                'status' => 'approved',
+                'approved_by' => $user->id,
+                'approved_name' => $signerName,
+                'approved_signature' => $signatureData,
+                'approved_at' => now(),
+            ]);
+        }
+
+        $approval->load(['preparedBy', 'checkedBy', 'approvedBy']);
+
+        return response()->json([
+            'success' => true,
+            'approval' => array_merge($approval->toArray(), [
+                'prepared_by_user' => $approval->preparedBy ? ['name' => $approval->preparedBy->name] : null,
+                'checked_by_user' => $approval->checkedBy ? ['name' => $approval->checkedBy->name] : null,
+                'approved_by_user' => $approval->approvedBy ? ['name' => $approval->approvedBy->name] : null,
+            ]),
+        ]);
     }
 }
