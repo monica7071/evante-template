@@ -2,23 +2,14 @@
 
 namespace App\Models;
 
-use App\Scopes\OrganizationScope;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Team extends Model
 {
-    protected static function booted(): void
-    {
-        static::addGlobalScope(new OrganizationScope());
-
-        static::creating(function ($model) {
-            if (auth()->check() && !auth()->user()->isSuperAdmin() && empty($model->organization_id)) {
-                $model->organization_id = auth()->user()->organization_id;
-            }
-        });
-    }
+    use BelongsToOrganization;
 
     protected $fillable = [
         'name', 'name_th', 'description', 'leader_id', 'parent_team_id', 'is_active',

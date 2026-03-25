@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Scopes\OrganizationScope;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Sale extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
         'listing_id',
         'user_id',
@@ -70,18 +72,11 @@ class Sale extends Model
 
     protected static function booted(): void
     {
-        static::addGlobalScope(new OrganizationScope());
-
         static::creating(function ($sale) {
             // Auto-generate sale number
             $today = now()->format('Ymd');
             $count = static::whereDate('created_at', today())->count() + 1;
             $sale->sale_number = 'SL-' . $today . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
-
-            // Auto-assign organization_id
-            if (auth()->check() && !auth()->user()->isSuperAdmin() && empty($sale->organization_id)) {
-                $sale->organization_id = auth()->user()->organization_id;
-            }
         });
     }
 }

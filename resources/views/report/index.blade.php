@@ -540,6 +540,83 @@
     </div>
 
     {{-- ══════════════════════════════════════════════════════ --}}
+    {{-- ── MARKETING BUDGET ────────────────────────────────── --}}
+    <div class="category-header"><i class="bi bi-megaphone"></i> Marketing Budget</div>
+
+    {{-- Summary Cards --}}
+    <div class="cust-cards" id="budgetSummaryCards" style="{{ $budgets->count() ? '' : 'display:none;' }}">
+        <div class="cust-card" style="background: rgba(42,139,146,0.04);">
+            <div class="cust-card-value" style="color: var(--primary);" id="summaryOnline">฿{{ number_format($budgets->sum('budget_marketing_online'), 0) }}</div>
+            <div class="cust-card-label">Total Online Budget</div>
+        </div>
+        <div class="cust-card" style="background: rgba(124,58,237,0.04);">
+            <div class="cust-card-value" style="color: #7c3aed;" id="summaryOffline">฿{{ number_format($budgets->sum('budget_marketing_offline'), 0) }}</div>
+            <div class="cust-card-label">Total Offline Budget</div>
+        </div>
+        <div class="cust-card" style="background: rgba(247,144,9,0.04);">
+            <div class="cust-card-value" style="color: #f79009;" id="summaryTotal">฿{{ number_format($budgets->sum('budget_marketing_online') + $budgets->sum('budget_marketing_offline'), 0) }}</div>
+            <div class="cust-card-label">Total Budget</div>
+        </div>
+    </div>
+
+    {{-- Weekly Budget Table --}}
+    <div class="section-card">
+        <div class="section-card-header">
+            <i class="bi bi-cash-stack"></i> Weekly Marketing Budget
+            <span style="font-size: 0.72rem; font-weight: 400; color: var(--text-light); margin-left: auto;">
+                {{ $monthLabel }}
+            </span>
+        </div>
+        <div class="section-card-body">
+            {{-- Toast --}}
+            <div id="budgetToast" style="display:none; font-size: 0.82rem; padding: 0.5rem 1rem; margin-bottom: 1rem; border-radius: var(--radius-sm); background: rgba(18,183,106,0.08); color: #059669; border: 1px solid rgba(18,183,106,0.2);"></div>
+
+            {{-- Table container (rendered by JS) --}}
+            <div id="budgetTableWrap"></div>
+
+            {{-- Add / Edit Form --}}
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem;" id="budgetFormTitle">
+                <i class="bi bi-plus-circle" style="color: var(--primary);"></i> เพิ่ม Budget รายสัปดาห์
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-mid); margin-bottom: 4px; display: block;">สัปดาห์</label>
+                    <select id="budgetWeek" class="form-select" style="font-size: 0.85rem;">
+                        <option value="1">Week 1</option>
+                        <option value="2">Week 2</option>
+                        <option value="3">Week 3</option>
+                        <option value="4">Week 4</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-mid); margin-bottom: 4px; display: block;">
+                        <i class="bi bi-globe" style="color: var(--primary);"></i> Online (฿)
+                    </label>
+                    <input type="number" step="0.01" min="0" id="budgetOnline" class="form-control" style="font-size: 0.85rem;" placeholder="0.00">
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-mid); margin-bottom: 4px; display: block;">
+                        <i class="bi bi-shop" style="color: #7c3aed;"></i> Offline (฿)
+                    </label>
+                    <input type="number" step="0.01" min="0" id="budgetOffline" class="form-control" style="font-size: 0.85rem;" placeholder="0.00">
+                </div>
+            </div>
+
+            <div style="margin-top: 0.75rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" id="budgetCancelBtn" class="btn btn-sm" style="font-size: 0.82rem; padding: 0.4rem 1rem; border: 1px solid var(--border); color: var(--text-mid); border-radius: var(--radius-sm); background: transparent; display: none;"
+                        onclick="budgetCancel()">
+                    Cancel
+                </button>
+                <button type="button" id="budgetSaveBtn" class="btn btn-sm" style="background: var(--primary); color: #fff; font-size: 0.82rem; font-weight: 600; padding: 0.4rem 1.25rem; border-radius: var(--radius-sm);"
+                        onclick="budgetSave()">
+                    <i class="bi bi-check-lg"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════ --}}
     {{-- ── PRODUCTION ─────────────────────────────────────── --}}
     <div class="category-header"><i class="bi bi-graph-up-arrow"></i> Production</div>
 
@@ -778,6 +855,147 @@
         + '&person_chart_month={{ $personChartMonth }}&person_chart_year={{ $personChartYear }}'
         @if($teamId) + '&team_id={{ $teamId }}' @endif
     ;
+    // ── Budget AJAX ──
+    const budgetState = { budgets: @json($budgets), editing: false };
+    const csrfToken = '{{ csrf_token() }}';
+    const budgetYear = {{ $year }};
+    const budgetMonth = {{ $month }};
+
+    function fmt(n) { return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+    function renderBudgetTable() {
+        const b = budgetState.budgets;
+        const wrap = document.getElementById('budgetTableWrap');
+        const cards = document.getElementById('budgetSummaryCards');
+
+        if (!b.length) { wrap.innerHTML = ''; cards.style.display = 'none'; budgetUpdateWeekOpts(); return; }
+
+        const totOn = b.reduce((s, r) => s + parseFloat(r.budget_marketing_online), 0);
+        const totOff = b.reduce((s, r) => s + parseFloat(r.budget_marketing_offline), 0);
+
+        cards.style.display = '';
+        document.getElementById('summaryOnline').textContent = '฿' + fmt(totOn);
+        document.getElementById('summaryOffline').textContent = '฿' + fmt(totOff);
+        document.getElementById('summaryTotal').textContent = '฿' + fmt(totOn + totOff);
+
+        const thStyle = 'font-size:0.72rem;text-transform:uppercase;color:var(--text-light);font-weight:700;';
+        let html = `<table class="table table-sm" style="font-size:0.82rem;margin-bottom:1.25rem;">
+            <thead><tr style="border-bottom:2px solid var(--border);">
+                <th style="${thStyle}">Week</th>
+                <th class="text-right" style="${thStyle}">Online (฿)</th>
+                <th class="text-right" style="${thStyle}">Offline (฿)</th>
+                <th class="text-right" style="${thStyle}">Total (฿)</th>
+                <th style="width:80px;"></th>
+            </tr></thead><tbody>`;
+
+        b.forEach(r => {
+            const on = parseFloat(r.budget_marketing_online);
+            const off = parseFloat(r.budget_marketing_offline);
+            html += `<tr>
+                <td style="font-weight:600;">Week ${r.week}</td>
+                <td class="text-right">${fmt(on)}</td>
+                <td class="text-right">${fmt(off)}</td>
+                <td class="text-right" style="font-weight:700;">${fmt(on + off)}</td>
+                <td class="text-right">
+                    <button type="button" class="btn btn-sm" style="font-size:0.72rem;padding:0.15rem 0.5rem;border:1px solid var(--primary);color:var(--primary);border-radius:var(--radius-sm);background:transparent;margin-right:2px;"
+                            onclick="budgetEdit(${r.week},${on},${off})"><i class="bi bi-pencil"></i></button>
+                    <button type="button" class="btn btn-sm" style="font-size:0.72rem;padding:0.15rem 0.5rem;border:1px solid #dc3545;color:#dc3545;border-radius:var(--radius-sm);background:transparent;"
+                            onclick="budgetDelete(${r.id},${r.week})"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+
+        html += `<tr style="border-top:2px solid var(--border);">
+            <td style="font-weight:700;">Total</td>
+            <td class="text-right" style="font-weight:700;">${fmt(totOn)}</td>
+            <td class="text-right" style="font-weight:700;">${fmt(totOff)}</td>
+            <td class="text-right" style="font-weight:700;">${fmt(totOn + totOff)}</td>
+            <td></td></tr></tbody></table>`;
+
+        wrap.innerHTML = html;
+        budgetUpdateWeekOpts();
+    }
+
+    function budgetUpdateWeekOpts() {
+        const sel = document.getElementById('budgetWeek');
+        const used = budgetState.budgets.map(r => r.week);
+        Array.from(sel.options).forEach(opt => {
+            const w = parseInt(opt.value);
+            opt.disabled = used.includes(w) && !budgetState.editing;
+            opt.textContent = 'Week ' + w + (used.includes(w) && !budgetState.editing ? ' (บันทึกแล้ว)' : '');
+        });
+        if (!budgetState.editing) {
+            const first = Array.from(sel.options).find(o => !o.disabled);
+            if (first) sel.value = first.value;
+        }
+    }
+
+    function budgetShowToast(msg) {
+        const t = document.getElementById('budgetToast');
+        t.textContent = msg; t.style.display = '';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    window.budgetSave = async function() {
+        const btn = document.getElementById('budgetSaveBtn');
+        btn.disabled = true;
+        try {
+            const res = await fetch('{{ route("report.save-budget") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    year: budgetYear, month: budgetMonth,
+                    week: document.getElementById('budgetWeek').value,
+                    budget_marketing_online: document.getElementById('budgetOnline').value || 0,
+                    budget_marketing_offline: document.getElementById('budgetOffline').value || 0,
+                })
+            });
+            const data = await res.json();
+            budgetState.budgets = data.budgets;
+            budgetState.editing = false;
+            renderBudgetTable();
+            budgetCancel();
+            budgetShowToast('บันทึก Budget สำเร็จ');
+        } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+        btn.disabled = false;
+    };
+
+    window.budgetDelete = async function(id, week) {
+        if (!confirm('ลบ Budget สัปดาห์ที่ ' + week + '?')) return;
+        try {
+            const res = await fetch('/report/budget/' + id, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            });
+            const data = await res.json();
+            budgetState.budgets = data.budgets;
+            renderBudgetTable();
+            budgetShowToast('ลบ Budget สำเร็จ');
+        } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+    };
+
+    window.budgetEdit = function(week, online, offline) {
+        budgetState.editing = true;
+        const sel = document.getElementById('budgetWeek');
+        Array.from(sel.options).forEach(opt => { opt.disabled = false; opt.textContent = 'Week ' + opt.value; });
+        sel.value = week;
+        document.getElementById('budgetOnline').value = online;
+        document.getElementById('budgetOffline').value = offline;
+        document.getElementById('budgetFormTitle').innerHTML = '<i class="bi bi-pencil" style="color: var(--primary);"></i> แก้ไข Budget สัปดาห์ที่ ' + week;
+        document.getElementById('budgetCancelBtn').style.display = '';
+    };
+
+    window.budgetCancel = function() {
+        budgetState.editing = false;
+        document.getElementById('budgetOnline').value = '';
+        document.getElementById('budgetOffline').value = '';
+        document.getElementById('budgetFormTitle').innerHTML = '<i class="bi bi-plus-circle" style="color: var(--primary);"></i> เพิ่ม Budget รายสัปดาห์';
+        document.getElementById('budgetCancelBtn').style.display = 'none';
+        budgetUpdateWeekOpts();
+    };
+
+    // Initial render
+    renderBudgetTable();
 })();
 </script>
 @endsection

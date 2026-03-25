@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ReportBudget;
 use App\Models\Team;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -15,6 +16,11 @@ class ReportController extends Controller
         $filters = $this->parseFilters($request);
         $data = $this->buildReportData($filters);
 
+        $budgets = ReportBudget::where('year', $filters['year'])
+            ->where('month', $filters['month'])
+            ->orderBy('week')
+            ->get();
+
         return view('report.index', array_merge($data, [
             'teams' => Team::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'filters' => $filters,
@@ -24,7 +30,48 @@ class ReportController extends Controller
             'teamChartYear' => $filters['teamChartYear'],
             'personChartMonth' => $filters['personChartMonth'],
             'personChartYear' => $filters['personChartYear'],
+            'budgets' => $budgets,
         ]));
+    }
+
+    public function saveBudget(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|integer|min:2020|max:2099',
+            'month' => 'required|integer|min:1|max:12',
+            'week' => 'required|integer|min:1|max:4',
+            'budget_marketing_online' => 'nullable|numeric|min:0',
+            'budget_marketing_offline' => 'nullable|numeric|min:0',
+        ]);
+
+        ReportBudget::updateOrCreate(
+            ['year' => $request->year, 'month' => $request->month, 'week' => $request->week],
+            [
+                'budget_marketing_online' => $request->budget_marketing_online ?? 0,
+                'budget_marketing_offline' => $request->budget_marketing_offline ?? 0,
+            ]
+        );
+
+        $budgets = ReportBudget::where('year', $request->year)
+            ->where('month', $request->month)
+            ->orderBy('week')
+            ->get();
+
+        return response()->json(['budgets' => $budgets]);
+    }
+
+    public function deleteBudget(Request $request, ReportBudget $budget)
+    {
+        $year = $budget->year;
+        $month = $budget->month;
+        $budget->delete();
+
+        $budgets = ReportBudget::where('year', $year)
+            ->where('month', $month)
+            ->orderBy('week')
+            ->get();
+
+        return response()->json(['budgets' => $budgets]);
     }
 
     public function exportPdf(Request $request)
@@ -34,10 +81,16 @@ class ReportController extends Controller
 
         $monthLabel = Carbon::create($filters['year'], $filters['month'])->format('M Y');
 
+        $budgets = ReportBudget::where('year', $filters['year'])
+            ->where('month', $filters['month'])
+            ->orderBy('week')
+            ->get();
+
         $pdf = Pdf::loadView('report.pdf', array_merge($data, [
             'filters' => $filters,
             'monthLabel' => $monthLabel,
             'year' => $filters['year'],
+            'budgets' => $budgets,
         ]));
 
         // Register Sarabun Thai font

@@ -378,6 +378,48 @@
         @endforeach
     </div>
 
+    <div class="category-title">📣 Marketing Budget</div>
+
+    {{-- Marketing Budget --}}
+    <div class="section">
+        <div class="section-title">Weekly Marketing Budget</div>
+        @if($budgets->count())
+            @php
+                $totalOnline = $budgets->sum('budget_marketing_online');
+                $totalOffline = $budgets->sum('budget_marketing_offline');
+                $totalBudgetAll = $totalOnline + $totalOffline;
+            @endphp
+            <table>
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th class="text-right">Online (฿)</th>
+                        <th class="text-right">Offline (฿)</th>
+                        <th class="text-right">Total (฿)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($budgets as $b)
+                        <tr>
+                            <td>Week {{ $b->week }}</td>
+                            <td class="text-right">{{ number_format($b->budget_marketing_online, 0) }}</td>
+                            <td class="text-right">{{ number_format($b->budget_marketing_offline, 0) }}</td>
+                            <td class="text-right font-bold">{{ number_format($b->budget_marketing_online + $b->budget_marketing_offline, 0) }}</td>
+                        </tr>
+                    @endforeach
+                    <tr style="border-top: 2px solid #999;">
+                        <td class="font-bold">Total</td>
+                        <td class="text-right font-bold">{{ number_format($totalOnline, 0) }}</td>
+                        <td class="text-right font-bold">{{ number_format($totalOffline, 0) }}</td>
+                        <td class="text-right font-bold">{{ number_format($totalBudgetAll, 0) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        @else
+            <p style="color: #999;">No budget data for this period</p>
+        @endif
+    </div>
+
     <div class="category-title">📈 Production</div>
 
     {{-- 6. Production (yearly) --}}

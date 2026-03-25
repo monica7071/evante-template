@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SalePurchaseAgreementInstallment extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
         'sale_purchase_agreement_id',
         'sequence',

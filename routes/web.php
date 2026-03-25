@@ -63,6 +63,9 @@ Route::get('/questionnaire/thank-you', [QuestionnaireController::class, 'thankYo
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/report', [ReportController::class, 'index'])->name('report.index');
+    Route::get('/report/export-pdf', [ReportController::class, 'exportPdf'])->name('report.export-pdf');
+    Route::post('/report/budget', [ReportController::class, 'saveBudget'])->name('report.save-budget');
+    Route::delete('/report/budget/{budget}', [ReportController::class, 'deleteBudget'])->name('report.delete-budget');
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 
