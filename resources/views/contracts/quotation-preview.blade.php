@@ -5,7 +5,7 @@
 @section('styles')
 <style>
     #pdf-wrapper { position: relative; display: inline-block; }
-    #pdf-canvas { display: block; border: none; border-radius: 4px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); }
+    #pdf-canvas { display: block; border: none; border-radius: 4px; box-shadow: 0 4px 24px rgba(0,0,0,0.1); max-width: none !important; }
     #pdf-container { overflow: auto; background: var(--cream-dark); border-radius: 0 0 var(--radius) var(--radius); padding: 24px !important; }
     #marker-overlay {
         position: absolute;
@@ -66,7 +66,7 @@
 
     let pdfDoc = null;
     let currentPage = 1;
-    const BASE_SCALE = 1;
+    const BASE_SCALE = 96 / 72; // match screen DPI (96) to PDF DPI (72)
     let scale = BASE_SCALE;
 
     const canvas = document.getElementById('pdf-canvas');
@@ -89,6 +89,8 @@
             const viewport = page.getViewport({ scale: scale });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
+            canvas.style.width = viewport.width + 'px';
+            canvas.style.height = viewport.height + 'px';
             pdfWrapper.style.width = viewport.width + 'px';
             pdfWrapper.style.height = viewport.height + 'px';
 

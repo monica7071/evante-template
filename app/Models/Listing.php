@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Scopes\OrganizationScope;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,16 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Listing extends Model
 {
-    protected static function booted(): void
-    {
-        static::addGlobalScope(new OrganizationScope());
-
-        static::creating(function ($model) {
-            if (auth()->check() && !auth()->user()->isSuperAdmin() && empty($model->organization_id)) {
-                $model->organization_id = auth()->user()->organization_id;
-            }
-        });
-    }
+    use BelongsToOrganization;
 
     protected $fillable = [
         'location_id',
@@ -38,9 +29,11 @@ class Listing extends Model
         'reservation_deposit',
         'contract_payment',
         'installment_15_terms',
+        'installment_15_terms_en',
         'installment_12_terms',
         'special_installment_3_terms',
         'transfer_amount',
+        'transfer_amount_en',
         'transfer_fee',
         'annual_common_fee',
         'sinking_fund',
@@ -57,9 +50,11 @@ class Listing extends Model
         'reservation_deposit' => 'decimal:2',
         'contract_payment' => 'decimal:2',
         'installment_15_terms' => 'decimal:2',
+        'installment_15_terms_en' => 'decimal:2',
         'installment_12_terms' => 'decimal:2',
         'special_installment_3_terms' => 'decimal:2',
         'transfer_amount' => 'decimal:2',
+        'transfer_amount_en' => 'decimal:2',
         'transfer_fee' => 'decimal:2',
         'annual_common_fee' => 'decimal:2',
         'sinking_fund' => 'decimal:2',

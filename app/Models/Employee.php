@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use App\Scopes\OrganizationScope;
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToOrganization;
 
     protected $fillable = [
         'employee_code', 'user_id', 'prefix', 'first_name', 'last_name',
@@ -54,18 +54,11 @@ class Employee extends Model
 
     protected static function booted(): void
     {
-        static::addGlobalScope(new OrganizationScope());
-
         static::creating(function ($employee) {
             // Auto-generate employee code
             if (empty($employee->employee_code)) {
                 $count = static::withTrashed()->count() + 1;
                 $employee->employee_code = 'EMP-' . str_pad($count, 5, '0', STR_PAD_LEFT);
-            }
-
-            // Auto-assign organization_id
-            if (auth()->check() && !auth()->user()->isSuperAdmin() && empty($employee->organization_id)) {
-                $employee->organization_id = auth()->user()->organization_id;
             }
         });
     }

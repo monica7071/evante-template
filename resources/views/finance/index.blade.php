@@ -11,6 +11,7 @@
     .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     @media (max-width: 1199px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 575px) { .kpi-grid { grid-template-columns: 1fr; } }
+    @media (min-width: 480px) and (max-width: 575px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
     .kpi-mini {
         background: var(--surface); border: 1px solid var(--border);
         border-radius: var(--radius); padding: 1rem 1.25rem;
@@ -31,6 +32,9 @@
     }
     .section-card-header i { color: var(--primary); font-size: 1rem; }
     .section-card-body { padding: 1.25rem; }
+    @media (max-width: 768px) {
+        .section-card-header { flex-wrap: wrap; gap: 0.4rem; }
+    }
 
     /* Year nav */
     .year-nav {
@@ -114,6 +118,48 @@
         text-align: center; padding: 2rem 1rem; color: var(--text-light); font-size: 0.85rem;
     }
     .empty-state i { font-size: 1.75rem; display: block; margin-bottom: 0.5rem; }
+
+    /* Transfer readiness */
+    .transfer-kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+    @media (max-width: 991px) { .transfer-kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 575px) { .transfer-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    .transfer-kpi {
+        text-align: center; padding: 0.85rem 0.5rem;
+        border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface);
+    }
+    .transfer-kpi-value { font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
+    .transfer-kpi-label { font-size: 0.7rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; margin-top: 2px; }
+
+    .transfer-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .transfer-table th {
+        text-align: left; padding: 0.6rem 0.75rem; font-size: 0.7rem; font-weight: 700;
+        text-transform: uppercase; color: var(--text-light); border-bottom: 2px solid var(--border);
+    }
+    .transfer-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: middle; }
+    .transfer-table tr:hover td { background: rgba(42,139,146,0.02); }
+
+    .badge-readiness {
+        display: inline-block; padding: 2px 8px; border-radius: 10px;
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    }
+    .badge-approved { background: #d1fae5; color: #065f46; }
+    .badge-on_process { background: #fef3c7; color: #92400e; }
+    .badge-not_ready { background: #f3f4f6; color: #6b7280; }
+
+    .badge-payment {
+        display: inline-block; padding: 2px 8px; border-radius: 10px;
+        font-size: 0.7rem; font-weight: 700;
+    }
+    .badge-bank_loan { background: #dbeafe; color: #1e40af; }
+    .badge-cash { background: #ede9fe; color: #5b21b6; }
+
+    .btn-edit-transfer {
+        border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-sm);
+        padding: 4px 10px; font-size: 0.75rem; cursor: pointer; color: var(--text-mid); transition: all 0.15s;
+    }
+    .btn-edit-transfer:hover { border-color: var(--primary); color: var(--primary); }
+
+    .table-responsive-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 </style>
 @endsection
 
@@ -241,6 +287,173 @@
             </div>
         @endif
     </div>
+
+    {{-- ── Transfer Readiness ──────────────────────────────────── --}}
+    <div class="section-card">
+        <div class="section-card-header">
+            <i class="bi bi-arrow-left-right"></i> Transfer Readiness ({{ $year }})
+        </div>
+        <div class="section-card-body">
+            <div class="transfer-kpi-grid" style="margin-bottom: 1.25rem;">
+                <div class="transfer-kpi">
+                    <div class="transfer-kpi-value" style="color: var(--text-dark);">{{ $transferStats->total }}</div>
+                    <div class="transfer-kpi-label">Total Customers</div>
+                </div>
+                <div class="transfer-kpi">
+                    <div class="transfer-kpi-value" style="color: #059669;">{{ $transferStats->approved }}</div>
+                    <div class="transfer-kpi-label">Approved</div>
+                </div>
+                <div class="transfer-kpi">
+                    <div class="transfer-kpi-value" style="color: #d97706;">{{ $transferStats->on_process }}</div>
+                    <div class="transfer-kpi-label">On Process</div>
+                </div>
+                <div class="transfer-kpi">
+                    <div class="transfer-kpi-value" style="color: #2563eb;">{{ $transferStats->bank_loan }}</div>
+                    <div class="transfer-kpi-label">Bank Loan</div>
+                </div>
+                <div class="transfer-kpi">
+                    <div class="transfer-kpi-value" style="color: #7c3aed;">{{ $transferStats->cash }}</div>
+                    <div class="transfer-kpi-label">Cash</div>
+                </div>
+            </div>
+
+            @if($transferCustomers->count())
+                <div class="table-responsive-wrapper">
+                    <table class="transfer-table">
+                        <thead>
+                            <tr>
+                                <th>Buyer</th>
+                                <th>Unit</th>
+                                <th>Project</th>
+                                <th>Payment Type</th>
+                                <th>Readiness</th>
+                                <th>Bank / Details</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($transferCustomers as $tc)
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700;">{{ trim($tc->customer_name) ?: '—' }}</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-light);">{{ $tc->salesperson }}</div>
+                                    </td>
+                                    <td>{{ $tc->unit_code }}</td>
+                                    <td style="font-size: 0.78rem;">{{ $tc->project_name }}</td>
+                                    <td>
+                                        <span class="badge-payment badge-{{ $tc->transfer_payment_type }}">
+                                            {{ $tc->transfer_payment_type === 'bank_loan' ? 'Bank Loan' : 'Cash' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($tc->transfer_readiness)
+                                            <span class="badge-readiness badge-{{ $tc->transfer_readiness }}">
+                                                {{ str_replace('_', ' ', $tc->transfer_readiness) }}
+                                            </span>
+                                        @else
+                                            <span class="badge-readiness badge-not_ready">Not Ready</span>
+                                        @endif
+                                    </td>
+                                    <td style="font-size: 0.78rem;">
+                                        @if($tc->transfer_payment_type === 'bank_loan' && $tc->bank_name)
+                                            <div>{{ $tc->bank_name }}</div>
+                                            @if($tc->loan_amount)
+                                                <div style="color: var(--text-light);">วงเงิน ฿{{ number_format($tc->loan_amount, 0) }}</div>
+                                            @endif
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-edit-transfer" onclick="openTransferModal({{ json_encode($tc) }})">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    No customers in installment/transferred status for {{ $year }}.
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- Transfer Modal --}}
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" style="font-size: 0.95rem; font-weight: 700;">Transfer Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="transferForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="tf_sale_id">
+                        <input type="hidden" id="tf_payment_type">
+
+                        {{-- Header info --}}
+                        <div style="background: #f8fafc; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem;">
+                            <div style="font-size: 0.78rem; color: var(--text-light);">Buyer</div>
+                            <div style="font-weight: 700; font-size: 0.9rem;" id="tf_buyer_name">—</div>
+                            <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 2px;">
+                                <span id="tf_unit_code"></span> &middot; <span id="tf_project_name"></span>
+                            </div>
+                            <div style="margin-top: 0.5rem;">
+                                <span class="badge-payment" id="tf_payment_badge"></span>
+                            </div>
+                        </div>
+
+                        {{-- Readiness --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" style="font-size: 0.82rem;">สถานะความพร้อมโอน</label>
+                            <select class="form-select form-select-sm" id="tf_readiness">
+                                <option value="not_ready">Not Ready</option>
+                                <option value="on_process">On Process</option>
+                                <option value="approved">Approved</option>
+                            </select>
+                        </div>
+
+                        {{-- Bank Loan fields --}}
+                        <div id="bankFields" style="display: none;">
+                            <hr style="margin: 1rem 0; border-color: var(--border);">
+                            <div style="font-weight: 700; font-size: 0.82rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="bi bi-bank"></i> ข้อมูลสินเชื่อ
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" style="font-size: 0.82rem;">ธนาคาร</label>
+                                <input type="text" class="form-control form-control-sm" id="tf_bank_name" placeholder="เช่น ธนาคารกสิกรไทย">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" style="font-size: 0.82rem;">วงเงินที่อนุมัติ</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" id="tf_loan_amount" placeholder="0.00">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" style="font-size: 0.82rem;">ยอดจัดกู้จริง</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" id="tf_actual_loan" placeholder="0.00">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" style="font-size: 0.82rem;">ส่วนต่างที่ลูกค้าต้องจ่ายเพิ่ม</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" id="tf_extra_payment" placeholder="0.00" readonly style="background: #f9fafb;">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" style="font-size: 0.82rem;">วันที่แบงค์อนุมัติ</label>
+                                <input type="date" class="form-control form-control-sm" id="tf_approved_at">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary" id="tf_submit_btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
@@ -302,6 +515,97 @@
         const deals = header.nextElementSibling;
         deals.classList.toggle('open');
     };
+
+    // ── Transfer Modal ──────────────────────────────────────
+    const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
+    let currentRoomPrice = 0;
+
+    window.openTransferModal = function(tc) {
+        const paymentType = tc.transfer_payment_type || tc.default_transfer_payment_type || 'cash';
+        const isBankLoan = paymentType === 'bank_loan';
+
+        document.getElementById('tf_sale_id').value = tc.sale_id;
+        document.getElementById('tf_payment_type').value = paymentType;
+        document.getElementById('tf_readiness').value = tc.transfer_readiness || 'not_ready';
+
+        // Header info
+        document.getElementById('tf_buyer_name').textContent = (tc.customer_name || '').trim() || '—';
+        document.getElementById('tf_unit_code').textContent = tc.unit_code || '';
+        document.getElementById('tf_project_name').textContent = tc.project_name || '';
+
+        const badge = document.getElementById('tf_payment_badge');
+        badge.textContent = isBankLoan ? 'Bank Loan' : 'Cash';
+        badge.className = 'badge-payment badge-' + paymentType;
+
+        // Bank fields
+        document.getElementById('tf_bank_name').value = tc.bank_name || '';
+        document.getElementById('tf_loan_amount').value = tc.loan_amount || '';
+        document.getElementById('tf_actual_loan').value = tc.actual_loan_amount || '';
+        document.getElementById('tf_extra_payment').value = tc.customer_extra_payment || '';
+        document.getElementById('tf_approved_at').value = tc.bank_approved_at ? tc.bank_approved_at.substring(0, 10) : '';
+
+        currentRoomPrice = parseFloat(tc.price_per_room) || 0;
+
+        // Show/hide bank fields based on auto-detected payment type
+        document.getElementById('bankFields').style.display = isBankLoan ? 'block' : 'none';
+
+        transferModal.show();
+    };
+
+    // Auto-calculate ส่วนต่าง = ราคาห้อง - ยอดจัดกู้จริง
+    document.getElementById('tf_actual_loan').addEventListener('input', function() {
+        const actualLoan = parseFloat(this.value) || 0;
+        const extra = currentRoomPrice > 0 ? Math.max(0, currentRoomPrice - actualLoan) : 0;
+        document.getElementById('tf_extra_payment').value = extra > 0 ? extra.toFixed(2) : '';
+    });
+
+    document.getElementById('transferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const saleId = document.getElementById('tf_sale_id').value;
+        const paymentType = document.getElementById('tf_payment_type').value;
+        const btn = document.getElementById('tf_submit_btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        const body = {
+            transfer_payment_type: paymentType,
+            transfer_readiness: document.getElementById('tf_readiness').value,
+        };
+
+        if (paymentType === 'bank_loan') {
+            body.bank_name = document.getElementById('tf_bank_name').value || null;
+            body.loan_amount = document.getElementById('tf_loan_amount').value || null;
+            body.actual_loan_amount = document.getElementById('tf_actual_loan').value || null;
+            body.customer_extra_payment = document.getElementById('tf_extra_payment').value || null;
+            body.bank_approved_at = document.getElementById('tf_approved_at').value || null;
+        }
+
+        fetch(`/finance/transfer/${saleId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(body),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                transferModal.hide();
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error saving transfer details.');
+                btn.disabled = false;
+                btn.textContent = 'Save';
+            }
+        })
+        .catch(() => {
+            alert('Network error. Please try again.');
+            btn.disabled = false;
+            btn.textContent = 'Save';
+        });
+    });
 })();
 </script>
 @endsection

@@ -30,8 +30,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\ReservationSignatureController;
+use App\Http\Controllers\QuestionnaireController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\SuperAdminOrganizationController;
+use App\Http\Controllers\SuperAdmin\SuperAdminPlanController;
 use App\Http\Controllers\SuperAdmin\SuperAdminUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,11 +54,20 @@ Route::redirect('/', '/dashboard');
 // Public listing view (no auth required)
 Route::get('/listing/{unit}', [PublicListingController::class, 'show'])->name('public.listing.show');
 
+// Public questionnaire (no auth required)
+Route::get('/questionnaire', [QuestionnaireController::class, 'create'])->name('questionnaire.create');
+Route::post('/questionnaire', [QuestionnaireController::class, 'store'])->name('questionnaire.store');
+Route::get('/questionnaire/thank-you', [QuestionnaireController::class, 'thankYou'])->name('questionnaire.thank-you');
+
 // All protected routes
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/report', [ReportController::class, 'index'])->name('report.index');
+    Route::get('/report/export-pdf', [ReportController::class, 'exportPdf'])->name('report.export-pdf');
+    Route::post('/report/budget', [ReportController::class, 'saveBudget'])->name('report.save-budget');
+    Route::delete('/report/budget/{budget}', [ReportController::class, 'deleteBudget'])->name('report.delete-budget');
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+    Route::post('/finance/transfer/{sale}', [FinanceController::class, 'storeTransfer'])->name('finance.transfer.store');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 
     // Profile
@@ -91,6 +103,14 @@ Route::middleware('auth')->group(function () {
         ->name('contracts.reservation-agreement.preview');
     Route::get('/contracts/reservation-agreement/{sale}/download', [ReservationAgreementContractController::class, 'download'])
         ->name('contracts.reservation-agreement.download');
+    // Reservation Signatures
+    Route::get('/contracts/reservation-agreement/{sale}/signature/{type}', [ReservationSignatureController::class, 'show'])
+        ->where('type', 'buyer|witness1|witness2')
+        ->name('contracts.reservation-agreement.signature');
+    Route::post('/contracts/reservation-agreement/{sale}/signature/{type}', [ReservationSignatureController::class, 'save'])
+        ->where('type', 'buyer|witness1|witness2')
+        ->name('contracts.reservation-agreement.signature.save');
+
     Route::get('/contracts/addendum/{sale}/preview-page', [ContractPreviewPageController::class, 'addendum'])
         ->name('contracts.addendum.preview-page');
     Route::get('/contracts/addendum/{sale}/preview', [ReservationAgreementContractController::class, 'previewAddendum'])
@@ -142,6 +162,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/{sale}/cancel', [SalePipelineController::class, 'cancel'])->name('cancel');
         Route::get('/{sale}/installments', [SalePipelineController::class, 'installments'])->name('installments');
         Route::post('/{sale}/installments/{installment}/proof', [SalePipelineController::class, 'uploadProof'])->name('installments.proof');
+        Route::get('/{sale}/deal-slip', [SalePipelineController::class, 'dealSlip'])->name('deal-slip');
+        Route::post('/{sale}/deal-slip/action', [SalePipelineController::class, 'dealSlipAction'])->name('deal-slip.action');
+        Route::post('/{sale}/quotation-visitor', [SalePipelineController::class, 'saveQuotationVisitor'])->name('quotation-visitor');
         Route::get('/api/projects/{location}', [SalePipelineController::class, 'getProjects'])->name('api.projects');
         Route::get('/api/floors/{project}', [SalePipelineController::class, 'getFloors'])->name('api.floors');
         Route::get('/api/units/{project}/{floor}', [SalePipelineController::class, 'getUnits'])->name('api.units');
@@ -210,6 +233,20 @@ Route::middleware(['auth', 'superadmin'])
     // Dashboard
     Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])
         ->name('dashboard');
+
+    // Plan management
+    Route::get('/plans', [SuperAdminPlanController::class, 'index'])
+        ->name('plans.index');
+    Route::get('/plans/create', [SuperAdminPlanController::class, 'create'])
+        ->name('plans.create');
+    Route::post('/plans', [SuperAdminPlanController::class, 'store'])
+        ->name('plans.store');
+    Route::get('/plans/{plan}/edit', [SuperAdminPlanController::class, 'edit'])
+        ->name('plans.edit');
+    Route::put('/plans/{plan}', [SuperAdminPlanController::class, 'update'])
+        ->name('plans.update');
+    Route::post('/plans/{plan}/toggle-active', [SuperAdminPlanController::class, 'toggleActive'])
+        ->name('plans.toggle-active');
 
     // Organization management
     Route::get('/organizations', [SuperAdminOrganizationController::class, 'index'])

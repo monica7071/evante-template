@@ -17,28 +17,54 @@ class ActivityController extends Controller
         $calendarDate = Carbon::create($year, $month, 1);
 
         // ── Calendar Data ────────────────────────────────────────
-        // Get all status changes in this month for the calendar grid
         $monthStart = $calendarDate->copy()->startOfMonth();
         $monthEnd = $calendarDate->copy()->endOfMonth();
 
-        $calendarEvents = DB::table('status_histories')
+        // Transferred events from status_histories
+        $transferredEvents = DB::table('status_histories')
             ->join('sales', 'status_histories.sale_id', '=', 'sales.id')
             ->join('listings', 'sales.listing_id', '=', 'listings.id')
             ->leftJoin('users', 'status_histories.user_id', '=', 'users.id')
+            ->where('status_histories.status', 'transferred')
             ->whereBetween('status_histories.created_at', [$monthStart, $monthEnd])
             ->select(
                 DB::raw('DAY(status_histories.created_at) as day'),
                 'status_histories.status',
+                'sales.id as sale_id',
                 'sales.sale_number',
                 'listings.unit_code',
                 'users.name as user_name',
+                DB::raw('NULL as appointment_date'),
+                DB::raw('NULL as appointment_time'),
+                DB::raw('NULL as remark'),
             )
             ->orderBy('status_histories.created_at')
             ->get();
 
-        // Group events by day
+        // Appointment events from sale_appointments
+        $appointmentEvents = DB::table('sale_appointments')
+            ->join('sales', 'sale_appointments.sale_id', '=', 'sales.id')
+            ->leftJoin('listings', 'sales.listing_id', '=', 'listings.id')
+            ->leftJoin('users', 'sales.user_id', '=', 'users.id')
+            ->whereBetween('sale_appointments.appointment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->select(
+                DB::raw('DAY(sale_appointments.appointment_date) as day'),
+                DB::raw("'appointment' as status"),
+                'sales.id as sale_id',
+                'sales.sale_number',
+                'listings.unit_code',
+                'users.name as user_name',
+                'sale_appointments.appointment_date',
+                'sale_appointments.appointment_time',
+                'sale_appointments.remark',
+            )
+            ->orderBy('sale_appointments.appointment_date')
+            ->orderBy('sale_appointments.appointment_time')
+            ->get();
+
+        // Merge and group by day
         $eventsByDay = [];
-        foreach ($calendarEvents as $ev) {
+        foreach ($transferredEvents->merge($appointmentEvents) as $ev) {
             $eventsByDay[$ev->day][] = $ev;
         }
 
@@ -47,42 +73,43 @@ class ActivityController extends Controller
         $daysInMonth = $calendarDate->daysInMonth;
 
         // ── Activities Summary (horizontal bars, for selected month) ─
-        $activitySummary = DB::table('status_histories')
-            ->whereBetween('status_histories.created_at', [$monthStart, $monthEnd])
-            ->select('status', DB::raw('COUNT(*) as cnt'))
-            ->groupBy('status')
-            ->pluck('cnt', 'status')
-            ->toArray();
+        // Appointment count from sale_appointments table
+        $appointmentCount = (int) DB::table('sale_appointments')
+            ->whereBetween('appointment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->count();
 
-        $statuses = ['available', 'appointment', 'reserved', 'contract', 'installment', 'transferred'];
-        $activityBars = [];
-        $activityMax = 1;
-        foreach ($statuses as $s) {
-            $cnt = $activitySummary[$s] ?? 0;
-            $activityBars[$s] = $cnt;
-            if ($cnt > $activityMax) $activityMax = $cnt;
-        }
-        $activityTotal = array_sum($activityBars);
+        // Transferred count from status_histories table
+        $transferredCount = (int) DB::table('status_histories')
+            ->where('status', 'transferred')
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->count();
+
+        $activityBars = [
+            'appointment' => $appointmentCount,
+            'transferred' => $transferredCount,
+        ];
+        $activityMax = max($appointmentCount, $transferredCount, 1);
+        $activityTotal = $appointmentCount + $transferredCount;
 
         // ── Upcoming Appointments ────────────────────────────────
         $appointments = DB::table('sales')
-            ->join('listings', 'sales.listing_id', '=', 'listings.id')
+            ->join('sale_appointments', 'sales.id', '=', 'sale_appointments.sale_id')
+            ->leftJoin('listings', 'sales.listing_id', '=', 'listings.id')
             ->leftJoin('users', 'sales.user_id', '=', 'users.id')
             ->where('sales.status', 'appointment')
-            ->whereNotNull('sales.appointment_date')
-            ->where('sales.appointment_date', '>=', $now->toDateString())
+            ->whereNotNull('sale_appointments.appointment_date')
+            ->where('sale_appointments.appointment_date', '>=', $now->toDateString())
             ->select(
                 'sales.id as sale_id',
                 'sales.sale_number',
-                'sales.appointment_date',
-                'sales.appointment_time',
-                'sales.appointment_name',
-                'sales.appointment_phone',
+                'sale_appointments.appointment_date',
+                'sale_appointments.appointment_time',
+                'sale_appointments.remark as appointment_remark',
                 'listings.unit_code',
                 'users.name as user_name',
             )
-            ->orderBy('sales.appointment_date')
-            ->orderBy('sales.appointment_time')
+            ->orderBy('sale_appointments.appointment_date')
+            ->orderBy('sale_appointments.appointment_time')
             ->limit(15)
             ->get();
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Organization extends Model
@@ -14,6 +15,7 @@ class Organization extends Model
         'logo',
         'primary_color',
         'domain',
+        'plan_id',
         'storage_limit',
         'storage_used',
         'is_active',
@@ -26,6 +28,11 @@ class Organization extends Model
     ];
 
     // ── Relationships ──
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
 
     public function users(): HasMany
     {
@@ -111,5 +118,42 @@ class Organization extends Model
         }
 
         return round(($this->storage_used / $this->storage_limit) * 100, 1);
+    }
+
+    public function storagePercentage(): float
+    {
+        if ($this->storage_limit === 0) {
+            return 0;
+        }
+
+        return round(($this->storage_used / $this->storage_limit) * 100, 1);
+    }
+
+    public function storageUsedGB(): float
+    {
+        return round($this->storage_used / 1024, 2);
+    }
+
+    public function storageLimitGB(): float
+    {
+        return round($this->storage_limit / 1024, 2);
+    }
+
+    public function isStorageNearFull(): bool
+    {
+        return $this->storagePercentage() >= 80;
+    }
+
+    public function storageBarColor(): string
+    {
+        $pct = $this->storagePercentage();
+        if ($pct >= 90) {
+            return '#ef4444';
+        }
+        if ($pct >= 80) {
+            return '#f59e0b';
+        }
+
+        return '#2A8B92';
     }
 }

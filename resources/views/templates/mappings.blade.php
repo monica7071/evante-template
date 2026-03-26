@@ -83,10 +83,11 @@
         display: block;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
+        max-width: none !important;
     }
     #pdf-container {
         overflow: auto;
-        text-align: center;
+        text-align: left;
         padding: 0.5rem;
     }
     #marker-overlay {
@@ -131,7 +132,6 @@
         color: #000;
         padding: 0 2px;
         border: none;
-        transform: translate(-50%, -50%);
     }
     .mapping-marker:hover { background: rgba(255,230,0,0.45); }
     .mapping-marker:active { cursor: grabbing; }
@@ -141,7 +141,6 @@
         color: #000;
         padding: 0;
         cursor: default;
-        transform: translate(-50%, -50%);
     }
     .mapping-marker.preview-mode:hover { background: transparent; }
     .mapping-marker.image-marker {
@@ -149,12 +148,10 @@
         background: rgba(255,230,0,0.1);
         overflow: hidden;
         padding: 0;
-        transform: none;
     }
     .mapping-marker.image-marker.preview-mode {
         border: none;
         background: transparent;
-        transform: none;
     }
     .mapping-marker.image-marker img {
         width: 100%;
@@ -388,7 +385,7 @@
     // ── State ──
     let pdfDoc = null;
     let currentPage = 1;
-    const BASE_SCALE = 1;
+    const BASE_SCALE = 96 / 72; // match screen DPI (96) to PDF DPI (72)
     let scale = BASE_SCALE;
     let isPreview = false;
     let markerFontSize = 10;
@@ -427,6 +424,9 @@
             const viewport = page.getViewport({ scale: scale });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
+            // Force canvas to display at exact buffer size (prevents CSS scaling)
+            canvas.style.width = viewport.width + 'px';
+            canvas.style.height = viewport.height + 'px';
             pdfWrapper.style.width = viewport.width + 'px';
             pdfWrapper.style.height = viewport.height + 'px';
 
@@ -446,6 +446,13 @@
     document.getElementById('next-page').addEventListener('click', function() {
         if (pdfDoc && currentPage < pdfDoc.numPages) { currentPage++; renderPage(currentPage); }
     });
+
+    // ── Display ratio: accounts for any CSS scaling of the canvas ──
+    function getDisplayRatio() {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !canvas.width) return 1;
+        return rect.width / canvas.width;
+    }
 
     // ── Markers ──
     function renderMarkers() {
@@ -468,8 +475,10 @@
         el.dataset.fieldType  = m.field_type;
         el.style.fontSize = markerFontSize + 'px';
 
+        const dr = getDisplayRatio();
+
         if (isImageField) {
-            const wPx = mmToPx(m.img_width || 50);
+            const wPx = mmToPx(m.img_width || 50) * dr;
             el.style.width  = wPx + 'px';
             el.dataset.wPx  = wPx;
             el.style.display  = 'block';
@@ -493,12 +502,12 @@
                 el.textContent = (m.img_width || 50) + 'mm';
             }
 
-            el.style.left = (m.x_position * scale) + 'px';
-            el.style.top  = (m.y_position * scale) + 'px';
+            el.style.left = (m.x_position * scale * dr) + 'px';
+            el.style.top  = (m.y_position * scale * dr) + 'px';
         } else {
             el.textContent = isPreview ? (sampleData[m.db_field] || m.db_field) : (fieldLabels[m.db_field] || m.db_field);
-            el.style.left = (m.x_position * scale) + 'px';
-            el.style.top  = (m.y_position * scale) + 'px';
+            el.style.left = (m.x_position * scale * dr) + 'px';
+            el.style.top  = (m.y_position * scale * dr) + 'px';
         }
 
         if (!isPreview) {
@@ -530,16 +539,19 @@
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
 
+                const dr = getDisplayRatio();
                 const newLeft = parseFloat(el.style.left);
                 const newTop  = parseFloat(el.style.top);
-                const clampedLeft = Math.max(0, Math.min(newLeft, canvas.width - 20));
-                const clampedTop  = Math.max(0, Math.min(newTop,  canvas.height - 10));
+                const maxLeft = canvas.width * dr - 20;
+                const maxTop  = canvas.height * dr - 10;
+                const clampedLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                const clampedTop  = Math.max(0, Math.min(newTop,  maxTop));
 
                 el.style.left = clampedLeft + 'px';
                 el.style.top  = clampedTop  + 'px';
 
-                const pdfX = clampedLeft / scale;
-                const pdfY = clampedTop  / scale;
+                const pdfX = clampedLeft / (scale * dr);
+                const pdfY = clampedTop  / (scale * dr);
 
                 fetch(baseUpdateUrl + mapping.id, {
                     method: 'PUT',
@@ -582,8 +594,9 @@
         const wrapperRect = pdfWrapper.getBoundingClientRect();
         const dropX = e.clientX - wrapperRect.left;
         const dropY = e.clientY - wrapperRect.top;
-        const pdfX = dropX / scale;
-        const pdfY = dropY / scale;
+        const dr = getDisplayRatio();
+        const pdfX = dropX / (scale * dr);
+        const pdfY = dropY / (scale * dr);
 
         fetch(storeUrl, {
             method: 'POST',
@@ -694,7 +707,7 @@
 
             const marker = overlay.querySelector('[data-mapping-id="' + mappingId + '"]');
             if (marker) {
-                const wPx = mmToPx(width);
+                const wPx = mmToPx(width) * getDisplayRatio();
                 marker.style.width = wPx + 'px';
                 marker.dataset.wPx = wPx;
                 const innerImg = marker.querySelector('img');

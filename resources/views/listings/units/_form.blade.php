@@ -157,10 +157,12 @@
                 $finFields = [
                     'reservation_deposit' => ['label' => 'Reservation fee', 'round' => 'up'],
                     'contract_payment' => ['label' => 'Signing contact', 'round' => 'up'],
-                    'installment_15_terms' => ['label' => 'Down payment', 'round' => 'nearest'],
+                    'installment_15_terms' => ['label' => 'Down payment (TH 9.5%)', 'round' => 'nearest'],
+                    'installment_15_terms_en' => ['label' => 'Down payment (EN 27%)', 'round' => 'nearest'],
                     'installment_12_terms' => ['label' => 'Normal down', 'round' => 'nearest'],
                     'special_installment_3_terms' => ['label' => 'Bullet on month', 'round' => 'nearest'],
-                    'transfer_amount' => ['label' => 'Transfer', 'round' => 'nearest'],
+                    'transfer_amount' => ['label' => 'Transfer (TH 87.5%)', 'round' => 'nearest'],
+                    'transfer_amount_en' => ['label' => 'Transfer (EN 70%)', 'round' => 'nearest'],
                     'transfer_fee' => ['label' => 'Transfer fee', 'round' => 'up'],
                     'annual_common_fee' => ['label' => 'Common Fee', 'round' => 'nearest'],
                     'sinking_fund' => ['label' => 'Sinking Fund', 'round' => 'nearest'],
@@ -173,7 +175,7 @@
                     $roundedValue = $rawValue !== '' ? round((float) $rawValue) : '';
                     $displayValue = $roundedValue !== '' ? number_format($roundedValue) : '';
                 @endphp
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="{{ $field }}" class="form-label">{{ $meta['label'] }}</label>
                     <input type="hidden" id="{{ $field }}" name="{{ $field }}" value="{{ $roundedValue }}">
                     <input type="text" class="form-control" id="{{ $field }}_display" value="{{ $displayValue }}">
@@ -186,7 +188,7 @@
                 $roundedUtilityFee = $rawUtilityFee !== '' ? round((float) $rawUtilityFee) : '';
                 $displayUtilityFee = $roundedUtilityFee !== '' ? number_format($roundedUtilityFee) : '';
             @endphp
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label for="utility_fee_display" class="form-label">Utility Meter Fees Paid</label>
                 <input type="hidden" id="utility_fee" name="utility_fee" value="{{ $roundedUtilityFee }}">
                 <input type="text" class="form-control @error('utility_fee') is-invalid @enderror"
@@ -199,7 +201,7 @@
                 $roundedTotalMisc = $rawTotalMisc !== '' ? round((float) $rawTotalMisc) : '';
                 $displayTotalMisc = $roundedTotalMisc !== '' ? number_format($roundedTotalMisc) : '';
             @endphp
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label for="total_misc_fee" class="form-label">Total</label>
                 <input type="hidden" id="total_misc_fee" name="total_misc_fee" value="{{ $roundedTotalMisc }}">
                 <input type="text" class="form-control" id="total_misc_fee_display" value="{{ $displayTotalMisc }}">
@@ -523,6 +525,11 @@
             display: document.getElementById('installment_15_terms_display'),
             round: 'nearest',
         },
+        installment_15_terms_en: {
+            hidden: document.getElementById('installment_15_terms_en'),
+            display: document.getElementById('installment_15_terms_en_display'),
+            round: 'nearest',
+        },
         installment_12_terms: {
             hidden: document.getElementById('installment_12_terms'),
             display: document.getElementById('installment_12_terms_display'),
@@ -536,6 +543,11 @@
         transfer_amount: {
             hidden: document.getElementById('transfer_amount'),
             display: document.getElementById('transfer_amount_display'),
+            round: 'nearest',
+        },
+        transfer_amount_en: {
+            hidden: document.getElementById('transfer_amount_en'),
+            display: document.getElementById('transfer_amount_en_display'),
             round: 'nearest',
         },
         transfer_fee: {
@@ -636,9 +648,11 @@
         const reservation = price * 0.0025;
         const contractPay = price * 0.0275;
         const installment15 = price * 0.095;
+        const installment15En = price * 0.27;
         const installment12 = installment15 > 0 ? 0.8 * (installment15 / 15) : NaN;
         const special3 = installment15 > 0 ? (installment15 - (installment12 * 12)) / 3 : NaN;
         const transferAmount = price * 0.875;
+        const transferAmountEn = price * 0.70;
         const transferFee = (price * 0.02) / 2;
         const annualCommon = area > 0 ? 55 * area * 12 : NaN;
         const sinkingFund = area > 0 ? area * 650 : NaN;
@@ -647,9 +661,11 @@
         setNumericField('reservation_deposit', reservation);
         setNumericField('contract_payment', contractPay);
         setNumericField('installment_15_terms', installment15);
+        setNumericField('installment_15_terms_en', installment15En);
         setNumericField('installment_12_terms', installment12);
         setNumericField('special_installment_3_terms', special3);
         setNumericField('transfer_amount', transferAmount);
+        setNumericField('transfer_amount_en', transferAmountEn);
         setNumericField('transfer_fee', transferFee);
         setNumericField('annual_common_fee', annualCommon);
         setNumericField('sinking_fund', sinkingFund);

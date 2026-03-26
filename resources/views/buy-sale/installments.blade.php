@@ -265,14 +265,24 @@
     <div class="summary-card mt-4">
         <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark-text me-2"></i>Documents</h5>
 
+        @php
+            $dealSlipApproval = $sale->dealSlipApproval;
+            $isApproved = $dealSlipApproval?->status === 'approved';
+        @endphp
         <div class="d-flex flex-wrap gap-2">
             @if($canPrintDealSlip)
-                <a href="{{ route('contracts.deal-slip.preview-page', ['sale' => $sale->id]) }}" class="btn btn-primary">
-                    <i class="bi bi-printer me-1"></i> Print Deal Slip
-                </a>
+                @if($isApproved)
+                    <a href="{{ route('contracts.deal-slip.preview-page', ['sale' => $sale->id]) }}" class="btn btn-success">
+                        <i class="bi bi-printer me-1"></i> Print Deal Slip
+                    </a>
+                @else
+                    <a href="{{ route('buy-sale.deal-slip', $sale) }}" class="btn btn-warning text-dark">
+                        <i class="bi bi-hourglass-split me-1"></i> Deal Slip (รอดำเนินการ)
+                    </a>
+                @endif
             @else
                 <button disabled class="btn btn-secondary" title="ชำระงวดรองสุดท้ายก่อน">
-                    <i class="bi bi-printer me-1"></i> Print Deal Slip (ยังไม่พร้อม)
+                    <i class="bi bi-printer me-1"></i> Deal Slip (ยังไม่พร้อม)
                 </button>
             @endif
 

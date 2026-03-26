@@ -2,32 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DealSlipApproval;
 use App\Models\Listing;
 use App\Models\Location;
 use App\Models\Project;
 use App\Models\Reservation;
 use App\Models\Sale;
+use App\Models\SaleAppointment;
 use App\Models\SalePurchaseAgreement;
 use App\Models\SalePurchaseAgreementInstallment;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class SalePipelineController extends Controller
 {
     private array $statusFlow = [
-        'available' => [
-            'label' => 'Available',
-            'icon' => 'bi-check-circle',
-            'color' => '#12b76a',
-            'bg' => 'rgba(18,183,106,0.12)',
-        ],
         'appointment' => [
             'label' => 'Appointment',
             'icon' => 'bi-calendar-check',
             'color' => '#7c3aed',
             'bg' => 'rgba(124,58,237,0.12)',
+        ],
+        'available' => [
+            'label' => 'Available',
+            'icon' => 'bi-check-circle',
+            'color' => '#12b76a',
+            'bg' => 'rgba(18,183,106,0.12)',
         ],
         'reserved' => [
             'label' => 'Reserved',
@@ -55,11 +58,10 @@ class SalePipelineController extends Controller
         ],
     ];
 
-    private array $statusSequence = ['available', 'appointment', 'reserved', 'contract', 'installment', 'transferred'];
+    private array $statusSequence = ['appointment', 'available', 'reserved', 'contract', 'installment', 'transferred'];
 
     private array $remarkColumns = [
         'available' => 'remark_available',
-        'appointment' => 'remark_appointment',
         'reserved' => 'remark_reserved',
         'contract' => 'remark_contract',
         'installment' => 'remark_installment',
@@ -71,8 +73,10 @@ class SalePipelineController extends Controller
         $status = $request->query('status');
         $projectId = $request->query('project');
         $unitCode = $request->query('unit_code');
+        $unitType = $request->query('unit_type');
+        $bedrooms = $request->query('bedrooms');
 
-        $query = Sale::with(['listing.project.location', 'user', 'purchaseAgreement'])
+        $query = Sale::with(['listing.project.location', 'user', 'purchaseAgreement.installments', 'appointment'])
             ->withSum('purchaseAgreementInstallments', 'amount_number');
 
         if ($status && array_key_exists($status, $this->statusFlow)) {
@@ -89,6 +93,14 @@ class SalePipelineController extends Controller
             });
         }
 
+        if ($unitType) {
+            $query->whereHas('listing', fn ($q) => $q->where('unit_type', $unitType));
+        }
+
+        if ($bedrooms !== null && $bedrooms !== '') {
+            $query->whereHas('listing', fn ($q) => $q->where('bedrooms', $bedrooms));
+        }
+
         $sales = $query->latest()->paginate(12)->withQueryString();
 
         $counts = ['all' => Sale::count()];
@@ -97,39 +109,38 @@ class SalePipelineController extends Controller
         }
 
         $projects = Project::orderBy('name')->get(['id', 'name']);
+        $unitTypes = Listing::whereNotNull('unit_type')->distinct()->orderBy('unit_type')->pluck('unit_type');
+        $bedroomOptions = Listing::whereNotNull('bedrooms')->distinct()->orderBy('bedrooms')->pluck('bedrooms');
 
         $statusFlow = $this->statusFlow;
         $remarkColumns = $this->remarkColumns;
 
-        return view('buy-sale.index', compact('sales', 'counts', 'status', 'projects', 'projectId', 'statusFlow', 'unitCode', 'remarkColumns'));
+        return view('buy-sale.index', compact('sales', 'counts', 'status', 'projects', 'projectId', 'statusFlow', 'unitCode', 'remarkColumns', 'unitType', 'bedrooms', 'unitTypes', 'bedroomOptions'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'listing_id' => 'required|exists:listings,id',
+            'appointment_date' => 'required|date',
+            'appointment_time' => 'required',
+            'remark_appointment' => 'nullable|string|max:2000',
         ]);
-
-        $listing = Listing::findOrFail($request->listing_id);
-
-        // Check if listing already has an active sale
-        $existingSale = Sale::where('listing_id', $listing->id)
-            ->where('status', '!=', 'transferred')
-            ->first();
-
-        if ($existingSale) {
-            return back()->with('error', 'This unit already has an active sale.');
-        }
 
         $sale = Sale::create([
-            'listing_id' => $listing->id,
+            'listing_id' => null,
             'user_id' => $request->user()?->id,
-            'status' => 'available',
+            'status' => 'appointment',
         ]);
 
-        $this->recordStatusHistory($sale, 'available', null, 'Sale created', $request->user()?->id);
+        $sale->appointment()->create([
+            'appointment_date' => $request->appointment_date,
+            'appointment_time' => $request->appointment_time,
+            'remark' => $request->remark_appointment,
+        ]);
 
-        return redirect()->route('buy-sale.index')->with('success', 'Sale created successfully.');
+        $this->recordStatusHistory($sale, 'appointment', null, 'Appointment created', $request->user()?->id);
+
+        return redirect()->route('buy-sale.index')->with('success', 'Appointment created successfully.');
     }
 
     public function getProjects(Location $location)
@@ -205,13 +216,24 @@ class SalePipelineController extends Controller
 
         $nextStatus = $this->statusSequence[$currentIndex + 1];
 
-        if ($nextStatus === 'appointment') {
+        if ($nextStatus === 'available') {
             $data = $request->validate([
-                'appointment_date' => 'required|date',
-                'appointment_time' => 'required',
+                'listing_id' => 'required|exists:listings,id',
             ]);
-            $sale->appointment_date = $data['appointment_date'];
-            $sale->appointment_time = $data['appointment_time'];
+
+            $listing = Listing::findOrFail($data['listing_id']);
+
+            // Check if listing already has an active sale
+            $existingSale = Sale::where('listing_id', $listing->id)
+                ->where('status', '!=', 'transferred')
+                ->where('id', '!=', $sale->id)
+                ->first();
+
+            if ($existingSale) {
+                return back()->with('error', 'This unit already has an active sale.');
+            }
+
+            $sale->listing_id = $listing->id;
         } elseif ($nextStatus === 'reserved') {
             if ($isDraft) {
                 $sale->reservation_data = $this->buildReservationFormState($request->all(), $sale);
@@ -230,7 +252,9 @@ class SalePipelineController extends Controller
             $data = $request->validate([
                 'reservation_first_name' => 'required|string|max:255',
                 'reservation_last_name' => 'required|string|max:255',
-                'reservation_id_number' => 'required|string|max:255',
+                'reservation_id_type' => 'required|in:id_card,passport',
+                'reservation_id_number' => 'required|string|max:13',
+                'reservation_nationality' => 'nullable|string|max:255',
                 'reservation_address' => 'required|string',
                 'reservation_phone' => 'required|string|max:50',
                 'reservation_email' => 'nullable|email|max:255',
@@ -245,11 +269,13 @@ class SalePipelineController extends Controller
             ]);
 
             $reservationPayload = [
-                'listing_id' => $sale->listing_id,
+                'listing_id' => $sale->listing_id ?? $data['listing_id'] ?? null,
                 'buyer_first_name' => $data['reservation_first_name'],
                 'buyer_last_name' => $data['reservation_last_name'],
                 'buyer_full_name' => trim($data['reservation_first_name'] . ' ' . $data['reservation_last_name']),
+                'buyer_id_type' => $data['reservation_id_type'],
                 'buyer_id_number' => $data['reservation_id_number'],
+                'buyer_nationality' => $data['reservation_nationality'] ?? null,
                 'buyer_address' => $data['reservation_address'],
                 'buyer_phone' => $data['reservation_phone'],
                 'buyer_email' => $data['reservation_email'] ?? null,
@@ -431,16 +457,29 @@ class SalePipelineController extends Controller
             }
         }
 
+        // Block advancing from installment → transferred if not all installments are paid
+        if ($sale->status === 'installment' && $nextStatus === 'transferred') {
+            $agreement = $sale->purchaseAgreement;
+            $installments = $agreement?->installments;
+            $allPaid = $installments && $installments->isNotEmpty() && $installments->every(fn($i) => $i->proof_image);
+
+            if (!$allPaid) {
+                return back()->with('error', 'ไม่สามารถเปลี่ยนสถานะได้ — ต้องชำระค่างวดให้ครบทุกงวดก่อน');
+            }
+        }
+
         if (!$isDraft) {
             $previousStatus = $sale->status;
             $sale->previous_status = $previousStatus;
             $sale->status = $nextStatus;
             $sale->save();
 
-            if ($sale->relationLoaded('listing')) {
-                $sale->listing?->update(['status' => $nextStatus]);
-            } else {
-                Listing::where('id', $sale->listing_id)->update(['status' => $nextStatus]);
+            if ($sale->listing_id) {
+                if ($sale->relationLoaded('listing')) {
+                    $sale->listing?->update(['status' => $nextStatus]);
+                } else {
+                    Listing::where('id', $sale->listing_id)->update(['status' => $nextStatus]);
+                }
             }
 
             $this->recordStatusHistory($sale, $nextStatus, $previousStatus, null, $request->user()?->id);
@@ -462,7 +501,7 @@ class SalePipelineController extends Controller
             return redirect()->route('buy-sale.index')->with('error', 'Installment tracking is only available for installment stage.');
         }
 
-        $sale->load(['listing.project', 'purchaseAgreement.installments']);
+        $sale->load(['listing.project', 'purchaseAgreement.installments', 'dealSlipApproval']);
         $agreement = $sale->purchaseAgreement;
         $installments = $agreement?->installments()->orderBy('sequence')->get() ?? collect();
         $today = now()->startOfDay();
@@ -493,48 +532,50 @@ class SalePipelineController extends Controller
 
     public function cancel(Request $request, Sale $sale): RedirectResponse
     {
-        if ($sale->status === 'available') {
-            return back()->with('error', 'Sale is already at available status.');
+        if ($sale->status === 'appointment') {
+            return back()->with('error', 'Sale is already at appointment status.');
         }
 
         // Delete related form data
-        Reservation::where('listing_id', $sale->listing_id)->delete();
+        if ($sale->listing_id) {
+            Reservation::where('listing_id', $sale->listing_id)->delete();
+        }
 
         if ($sale->purchaseAgreement) {
             $sale->purchaseAgreement->installments()->delete();
             $sale->purchaseAgreement->delete();
         }
 
-        // Delete status histories except available
-        $sale->statusHistories()->where('status', '!=', 'available')->delete();
+        // Delete status histories except appointment
+        $sale->statusHistories()->where('status', '!=', 'appointment')->delete();
+
+        // Reset listing status if linked
+        if ($sale->listing_id) {
+            Listing::where('id', $sale->listing_id)->update(['status' => 'available']);
+        }
 
         // Reset sale
-        $sale->status = 'available';
+        $sale->status = 'appointment';
         $sale->previous_status = null;
+        $sale->listing_id = null;
         $sale->reservation_data = null;
         $sale->contract_data = null;
-        $sale->appointment_date = null;
-        $sale->appointment_time = null;
-        $sale->appointment_name = null;
-        $sale->appointment_phone = null;
-        $sale->remark_appointment = null;
+        $sale->remark_available = null;
         $sale->remark_reserved = null;
         $sale->remark_contract = null;
         $sale->remark_installment = null;
         $sale->remark_transferred = null;
         $sale->save();
 
-        Listing::where('id', $sale->listing_id)->update(['status' => 'available']);
-
         return redirect()->route('buy-sale.index', [
             'highlight' => $sale->id,
-        ])->with('success', 'Sale has been cancelled and reset to Available.');
+        ])->with('success', 'Sale has been cancelled and reset to Appointment.');
     }
 
     public function updateRemark(Request $request, Sale $sale): RedirectResponse
     {
         $status = $request->input('status');
-        if (!isset($this->remarkColumns[$status])) {
+        if ($status !== 'appointment' && !isset($this->remarkColumns[$status])) {
             abort(404);
         }
 
@@ -542,9 +583,16 @@ class SalePipelineController extends Controller
             'remark' => 'nullable|string|max:2000',
         ]);
 
-        $column = $this->remarkColumns[$status];
-        $sale->$column = $data['remark'];
-        $sale->save();
+        if ($status === 'appointment') {
+            $appointment = $sale->appointment;
+            if ($appointment) {
+                $appointment->update(['remark' => $data['remark']]);
+            }
+        } else {
+            $column = $this->remarkColumns[$status];
+            $sale->$column = $data['remark'];
+            $sale->save();
+        }
 
         $filters = array_filter([
             'status' => $request->input('current_filter_status'),
@@ -556,6 +604,28 @@ class SalePipelineController extends Controller
 
         return redirect()->route('buy-sale.index', $filters)
             ->with('success', 'Remark saved successfully.');
+    }
+
+    public function saveQuotationVisitor(Request $request, Sale $sale)
+    {
+        $data = $request->validate([
+            'visitor_name' => 'required|string|max:255',
+            'visitor_phone' => 'required|string|max:50',
+            'language' => 'required|in:th,en',
+        ]);
+
+        $sale->update([
+            'avail_name' => $data['visitor_name'],
+            'avail_tel' => $data['visitor_phone'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'redirect_url' => route('contracts.quotation.preview-listing', [
+                'listing' => $sale->listing_id,
+                'language' => $data['language'],
+            ]),
+        ]);
     }
 
     private function loadThaiData(string $filename, string $key): array
@@ -577,7 +647,9 @@ class SalePipelineController extends Controller
         return [
             'first_name' => data_get($source, 'reservation_first_name'),
             'last_name' => data_get($source, 'reservation_last_name'),
+            'id_type' => data_get($source, 'reservation_id_type', 'id_card'),
             'id_number' => data_get($source, 'reservation_id_number'),
+            'nationality' => data_get($source, 'reservation_nationality'),
             'address' => data_get($source, 'reservation_address'),
             'phone' => data_get($source, 'reservation_phone'),
             'email' => data_get($source, 'reservation_email'),
@@ -685,5 +757,80 @@ class SalePipelineController extends Controller
                 'witness_two_name' => data_get($source, 'contract_witness_two_name'),
             ],
         ];
+    }
+
+    public function dealSlip(Sale $sale)
+    {
+        $sale->load(['listing.project', 'dealSlipApproval.preparedBy', 'dealSlipApproval.checkedBy', 'dealSlipApproval.approvedBy']);
+
+        return view('buy-sale.deal-slip', [
+            'sale' => $sale,
+            'approval' => $sale->dealSlipApproval,
+        ]);
+    }
+
+    public function dealSlipAction(Request $request, Sale $sale): JsonResponse
+    {
+        $request->validate([
+            'action' => 'required|in:prepare,check,approve',
+            'signer_name' => 'required|string|max:255',
+            'signature_data' => 'required|string',
+        ]);
+
+        $action = $request->input('action');
+        $user = $request->user();
+        $signerName = $request->input('signer_name');
+        $signatureData = $request->input('signature_data');
+
+        if ($action === 'prepare') {
+            $approval = DealSlipApproval::updateOrCreate(
+                ['sale_id' => $sale->id],
+                [
+                    'status' => 'prepare',
+                    'prepared_by' => $user->id,
+                    'prepared_name' => $signerName,
+                    'prepared_signature' => $signatureData,
+                    'prepared_at' => now(),
+                ]
+            );
+        } elseif ($action === 'check') {
+            $approval = $sale->dealSlipApproval;
+            if (!$approval || $approval->status !== 'prepare') {
+                return response()->json(['message' => 'ต้องเริ่มดำเนินการก่อน'], 422);
+            }
+            $approval->update([
+                'status' => 'check',
+                'checked_by' => $user->id,
+                'checked_name' => $signerName,
+                'checked_signature' => $signatureData,
+                'checked_at' => now(),
+            ]);
+        } elseif ($action === 'approve') {
+            if (!$user->isSalesManager() && !$user->isSuperAdmin() && !$user->isAdmin()) {
+                return response()->json(['message' => 'เฉพาะ Sales Manager เท่านั้น'], 403);
+            }
+            $approval = $sale->dealSlipApproval;
+            if (!$approval || $approval->status !== 'check') {
+                return response()->json(['message' => 'ต้องส่งตรวจสอบก่อน'], 422);
+            }
+            $approval->update([
+                'status' => 'approved',
+                'approved_by' => $user->id,
+                'approved_name' => $signerName,
+                'approved_signature' => $signatureData,
+                'approved_at' => now(),
+            ]);
+        }
+
+        $approval->load(['preparedBy', 'checkedBy', 'approvedBy']);
+
+        return response()->json([
+            'success' => true,
+            'approval' => array_merge($approval->toArray(), [
+                'prepared_by_user' => $approval->preparedBy ? ['name' => $approval->preparedBy->name] : null,
+                'checked_by_user' => $approval->checkedBy ? ['name' => $approval->checkedBy->name] : null,
+                'approved_by_user' => $approval->approvedBy ? ['name' => $approval->approvedBy->name] : null,
+            ]),
+        ]);
     }
 }

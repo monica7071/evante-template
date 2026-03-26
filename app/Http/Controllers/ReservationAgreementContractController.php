@@ -7,7 +7,7 @@ use App\Models\Reservation;
 use App\Models\Sale;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\Tfpdf\Fpdi;
 
 class ReservationAgreementContractController extends Controller
 {
@@ -88,7 +88,13 @@ class ReservationAgreementContractController extends Controller
 
         $contractData = $this->buildContractData($reservation);
 
+        if (!defined('_SYSTEM_TTFONTS')) {
+            define('_SYSTEM_TTFONTS', storage_path('fonts') . '/');
+        }
         $pdf = new Fpdi();
+        $pdf->AddFont('Sarabun', '', 'Sarabun-Regular.ttf', true);
+        $pdf->AddFont('Sarabun', 'B', 'Sarabun-Bold.ttf', true);
+
         $pageCount = $pdf->setSourceFile($templatePath);
         $groupedMappings = $template->mappings->groupBy('page_number');
         $fontSizePt = 10;
@@ -105,7 +111,7 @@ class ReservationAgreementContractController extends Controller
                 continue;
             }
 
-            $pdf->SetFont('Helvetica', '', $fontSizePt);
+            $pdf->SetFont('Sarabun', '', $fontSizePt);
             $pdf->SetTextColor(0, 0, 0);
 
             foreach ($groupedMappings->get($pageNo) as $mapping) {

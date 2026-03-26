@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') | Evante</title>
     @php $faviconLogo = optional(\App\Models\Company::query()->select('logo')->first())->logo; @endphp
     @if($faviconLogo)
@@ -226,6 +227,18 @@
             .user-btn::after { display: none !important; }
         }
 
+        /* ── Desktop: Employee menu icon only ── */
+        @media (min-width: 992px) {
+            .nav-label-employee { display: none; }
+        }
+
+        /* ── Desktop: user button avatar only (all sizes ≥ 992px) ── */
+        @media (min-width: 992px) {
+            .user-btn { padding: 4px !important; border-radius: 50% !important; gap: 0 !important; width: 36px; height: 36px; justify-content: center; }
+            .user-btn-name, .user-btn-role { display: none !important; }
+            .user-btn::after { display: none !important; }
+        }
+
         /* ── Page title bar ── */
         #page-title-bar {
             background: var(--surface);
@@ -389,6 +402,21 @@
 </head>
 <body>
 
+    {{-- Impersonation Banner --}}
+    @if(session('impersonating_as'))
+    <div class="text-center py-2 px-4 fw-medium" style="background:#f59e0b; color:#1a2e35; font-size:0.85rem;">
+        You are impersonating
+        <strong>{{ auth()->user()->name }}</strong>
+        ({{ auth()->user()->organization->name ?? '—' }}).
+        <form method="POST" action="{{ route('super-admin.leave-impersonate') }}" class="d-inline ms-3">
+            @csrf
+            <button type="submit" class="btn btn-link p-0 text-decoration-underline fw-bold" style="color:#1a2e35; font-size:0.85rem;">
+                Leave Impersonation
+            </button>
+        </form>
+    </div>
+    @endif
+
     {{-- ════════════ Top Navbar ════════════ --}}
     @php
         $isListing   = request()->routeIs('locations.*') || request()->routeIs('projects.*') || request()->routeIs('units.*');
@@ -536,7 +564,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ $isEmployee ? 'active' : '' }}"
                                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Employee
+                                <i class="bi bi-people-fill me-1"></i><span class="nav-label-employee">Employee</span>
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
@@ -599,9 +627,22 @@
                                     <div class="fw-semibold small text-dark">{{ Auth::user()->name }}</div>
                                     <div class="text-muted" style="font-size:0.72rem;">{{ Auth::user()->email }}</div>
                                 </li>
+                                @if(auth()->user()->isSuperAdmin())
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('super-admin.dashboard') }}">
+                                        <i class="bi bi-shield-lock me-2 text-secondary"></i>Super Admin
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                @endif
                                 <li>
                                     <a class="dropdown-item" href="{{ route('profile.edit') }}">
                                         <i class="bi bi-person-circle me-2 text-secondary"></i>Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/questionnaire">
+                                        <i class="bi bi-clipboard2-check me-2 text-secondary"></i>Questionnaire
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider my-1"></li>

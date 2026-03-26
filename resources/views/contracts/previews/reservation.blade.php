@@ -3,45 +3,60 @@
 @section('title', $pageTitle)
 
 @section('content')
-<div class="contract-preview-container" data-pdf-url="{{ $pdfUrl }}" data-download-url="{{ $downloadUrl }}">
-    <div class="preview-header">
-        <div class="header-content">
-            <div class="header-actions-left">
-                <a href="{{ route('buy-sale.index') }}" class="header-btn back-btn">
-                    ← Back to Sale
-                </a>
-            </div>
-            <div class="header-actions-right">
-                <button id="downloadPdf" class="header-btn primary">
-                    <i class="bi bi-cloud-arrow-down"></i>
-                    Download PDF
+<div class="cpv-wrapper" data-pdf-url="{{ $pdfUrl }}" data-download-url="{{ $downloadUrl }}">
+
+    {{-- ── Document Title ── --}}
+    <div class="cpv-doc-title">{{ $pageTitle }}</div>
+
+    {{-- ── Top Bar ── --}}
+    <div class="cpv-topbar">
+        <div class="cpv-topbar-inner">
+            <a href="{{ route('buy-sale.index') }}" class="cpv-back">
+                <i class="bi bi-arrow-left"></i> Back to Sale
+            </a>
+            <div class="cpv-topbar-actions">
+                @if(isset($contractType) && $contractType === 'reservation_agreement')
+                    @php
+                        $sigTypes = [
+                            'buyer'    => ['label' => 'Buyer', 'icon' => 'bi-person-check', 'name' => $reservation->buyer_signature_name ?? null, 'signed' => $reservation->buyer_signed_at ?? null],
+                            'witness1' => ['label' => 'Witness 1', 'icon' => 'bi-person', 'name' => $reservation->witness_one_name ?? null, 'signed' => $reservation->witness_one_signed_at ?? null],
+                            'witness2' => ['label' => 'Witness 2', 'icon' => 'bi-person', 'name' => $reservation->witness_two_name ?? null, 'signed' => $reservation->witness_two_signed_at ?? null],
+                        ];
+                    @endphp
+                    @foreach($sigTypes as $type => $sig)
+                        <a href="{{ route('contracts.reservation-agreement.signature', ['sale' => $sale->id, 'type' => $type]) }}"
+                           target="_blank"
+                           class="cpv-btn cpv-btn-sig {{ $sig['signed'] ? 'signed' : '' }}"
+                           title="{{ $sig['signed'] ? $sig['name'] . ' · ' . \Carbon\Carbon::parse($sig['signed'])->timezone('Asia/Bangkok')->format('d/m/Y H:i') : 'Not signed yet' }}">
+                            <i class="bi {{ $sig['signed'] ? 'bi-check-circle-fill' : 'bi-pen' }}"></i>
+                            {{ $sig['label'] }}
+                        </a>
+                    @endforeach
+                @endif
+                <button id="downloadPdf" class="cpv-btn cpv-btn-download">
+                    <i class="bi bi-download"></i> Download
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="signature-toolbar">
-        <div class="signature-actions">
-            <a href="#" class="signature-btn">Tenant Sign</a>
-            <a href="#" class="signature-btn">Witness 1 Sign</a>
-            <a href="#" class="signature-btn">Witness 2 Sign</a>
-        </div>
-    </div>
-
-    <div class="pdf-viewer-card">
-        <div class="pdf-viewer" id="pdfViewer">
-            <div class="pdf-loading" id="pdfLoading">
-                <div class="loading-spinner"></div>
-                <p>Loading document…</p>
+    {{-- ── PDF Viewer ── --}}
+    <div class="cpv-viewer-wrap">
+        <div class="cpv-viewer" id="pdfViewer">
+            <div class="cpv-loading" id="pdfLoading">
+                <div class="cpv-spinner"></div>
+                <p>Loading document...</p>
             </div>
-            <canvas id="pdfCanvas" class="pdf-canvas" aria-label="Contract preview" role="img"></canvas>
+            <canvas id="pdfCanvas" class="cpv-canvas" aria-label="Contract preview" role="img"></canvas>
         </div>
-        <div class="pdf-controls">
-            <button id="prevPage" class="control-btn" disabled>
+        <div class="cpv-pager">
+            <button id="prevPage" class="cpv-pager-btn" disabled>
                 <i class="bi bi-chevron-left"></i>
             </button>
-            <span class="page-info"><span id="currentPage">1</span> / <span id="totalPages">1</span></span>
-            <button id="nextPage" class="control-btn" disabled>
+            <span class="cpv-pager-info">
+                <span id="currentPage">1</span> / <span id="totalPages">1</span>
+            </span>
+            <button id="nextPage" class="cpv-pager-btn" disabled>
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>
@@ -51,102 +66,94 @@
 
 @section('styles')
 <style>
-    .contract-preview-container {
-        padding-bottom: 48px;
+    /* ── Wrapper ── */
+    .cpv-wrapper { padding-bottom: 48px; }
+
+    /* ── Top Bar ── */
+    .cpv-topbar {
+        border-bottom: 1px solid #e5e7eb;
+        top: 0;
+        z-index: 20;
     }
-    .preview-header {
-        border-bottom: 1px solid var(--border);
-        background: var(--surface);
-    }
-    .header-content {
-        max-width: 1200px;
+    .cpv-topbar-inner {
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 20px 24px;
+        padding: 14px 0;
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-    .header-actions-left {
-        display: flex;
-        flex-wrap: wrap;
         gap: 12px;
-        align-items: center;
     }
-    .header-actions-right {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-    }
-    .header-btn {
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        padding: 8px 16px;
-        font-size: 14px;
+    .cpv-back {
         display: inline-flex;
-        gap: 8px;
         align-items: center;
-        text-decoration: none;
-    }
-    .header-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .header-btn.secondary { background: #f3f4f6; color: #4b5563; }
-    .header-btn.back-btn { background: #fff; color: #111827; }
-    .header-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .contract-tags {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    .tag {
-        background: #f3f4f6;
-        color: #4b5563;
-        padding: 4px 10px;
-        border-radius: 999px;
+        gap: 6px;
         font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.15s;
     }
-    .tag.status { background: #ecfeff; color: #0e7490; }
 
-    .signature-toolbar {
-        max-width: 1200px;
-        margin: 20px auto 0;
-        padding: 16px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px;
+    /* ── Document Title ── */
+    .cpv-doc-title {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 16px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
     }
-    .signature-title { font-weight: 600; color: #111827; }
-    .signature-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .signature-btn {
+    .cpv-topbar-actions { display: flex; gap: 8px; }
+    .cpv-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .cpv-btn-download {
+        background: #667777;
+        color: #fff;
+    }
+    .cpv-btn-download:hover { background: #4a5858; }
+
+    /* ── Signature Buttons ── */
+    .cpv-btn-sig {
         background: #fff;
         border: 1px dashed #d97706;
         color: #b45309;
-        padding: 6px 14px;
-        border-radius: 999px;
         text-decoration: none;
-        font-size: 13px;
+        padding: 8px 14px;
     }
-    .signature-note { font-size: 12px; color: #6b7280; }
-
-    .contract-summary {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 24px 12px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
+    .cpv-btn-sig:hover {
+        border-style: solid;
+        background: #fffbeb;
+        color: #92400e;
     }
-    .summary-label { font-size: 12px; text-transform: uppercase; color: #9ca3af; margin-bottom: 4px; }
-    .summary-value { font-size: 15px; color: #111827; font-weight: 600; }
+    .cpv-btn-sig.signed {
+        border-color: #16a34a;
+        border-style: solid;
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+    .cpv-btn-sig.signed:hover {
+        background: #dcfce7;
+    }
 
-    .pdf-viewer-card {
+    /* ── PDF Viewer ── */
+    .cpv-viewer-wrap {
         max-width: 900px;
-        margin: 16px auto 0;
-        padding: 0 16px;
+        margin: 20px auto 0;
+        padding: 0 24px;
     }
-    .pdf-viewer {
+    .cpv-viewer {
         background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
@@ -155,47 +162,62 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
     }
-    .pdf-loading { text-align: center; color: #6b7280; }
-    .loading-spinner {
+    .cpv-loading { text-align: center; color: #6b7280; }
+    .cpv-spinner {
         width: 36px;
         height: 36px;
         border: 3px solid #e5e7eb;
-        border-top: 3px solid #0f62fe;
+        border-top: 3px solid #667777;
         border-radius: 50%;
         margin: 0 auto 12px;
-        animation: spin 1s linear infinite;
+        animation: cpv-spin 0.8s linear infinite;
     }
-    @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
-    .pdf-canvas { display: none; max-width: 100%; box-shadow: 0 12px 30px rgba(15, 98, 254, 0.08); }
+    @keyframes cpv-spin { to { transform: rotate(360deg); } }
+    .cpv-canvas {
+        display: none;
+        max-width: 100%;
+        border-radius: 4px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
 
-    .pdf-controls {
+    /* ── Pager ── */
+    .cpv-pager {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 18px;
+        gap: 16px;
         padding: 12px;
-        margin-top: 16px;
+        margin-top: 12px;
+        background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 10px;
-        background: #fff;
     }
-    .control-btn {
+    .cpv-pager-btn {
         border: 1px solid #d1d5db;
         border-radius: 50%;
-        width: 36px; height: 36px;
+        width: 34px; height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         background: #f9fafb;
-        color: #111827;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.15s;
     }
-    .control-btn:disabled { opacity: 0.4; }
-    .page-info { font-weight: 600; color: #111827; }
+    .cpv-pager-btn:hover:not(:disabled) { background: #e5e7eb; }
+    .cpv-pager-btn:disabled { opacity: 0.35; cursor: default; }
+    .cpv-pager-info {
+        font-weight: 600;
+        font-size: 14px;
+        color: #1e293b;
+    }
 
+    /* ── Responsive ── */
     @media (max-width: 768px) {
-        .header-content { flex-direction: column; }
-        .contract-summary { grid-template-columns: 1fr 1fr; }
+        .cpv-topbar-inner { flex-wrap: wrap; }
+        .cpv-topbar-actions { flex-wrap: wrap; }
     }
 </style>
 @endsection
@@ -206,89 +228,62 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     document.addEventListener('DOMContentLoaded', () => {
-        const container = document.querySelector('.contract-preview-container');
-        if (!container) return;
+        const wrapper = document.querySelector('.cpv-wrapper');
+        if (!wrapper) return;
 
-        const pdfUrl = container.dataset.pdfUrl;
-        const downloadUrl = container.dataset.downloadUrl;
-        const pdfCanvas = document.getElementById('pdfCanvas');
-        const ctx = pdfCanvas.getContext('2d');
-        const loading = document.getElementById('pdfLoading');
-        const prevBtn = document.getElementById('prevPage');
-        const nextBtn = document.getElementById('nextPage');
-        const currentPageEl = document.getElementById('currentPage');
-        const totalPagesEl = document.getElementById('totalPages');
-        const downloadBtn = document.getElementById('downloadPdf');
+        const pdfUrl      = wrapper.dataset.pdfUrl;
+        const downloadUrl = wrapper.dataset.downloadUrl;
+        const canvas      = document.getElementById('pdfCanvas');
+        const ctx         = canvas.getContext('2d');
+        const loading     = document.getElementById('pdfLoading');
+        const prevBtn     = document.getElementById('prevPage');
+        const nextBtn     = document.getElementById('nextPage');
+        const curPageEl   = document.getElementById('currentPage');
+        const totalEl     = document.getElementById('totalPages');
+        const dlBtn       = document.getElementById('downloadPdf');
 
-        let pdfDoc = null;
-        let pageNum = 1;
-        let pageRendering = false;
-        let pageNumPending = null;
+        let pdfDoc = null, pageNum = 1, rendering = false, pending = null;
         const scale = 1.4;
 
-        function updateControls() {
+        function updateUI() {
             if (!pdfDoc) return;
             prevBtn.disabled = pageNum <= 1;
             nextBtn.disabled = pageNum >= pdfDoc.numPages;
-            currentPageEl.textContent = pageNum;
-            totalPagesEl.textContent = pdfDoc.numPages;
+            curPageEl.textContent = pageNum;
+            totalEl.textContent   = pdfDoc.numPages;
         }
 
         function renderPage(num) {
-            pageRendering = true;
+            rendering = true;
             pdfDoc.getPage(num).then(page => {
-                const viewport = page.getViewport({ scale });
-                pdfCanvas.height = viewport.height;
-                pdfCanvas.width = viewport.width;
-                return page.render({ canvasContext: ctx, viewport }).promise;
+                const vp = page.getViewport({ scale });
+                canvas.height = vp.height;
+                canvas.width  = vp.width;
+                return page.render({ canvasContext: ctx, viewport: vp }).promise;
             }).then(() => {
-                pageRendering = false;
-                if (pageNumPending !== null) {
-                    renderPage(pageNumPending);
-                    pageNumPending = null;
-                }
-                updateControls();
+                rendering = false;
+                if (pending !== null) { renderPage(pending); pending = null; }
+                updateUI();
             });
         }
 
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
+        function queue(num) { rendering ? (pending = num) : renderPage(num); }
 
-        prevBtn.addEventListener('click', () => {
-            if (pageNum <= 1) return;
-            pageNum -= 1;
-            queueRenderPage(pageNum);
-        });
+        prevBtn.addEventListener('click', () => { if (pageNum > 1) queue(--pageNum); });
+        nextBtn.addEventListener('click', () => { if (pdfDoc && pageNum < pdfDoc.numPages) queue(++pageNum); });
+        dlBtn.addEventListener('click', () => window.open(downloadUrl, '_blank'));
 
-        nextBtn.addEventListener('click', () => {
-            if (pageNum >= pdfDoc.numPages) return;
-            pageNum += 1;
-            queueRenderPage(pageNum);
-        });
-
-        downloadBtn.addEventListener('click', () => {
-            window.open(downloadUrl, '_blank');
-        });
-
-        pdfjsLib.getDocument({
-            url: pdfUrl,
-            withCredentials: true,
-            httpHeaders: { 'Accept': 'application/pdf' }
-        }).promise
+        pdfjsLib.getDocument({ url: pdfUrl, withCredentials: true, httpHeaders: { 'Accept': 'application/pdf' } })
+            .promise
             .then(pdf => {
                 pdfDoc = pdf;
                 loading.style.display = 'none';
-                pdfCanvas.style.display = 'block';
+                canvas.style.display  = 'block';
                 renderPage(pageNum);
             })
-            .catch((error) => {
-                console.error('PDF preview error', error);
-                loading.innerHTML = '<p class="text-danger">Unable to load PDF preview. Please check the template.</p>';
+            .catch(err => {
+                console.error('PDF preview error', err);
+                loading.innerHTML = '<p style="color:#ef4444;">Unable to load PDF preview. Please check the template.</p>';
             });
     });
 </script>

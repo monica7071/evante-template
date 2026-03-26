@@ -15,146 +15,146 @@ async function fetchBuildings() {
       floors: [
         {
           floor: 1,
-          floorPlan: "/images/floorplan/a1.png",
+          floorPlan: "/images/floorplan/a1.jpg",
           rooms: [
-            { unit_no: '1', position: { top: '43%', left: '23%' }},
-            { unit_no: '2', position: { top: '47.5%', left: '28.5%' }},
-            { unit_no: '3', position: { top: '52%', left: '34%' }},
-            { unit_no: '4', position: { top: '57%', left: '39.5%' }},
-            { unit_no: '5', position: { top: '62.5%', left: '46%' }},
-            { unit_no: '6', position: { top: '65%', left: '54%' }},
-            { unit_no: '7', position: { top: '65%', left: '59.8%' }},
-            { unit_no: '8', position: { top: '65%', left: '67.3%' }},
-            { unit_no: '9', position: { top: '56%', left: '74.5%' }},
-            { unit_no: '10', position: { top: '48%', left: '74.5%' }},
-            { unit_no: '11', position: { top: '40%', left: '74.5%' }},
-            { unit_no: '12', position: { top: '42%', left: '83.5%' }},
-            { unit_no: '13', position: { top: '49.5%', left: '83.5%' }},
-            { unit_no: '14', position: { top: '57%', left: '83.5%' }},
-            { unit_no: '15', position: { top: '66%', left: '83.5%' }},
-            { unit_no: '16', position: { top: '79%', left: '83.6%' }},
-            { unit_no: '17', position: { top: '79%', left: '77.5%' }},
-            { unit_no: '18', position: { top: '79%', left: '72%' }},
-            { unit_no: '19', position: { top: '79%', left: '66%' }},
-            { unit_no: '20', position: { top: '79%', left: '60%' }},
-            { unit_no: '21', position: { top: '79%', left: '53.5%' }},
-            { unit_no: '22', position: { top: '79%', left: '46.2%' }},
-            { unit_no: '23', position: { top: '73.8%', left: '40%' }},
-            { unit_no: '24', position: { top: '69%', left: '34.5%' }},
-            { unit_no: '25', position: { top: '64.5%', left: '29%' }},
-            { unit_no: '26', position: { top: '57.5%', left: '20.5%' }},
-            { unit_no: '27', position: { top: '52.5%', left: '14%' }}, 
+            { unit_no: '1', position: { top: '40.5%', left: '26%' } },
+            { unit_no: '2', position: { top: '44%', left: '30.5%' } },
+            { unit_no: '3', position: { top: '48%', left: '35%' } },
+            { unit_no: '4', position: { top: '52%', left: '39%' } },
+            { unit_no: '5', position: { top: '57.5%', left: '44.5%' } },
+            { unit_no: '6', position: { top: '59.5%', left: '51%' } },
+            { unit_no: '7', position: { top: '59.5%', left: '55.8%' } },
+            { unit_no: '8', position: { top: '59.5%', left: '61.5%' } },
+            { unit_no: '9', position: { top: '51%', left: '68%' } },
+            { unit_no: '10', position: { top: '44.5%', left: '68%' } },
+            { unit_no: '11', position: { top: '38%', left: '68%' } },
+            { unit_no: '12', position: { top: '39%', left: '74.5%' } },
+            { unit_no: '13', position: { top: '46%', left: '74.5%' } },
+            { unit_no: '14', position: { top: '53%', left: '74.5%' } },
+            { unit_no: '15', position: { top: '60%', left: '74.5%' } },
+            { unit_no: '16', position: { top: '72%', left: '75.2%' } },
+            { unit_no: '17', position: { top: '72%', left: '70%' } },
+            { unit_no: '18', position: { top: '72%', left: '65.6%' } },
+            { unit_no: '19', position: { top: '72%', left: '61%' } },
+            { unit_no: '20', position: { top: '72%', left: '56%' } },
+            { unit_no: '21', position: { top: '72%', left: '51%' } },
+            { unit_no: '22', position: { top: '72%', left: '45.2%' } },
+            { unit_no: '23', position: { top: '66.5%', left: '40%' } },
+            { unit_no: '24', position: { top: '63%', left: '35.5%' } },
+            { unit_no: '25', position: { top: '58.5%', left: '31%' } },
+            { unit_no: '26', position: { top: '52.5%', left: '24.5%' } },
+            { unit_no: '27', position: { top: '47.5%', left: '19%' } },
           ],
         },
         {
           floor: 2,
-          floorPlan: "/images/floorplan/a2.png",
+          floorPlan: "/images/floorplan/a2.jpg",
           rooms: [
-            { unit_no: '1', position: { top: '43%', left: '23%' }},
-            { unit_no: '2', position: { top: '47.5%', left: '28.5%' }},
-            { unit_no: '3', position: { top: '52%', left: '34%' }},
-            { unit_no: '4', position: { top: '57%', left: '39.5%' }},
-            { unit_no: '5', position: { top: '62.5%', left: '46%' }},
-            { unit_no: '6', position: { top: '65%', left: '54%' }},
-            { unit_no: '7', position: { top: '65%', left: '59.8%' }},
-            { unit_no: '8', position: { top: '65%', left: '67.3%' }},
-            { unit_no: '9', position: { top: '56%', left: '74.5%' }},
-            { unit_no: '10', position: { top: '48%', left: '74.5%' }},
-            { unit_no: '11', position: { top: '40%', left: '74.5%' }},
-            { unit_no: '12', position: { top: '31%', left: '73.5%' }}, 
-            { unit_no: '13', position: { top: '23.5%', left: '72.5%' }}, 
-            { unit_no: '14', position: { top: '14.8%', left: '71%' }}, 
-            { unit_no: '15', position: { top: '13.5%', left: '79.5%' }},
-            { unit_no: '16', position: { top: '38.6%', left: '83%' }},
-            { unit_no: '17', position: { top: '49.5%', left: '83.5%' }},
-            { unit_no: '18', position: { top: '57%', left: '83.5%' }},
-            { unit_no: '19', position: { top: '66%', left: '83.5%' }},
-            { unit_no: '20', position: { top: '79%', left: '83.6%' }},
-            { unit_no: '21', position: { top: '79%', left: '77.5%' }},
-            { unit_no: '22', position: { top: '79%', left: '72%' }},
-            { unit_no: '23', position: { top: '79%', left: '65.5%' }},
-            { unit_no: '24', position: { top: '79%', left: '60%' }},
-            { unit_no: '25', position: { top: '79%', left: '53.5%' }},
-            { unit_no: '26', position: { top: '79%', left: '46.2%' }},
-            { unit_no: '27', position: { top: '73.8%', left: '40%' }},
-            { unit_no: '28', position: { top: '69%', left: '34.5%' }},
-            { unit_no: '29', position: { top: '64.6%', left: '30%' }},
-            { unit_no: '30', position: { top: '57.5%', left: '20.5%' }},
-            { unit_no: '31', position: { top: '52.5%', left: '14%' }},
+            { unit_no: '1', position: { top: '40.5%', left: '26%' } },
+            { unit_no: '2', position: { top: '44%', left: '30.5%' } },
+            { unit_no: '3', position: { top: '48%', left: '35%' } },
+            { unit_no: '4', position: { top: '52%', left: '39%' } },
+            { unit_no: '5', position: { top: '57.5%', left: '44.5%' } },
+            { unit_no: '6', position: { top: '59.5%', left: '51%' } },
+            { unit_no: '7', position: { top: '59.5%', left: '55.8%' } },
+            { unit_no: '8', position: { top: '59.5%', left: '61.5%' } },
+            { unit_no: '9', position: { top: '51%', left: '68%' } },
+            { unit_no: '10', position: { top: '44.5%', left: '68%' } },
+            { unit_no: '11', position: { top: '38%', left: '68%' } },
+            { unit_no: '12', position: { top: '30%', left: '67.5%' } },
+            { unit_no: '13', position: { top: '23.5%', left: '66.5%' } },
+            { unit_no: '14', position: { top: '15.8%', left: '65%' } },
+            { unit_no: '15', position: { top: '14.5%', left: '72%' } },
+            { unit_no: '16', position: { top: '36.6%', left: '75%' } },
+            { unit_no: '17', position: { top: '46%', left: '75%' } },
+            { unit_no: '18', position: { top: '53%', left: '75%' } },
+            { unit_no: '19', position: { top: '60%', left: '75%' } },
+            { unit_no: '20', position: { top: '72%', left: '75%' } },
+            { unit_no: '21', position: { top: '72%', left: '70%' } },
+            { unit_no: '22', position: { top: '72%', left: '65.6%' } },
+            { unit_no: '23', position: { top: '72%', left: '61.2%' } },
+            { unit_no: '24', position: { top: '72%', left: '56%' } },
+            { unit_no: '25', position: { top: '72%', left: '51%' } },
+            { unit_no: '26', position: { top: '72%', left: '45%' } },
+            { unit_no: '27', position: { top: '67.5%', left: '39.6%' } },
+            { unit_no: '28', position: { top: '63.5%', left: '35.4%' } },
+            { unit_no: '29', position: { top: '59.6%', left: '31%' } },
+            { unit_no: '30', position: { top: '53%', left: '24.5%' } },
+            { unit_no: '31', position: { top: '48%', left: '19%' } },
           ],
         },
         {
           floor: 3,
-          floorPlan: "/images/floorplan/a3.png",
+          floorPlan: "/images/floorplan/a3.jpg",
           rooms: [
-            { unit_no: '1', position: { top: '43%', left: '23%' }},
-            { unit_no: '2', position: { top: '47.5%', left: '28.5%' }},
-            { unit_no: '3', position: { top: '52%', left: '34%' }},
-            { unit_no: '4', position: { top: '57%', left: '39.5%' }},
-            { unit_no: '5', position: { top: '62.5%', left: '46%' }},
-            { unit_no: '6', position: { top: '65%', left: '54%' }},
-            { unit_no: '7', position: { top: '65%', left: '59.8%' }},
-            { unit_no: '8', position: { top: '65%', left: '67.3%' }},
-            { unit_no: '9', position: { top: '56%', left: '74.5%' }},
-            { unit_no: '10', position: { top: '48%', left: '74.5%' }},
-            { unit_no: '11', position: { top: '40%', left: '74.5%' }},
-            { unit_no: '12', position: { top: '31%', left: '73.5%' }}, 
-            { unit_no: '13', position: { top: '23.5%', left: '72.5%' }}, 
-            { unit_no: '14', position: { top: '14.8%', left: '71%' }}, 
-            { unit_no: '15', position: { top: '13.5%', left: '79.5%' }},
-            { unit_no: '16', position: { top: '38.6%', left: '83%' }},
-            { unit_no: '17', position: { top: '49.5%', left: '83.5%' }},
-            { unit_no: '18', position: { top: '57%', left: '83.5%' }},
-            { unit_no: '19', position: { top: '66%', left: '83.5%' }},
-            { unit_no: '20', position: { top: '79%', left: '83.6%' }},
-            { unit_no: '21', position: { top: '79%', left: '76.2%' }},
-            { unit_no: '22', position: { top: '79%', left: '72%' }},
-            { unit_no: '23', position: { top: '79%', left: '65.5%' }},
-            { unit_no: '24', position: { top: '79%', left: '60%' }},
-            { unit_no: '25', position: { top: '79%', left: '53.5%' }},
-            { unit_no: '26', position: { top: '79%', left: '46.2%' }},
-            { unit_no: '27', position: { top: '73.8%', left: '40%' }},
-            { unit_no: '28', position: { top: '69%', left: '34.5%' }},
-            { unit_no: '29', position: { top: '64.6%', left: '30%' }},
-            { unit_no: '30', position: { top: '57.5%', left: '20.5%' }},
-            { unit_no: '31', position: { top: '52.5%', left: '14%' }},
+            { unit_no: '1', position: { top: '40.5%', left: '26%' } },
+            { unit_no: '2', position: { top: '44%', left: '30.5%' } },
+            { unit_no: '3', position: { top: '48%', left: '35%' } },
+            { unit_no: '4', position: { top: '52%', left: '39%' } },
+            { unit_no: '5', position: { top: '57.5%', left: '44.5%' } },
+            { unit_no: '6', position: { top: '59.5%', left: '51%' } },
+            { unit_no: '7', position: { top: '59.5%', left: '55.8%' } },
+            { unit_no: '8', position: { top: '59.5%', left: '61.5%' } },
+            { unit_no: '9', position: { top: '51%', left: '68%' } },
+            { unit_no: '10', position: { top: '44.5%', left: '68%' } },
+            { unit_no: '11', position: { top: '38%', left: '68%' } },
+            { unit_no: '12', position: { top: '30%', left: '67.5%' } },
+            { unit_no: '13', position: { top: '23.5%', left: '66.5%' } },
+            { unit_no: '14', position: { top: '15.8%', left: '65%' } },
+            { unit_no: '15', position: { top: '14.5%', left: '72%' } },
+            { unit_no: '16', position: { top: '36.6%', left: '75%' } },
+            { unit_no: '17', position: { top: '46%', left: '75%' } },
+            { unit_no: '18', position: { top: '53%', left: '75%' } },
+            { unit_no: '19', position: { top: '60%', left: '75%' } },
+            { unit_no: '20', position: { top: '72%', left: '75%' } },
+            { unit_no: '21', position: { top: '72%', left: '70%' } },
+            { unit_no: '22', position: { top: '72%', left: '65.6%' } },
+            { unit_no: '23', position: { top: '72%', left: '61.2%' } },
+            { unit_no: '24', position: { top: '72%', left: '56%' } },
+            { unit_no: '25', position: { top: '72%', left: '51%' } },
+            { unit_no: '26', position: { top: '72%', left: '45%' } },
+            { unit_no: '27', position: { top: '67.5%', left: '39.6%' } },
+            { unit_no: '28', position: { top: '63.5%', left: '35.4%' } },
+            { unit_no: '29', position: { top: '59.6%', left: '31%' } },
+            { unit_no: '30', position: { top: '53%', left: '24.5%' } },
+            { unit_no: '31', position: { top: '48%', left: '19%' } },
           ],
         },
         {
           floor: 4,
-          floorPlan: "/images/floorplan/a4.png",
+          floorPlan: "/images/floorplan/a4.jpg",
           rooms: [
-            { unit_no: '1', position: { top: '43%', left: '23%' }},
-            { unit_no: '2', position: { top: '47.5%', left: '28.5%' }},
-            { unit_no: '3', position: { top: '52%', left: '34%' }},
-            { unit_no: '4', position: { top: '57%', left: '39.5%' }},
-            { unit_no: '5', position: { top: '62.5%', left: '46%' }},
-            { unit_no: '6', position: { top: '65%', left: '54%' }},
-            { unit_no: '7', position: { top: '65%', left: '59.8%' }},
-            { unit_no: '8', position: { top: '65%', left: '67.3%' }},
-            { unit_no: '9', position: { top: '56%', left: '74.5%' }},
-            { unit_no: '10', position: { top: '48%', left: '74.5%' }},
-            { unit_no: '11', position: { top: '40%', left: '74.5%' }},
-            { unit_no: '12', position: { top: '31%', left: '73.5%' }}, 
-            { unit_no: '13', position: { top: '23.5%', left: '72.5%' }}, 
-            { unit_no: '14', position: { top: '14.8%', left: '71%' }}, 
-            { unit_no: '15', position: { top: '13.5%', left: '79.5%' }},
-            { unit_no: '16', position: { top: '38.6%', left: '83%' }},
-            { unit_no: '17', position: { top: '49.5%', left: '83.5%' }},
-            { unit_no: '18', position: { top: '57%', left: '83.5%' }},
-            { unit_no: '19', position: { top: '66%', left: '83.5%' }},
-            { unit_no: '20', position: { top: '79%', left: '83.6%' }},
-            { unit_no: '21', position: { top: '79%', left: '77.5%' }},
-            { unit_no: '22', position: { top: '79%', left: '72%' }},
-            { unit_no: '23', position: { top: '79%', left: '65.5%' }},
-            { unit_no: '24', position: { top: '79%', left: '60%' }},
-            { unit_no: '25', position: { top: '79%', left: '53.5%' }},
-            { unit_no: '26', position: { top: '79%', left: '46.2%' }},
-            { unit_no: '27', position: { top: '73.8%', left: '40%' }},
-            { unit_no: '28', position: { top: '69%', left: '34.5%' }},
-            { unit_no: '29', position: { top: '64.6%', left: '30%' }},
-            { unit_no: '30', position: { top: '57.5%', left: '20.5%' }},
-            { unit_no: '31', position: { top: '52.5%', left: '14%' }},
+            { unit_no: '1', position: { top: '40.5%', left: '26%' } },
+            { unit_no: '2', position: { top: '44%', left: '30.5%' } },
+            { unit_no: '3', position: { top: '48%', left: '35%' } },
+            { unit_no: '4', position: { top: '52%', left: '39%' } },
+            { unit_no: '5', position: { top: '57.5%', left: '44.5%' } },
+            { unit_no: '6', position: { top: '59.5%', left: '51%' } },
+            { unit_no: '7', position: { top: '59.5%', left: '55.8%' } },
+            { unit_no: '8', position: { top: '59.5%', left: '61.5%' } },
+            { unit_no: '9', position: { top: '51%', left: '68%' } },
+            { unit_no: '10', position: { top: '44.5%', left: '68%' } },
+            { unit_no: '11', position: { top: '38%', left: '68%' } },
+            { unit_no: '12', position: { top: '30%', left: '67.5%' } },
+            { unit_no: '13', position: { top: '23.5%', left: '66.5%' } },
+            { unit_no: '14', position: { top: '15.8%', left: '65%' } },
+            { unit_no: '15', position: { top: '14.5%', left: '72%' } },
+            { unit_no: '16', position: { top: '36.6%', left: '75%' } },
+            { unit_no: '17', position: { top: '46%', left: '75%' } },
+            { unit_no: '18', position: { top: '53%', left: '75%' } },
+            { unit_no: '19', position: { top: '60%', left: '75%' } },
+            { unit_no: '20', position: { top: '72%', left: '75%' } },
+            { unit_no: '21', position: { top: '72%', left: '70%' } },
+            { unit_no: '22', position: { top: '72%', left: '65.6%' } },
+            { unit_no: '23', position: { top: '72%', left: '61.2%' } },
+            { unit_no: '24', position: { top: '72%', left: '56%' } },
+            { unit_no: '25', position: { top: '72%', left: '51%' } },
+            { unit_no: '26', position: { top: '72%', left: '45%' } },
+            { unit_no: '27', position: { top: '67.5%', left: '39.6%' } },
+            { unit_no: '28', position: { top: '63.5%', left: '35.4%' } },
+            { unit_no: '29', position: { top: '59.6%', left: '31%' } },
+            { unit_no: '30', position: { top: '53%', left: '24.5%' } },
+            { unit_no: '31', position: { top: '48%', left: '19%' } },
           ],
         },
       ],
@@ -164,60 +164,60 @@ async function fetchBuildings() {
       floors: [
         {
           floor: 1,
-          floorPlan: "/images/floorplan/b1.png",
+          floorPlan: "/images/floorplan/b1.jpg",
           rooms: [
-            { unit_no: '1', position: { top: '31%', left: '28%' }},
-            { unit_no: '2', position: { top: '36.7%', left: '28.7%' }},
-            { unit_no: '3', position: { top: '42.5%', left: '29.4%' }},
-            { unit_no: '4', position: { top: '48.4%', left: '30%' }},
-            { unit_no: '5', position: { top: '54%', left: '30.7%' }},
-            { unit_no: '6', position: { top: '59.6%', left: '31.4%' }},
-            { unit_no: '7', position: { top: '67%', left: '37.2%' }},
-            { unit_no: '8', position: { top: '67%', left: '43.5%' }},
-            { unit_no: '9', position: { top: '67%', left: '50.8%' }},
-            { unit_no: '10', position: { top: '67%', left: '58.4%' }},
-            { unit_no: '11', position: { top: '50.6%', left: '75.4%' }},
-            { unit_no: '12', position: { top: '56.2%', left: '77%' }},
-            { unit_no: '13', position: { top: '61.4%', left: '78.6%' }},
-            { unit_no: '14', position: { top: '67%', left: '80.4%' }},
-            { unit_no: '15', position: { top: '72.2%', left: '81.9%' }},
-            { unit_no: '16', position: { top: '78.8%', left: '75.3%' }},
-            { unit_no: '17', position: { top: '78.8%', left: '71.2%' }},
-            { unit_no: '18', position: { top: '78.8%', left: '67.5%' }},
-            { unit_no: '19', position: { top: '78.8%', left: '63.5%' }},
-            { unit_no: '20', position: { top: '78.8%', left: '59.5%' }},
-            { unit_no: '21', position: { top: '78.8%', left: '55.7%' }},
-            { unit_no: '22', position: { top: '78.8%', left: '51.7%' }},
-            { unit_no: '23', position: { top: '78.8%', left: '47.8%' }},
-            { unit_no: '24', position: { top: '78.8%', left: '44%' }},
-            { unit_no: '25', position: { top: '78.8%', left: '40%' }},
-            { unit_no: '26', position: { top: '78.8%', left: '36%' }},
-            { unit_no: '27', position: { top: '78.8%', left: '32%' }},
-            { unit_no: '28', position: { top: '78.8%', left: '25.6%' }},
-            { unit_no: '29', position: { top: '73.2%', left: '25%' }},
-            { unit_no: '30', position: { top: '67.5%', left: '24.3%' }},
-            { unit_no: '31', position: { top: '61.6%', left: '23.6%' }},
-            { unit_no: '32', position: { top: '55.8%', left: '23%' }},
-            { unit_no: '33', position: { top: '50.2%', left: '22.3%' }},
-            { unit_no: '34', position: { top: '44.2%', left: '21.5%' }},
-            { unit_no: '35', position: { top: '38.8%', left: '20.8%' }},
-            { unit_no: '36', position: { top: '32.8%', left: '20%' }},
+            { unit_no: '1', position: { top: '28.5%', left: '30.5%' } },
+            { unit_no: '2', position: { top: '33.8%', left: '31%' } },
+            { unit_no: '3', position: { top: '39%', left: '31.5%' } },
+            { unit_no: '4', position: { top: '44.4%', left: '32%' } },
+            { unit_no: '5', position: { top: '49.8%', left: '32.7%' } },
+            { unit_no: '6', position: { top: '55%', left: '33.3%' } },
+            { unit_no: '7', position: { top: '62%', left: '39%' } },
+            { unit_no: '8', position: { top: '62%', left: '44%' } },
+            { unit_no: '9', position: { top: '62%', left: '50.8%' } },
+            { unit_no: '10', position: { top: '62%', left: '57.4%' } },
+            { unit_no: '11', position: { top: '46.4%', left: '72%' } },
+            { unit_no: '12', position: { top: '51.5%', left: '73.2%' } },
+            { unit_no: '13', position: { top: '56.4%', left: '74.6%' } },
+            { unit_no: '14', position: { top: '61.3%', left: '76%' } },
+            { unit_no: '15', position: { top: '66.2%', left: '77.4%' } },
+            { unit_no: '16', position: { top: '73.8%', left: '71.4%' } },
+            { unit_no: '17', position: { top: '73.8%', left: '68%' } },
+            { unit_no: '18', position: { top: '73.8%', left: '64.7%' } },
+            { unit_no: '19', position: { top: '73.8%', left: '61.4%' } },
+            { unit_no: '20', position: { top: '73.8%', left: '58%' } },
+            { unit_no: '21', position: { top: '73.8%', left: '54.7%' } },
+            { unit_no: '22', position: { top: '73.8%', left: '51.3%' } },
+            { unit_no: '23', position: { top: '73.8%', left: '48%' } },
+            { unit_no: '24', position: { top: '73.8%', left: '44.6%' } },
+            { unit_no: '25', position: { top: '73.8%', left: '41.3%' } },
+            { unit_no: '26', position: { top: '73.8%', left: '38%' } },
+            { unit_no: '27', position: { top: '73.8%', left: '34.6%' } },
+            { unit_no: '28', position: { top: '72.8%', left: '28.4%' } },
+            { unit_no: '29', position: { top: '67.5%', left: '27.8%' } },
+            { unit_no: '30', position: { top: '62.5%', left: '27.3%' } },
+            { unit_no: '31', position: { top: '56.8%', left: '26.6%' } },
+            { unit_no: '32', position: { top: '51.6%', left: '26%' } },
+            { unit_no: '33', position: { top: '46.2%', left: '25.3%' } },
+            { unit_no: '34', position: { top: '41.2%', left: '24.8%' } },
+            { unit_no: '35', position: { top: '35.8%', left: '24.2%' } },
+            { unit_no: '36', position: { top: '30.5%', left: '23.6%' } },
           ],
         },
         {
           floor: 2,
-          floorPlan: "/images/floorplan/b2.png",
+          floorPlan: "/images/floorplan/b2.jpg",
           rooms: [
-            { unit_no: '1', position: { top: '31%', left: '28%' }},
-            { unit_no: '2', position: { top: '36.7%', left: '28.7%' }},
-            { unit_no: '3', position: { top: '42.5%', left: '29.4%' }},
-            { unit_no: '4', position: { top: '48.4%', left: '30%' }},
-            { unit_no: '5', position: { top: '54%', left: '30.7%' }},
-            { unit_no: '6', position: { top: '59.6%', left: '31.4%' }},
-            { unit_no: '7', position: { top: '67%', left: '37.2%' }},
-            { unit_no: '8', position: { top: '67%', left: '43.5%' }},
-            { unit_no: '9', position: { top: '67%', left: '50.8%' }},
-            { unit_no: '10', position: { top: '67%', left: '58.4%' }},
+            { unit_no: '1', position: { top: '28.5%', left: '30.5%' } },
+            { unit_no: '2', position: { top: '33.8%', left: '31%' } },
+            { unit_no: '3', position: { top: '39%', left: '31.5%' } },
+            { unit_no: '4', position: { top: '44.4%', left: '32%' } },
+            { unit_no: '5', position: { top: '49.8%', left: '32.7%' } },
+            { unit_no: '6', position: { top: '55%', left: '33.3%' } },
+            { unit_no: '7', position: { top: '62%', left: '39%' } },
+            { unit_no: '8', position: { top: '62%', left: '44%' } },
+            { unit_no: '9', position: { top: '62%', left: '50.8%' } },
+            { unit_no: '10', position: { top: '62%', left: '57.4%' } },
             { unit_no: '11', position: { top: '56.8%', left: '68.4%' }},
             { unit_no: '12', position: { top: '51.5%', left: '67%' }},
             { unit_no: '13', position: { top: '46.2%', left: '65.5%' }},
@@ -261,7 +261,7 @@ async function fetchBuildings() {
         },
         {
           floor: 3,
-          floorPlan: "/images/floorplan/b3.png",
+          floorPlan: "/images/floorplan/b3.jpg",
           rooms: [
             { unit_no: '1', position: { top: '31%', left: '28%' }},
             { unit_no: '2', position: { top: '36.7%', left: '28.7%' }},
@@ -316,7 +316,7 @@ async function fetchBuildings() {
         },
         {
           floor: 4,
-          floorPlan: "/images/floorplan/b4.png",
+          floorPlan: "/images/floorplan/b4.jpg",
           rooms: [
             { unit_no: '1', position: { top: '31%', left: '28%' }},
             { unit_no: '2', position: { top: '36.7%', left: '28.7%' }},
@@ -376,7 +376,7 @@ async function fetchBuildings() {
       floors: [
         {
           floor: 1,
-          floorPlan: "/images/floorplan/c1.png",
+          floorPlan: "/images/floorplan/c1.jpg",
           rooms: [
             { unit_no: '1', position: { top: '52.5%', left: '49%' }},
             { unit_no: '2', position: { top: '52.5%', left: '38%' }},
@@ -386,7 +386,7 @@ async function fetchBuildings() {
         },
         {
           floor: 2,
-          floorPlan: "/images/floorplan/c2.png",
+          floorPlan: "/images/floorplan/c2.jpg",
           rooms: [
             { unit_no: '1', position: { top: '52%', left: '12.1%' }},
             { unit_no: '2', position: { top: '52%', left: '25.5%' }},
@@ -398,7 +398,7 @@ async function fetchBuildings() {
         },
         {
           floor: 3,
-          floorPlan: "/images/floorplan/c3.png",
+          floorPlan: "/images/floorplan/c3.jpg",
           rooms: [
             { unit_no: '1', position: { top: '52%', left: '12%' }},
             { unit_no: '2', position: { top: '52%', left: '25%' }},
@@ -460,27 +460,35 @@ async function loadData() {
 }
 
 
-// -------------------- Floor Tabs --------------------
+// -------------------- Floor Select --------------------
 function updateFloorTabs() {
-  const floorTabs = document.getElementById('floorTabs');
-  floorTabs.innerHTML = '';
+  const floorSelect = document.getElementById('floorSelect');
+  floorSelect.innerHTML = '';
   if (!buildings || !buildings[currentBuilding]) return;
   const building = buildings[currentBuilding];
   building.floors.forEach(floor => {
-    const button = document.createElement('button');
-    button.className = `floor-tab ${floor.floor === currentFloor ? 'active' : ''}`;
-    button.textContent = `Floor ${floor.floor}`;
-    button.onclick = () => selectFloor(floor.floor);
-    floorTabs.appendChild(button);
+    const option = document.createElement('option');
+    option.value = floor.floor;
+    option.textContent = `Floor ${floor.floor}`;
+    if (floor.floor === currentFloor) option.selected = true;
+    floorSelect.appendChild(option);
   });
 }
 
+// Attach floor select change event
+document.addEventListener('DOMContentLoaded', function () {
+  const floorSelect = document.getElementById('floorSelect');
+  if (floorSelect) {
+    floorSelect.addEventListener('change', function () {
+      selectFloor(parseInt(this.value, 10));
+    });
+  }
+});
+
 function selectFloor(floor) {
   currentFloor = floor;
-  document.querySelectorAll('.floor-tab').forEach(btn => btn.classList.remove('active'));
-  const activeBtn = Array.from(document.querySelectorAll('.floor-tab'))
-                         .find(btn => btn.textContent.includes(floor));
-  if (activeBtn) activeBtn.classList.add('active');
+  const floorSelect = document.getElementById('floorSelect');
+  if (floorSelect) floorSelect.value = floor;
   updateDisplay();
 }
 
@@ -492,12 +500,9 @@ function selectBuilding(letter) {
   // Reset to first floor of this building
   const firstFloor = (buildings[b].floors[0] || {}).floor || 1;
   currentFloor = firstFloor;
-  // Update active tab styles
-  document.querySelectorAll('.building-tab').forEach(btn => btn.classList.remove('active'));
-  const btn = Array.from(document.querySelectorAll('.building-tab')).find(x =>
-    (x.getAttribute('data-building') || '').toUpperCase() === b
-  );
-  if (btn) btn.classList.add('active');
+  // Sync building select
+  const buildingSelect = document.getElementById('buildingSelect');
+  if (buildingSelect) buildingSelect.value = b;
   updateFloorTabs();
   updateDisplay();
 }
@@ -565,12 +570,14 @@ function updateDisplay() {
 }
 
 // -------------------- Modal --------------------
+let currentDbData = null;
+
 async function showRoomModal(room) {
   currentRoom = room;
   const modal = document.getElementById('roomModal');
   const roomDetails = document.getElementById('roomDetails');
-  document.getElementById('modalTitle').textContent = `Room ${room.unit_no} Details`;
-  roomDetails.innerHTML = '<p>Loading...</p>';
+  roomDetails.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8"><i class="bi bi-arrow-repeat spin"></i> Loading...</div>';
+  modal.classList.add('active');
 
   // Fetch DB details
   let db = null;
@@ -578,51 +585,172 @@ async function showRoomModal(room) {
     const url = `/api/floorplan/unit/${encodeURIComponent(room.project_name || '')}`;
     const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
     if (!res.ok) {
-      // Show not found/error feedback in modal
-      roomDetails.innerHTML = `<p><strong>Unit No:</strong> ${room.unit_no}</p>` +
-                              `<p style="color:#b91c1c">Unit not found in database.</p>`;
-      modal.classList.add('active');
+      roomDetails.innerHTML =
+        '<div style="padding:32px 24px;text-align:center">' +
+          `<p style="font-weight:600;font-size:1.1rem;color:#1e293b">Room ${room.unit_no}</p>` +
+          '<p style="color:#b91c1c;font-size:0.88rem">Unit not found in database.</p>' +
+        '</div>';
       return;
     }
     db = await res.json();
-  } catch (e) { /* fallback */ }
+  } catch (e) {
+    roomDetails.innerHTML = '<div style="padding:32px 24px;text-align:center;color:#b91c1c">Failed to load data.</div>';
+    return;
+  }
 
-  const areaRaw = db?.approximate_area ?? '-';
-  const areaText = (areaRaw !== null && areaRaw !== undefined && String(areaRaw).trim() !== '') && areaRaw !== '-' ? `${areaRaw} sqm.` : '-';
+  currentDbData = db;
 
-  // Always-shown fields
-  const always = [
-    ['Unit No',       room.unit_no],
-    ['Project Name',  room.project_name || db?.project_name || '-'],
-    ['Status',        db?.process_status ?? (dbUnitStatusMap[room.project_name] || 'Available')],
-    ['Unit Type',     db?.unit_type ?? '-'],
-    ['Approx. Area',  areaText],
-    ['Price',         db?.price ?? '-'],
+  const status = db?.process_status ?? (dbUnitStatusMap[room.project_name] || 'Available');
+  const statusClass = status.toLowerCase();
+  const area = db?.approximate_area;
+  const areaText = area ? `${area} sqm` : '-';
+  const storageBase = '/storage/';
+
+  const imgSrc = db?.room_layout_image ? `${storageBase}${db.room_layout_image}` : null;
+
+  // Build modal HTML
+  let html = '';
+
+  // Header
+  html += '<div class="rm-header">';
+  html += `<div class="rm-unit-code">${db?.unit_code || room.unit_no}</div>`;
+  html += `<span class="rm-status ${statusClass}">${status}</span>`;
+  html += '</div>';
+
+  // Body: left details + right image
+  html += '<div class="rm-body">';
+
+  // Left: detail grid
+  const details = [
+    ['Unit Type', db?.unit_type ?? '-'],
+    ['Bedrooms', db?.bedrooms ?? '-'],
+    ['Area', areaText],
+    ['Price', db?.price ? `฿ ${db.price}` : '-'],
+    ['Price/SQM', db?.price_per_sqm ? `฿ ${db.price_per_sqm}` : '-'],
   ];
 
-  // Conditional fields — only shown when the API returns a value
-  const conditional = [
-    ['Customer Type',           db?.customer_type],
-    ['Total Installments',      db?.installment_count ? `${db.installment_count} terms` : null],
-    ['Total Installment Amount', db?.installment_total ? `฿ ${db.installment_total}` : null],
-  ];
+  html += '<div class="rm-details">';
+  details.forEach(([label, value]) => {
+    html += '<div class="rm-detail-item">';
+    html += `<div class="rm-detail-label">${label}</div>`;
+    html += `<div class="rm-detail-value">${value}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
 
-  const rows = [
-    ...always,
-    ...conditional.filter(([, v]) => v != null && v !== ''),
-  ];
+  // Right: image
+  if (imgSrc) {
+    html += '<div class="rm-image-wrap">';
+    html += `<a href="${imgSrc}" target="_blank" title="View full image">`;
+    html += `<img src="${imgSrc}" alt="Unit Type">`;
+    html += '<div class="rm-image-zoom"><i class="bi bi-arrows-fullscreen"></i></div>';
+    html += '</a>';
+    html += '</div>';
+  }
 
-  roomDetails.innerHTML = rows
-    .map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`)
-    .join('');
+  html += '</div>'; // .rm-body
 
-  modal.classList.add('active');
+  // Quotation buttons — only for Available status
+  if (db?.sale_id && statusClass === 'available') {
+    html += '<div class="rm-actions">';
+    html += `<button class="btn rm-btn-th" onclick="openFpQuotation('th')"><i class="bi bi-file-earmark-text me-1"></i>Quotation TH</button>`;
+    html += `<button class="btn rm-btn-en" onclick="openFpQuotation('en')"><i class="bi bi-file-earmark-text me-1"></i>Quotation EN</button>`;
+    html += '</div>';
+  }
+
+  roomDetails.innerHTML = html;
 }
 
 function closeModal() {
   document.getElementById('roomModal').classList.remove('active');
   currentRoom = null;
+  currentDbData = null;
 }
+
+// -------------------- Quotation Visitor --------------------
+function openFpQuotation(language) {
+  if (!currentDbData) return;
+  const fpModal = document.getElementById('fpQuotationModal');
+  if (!fpModal) return;
+
+  document.getElementById('fpQvSaleId').value = currentDbData.sale_id;
+  document.getElementById('fpQvListingId').value = currentDbData.listing_id;
+  document.getElementById('fpQvLanguage').value = language;
+  document.getElementById('fpQvName').value = currentDbData.avail_name || '';
+  document.getElementById('fpQvPhone').value = currentDbData.avail_tel || '';
+  document.getElementById('fpQvName').classList.remove('is-invalid');
+  document.getElementById('fpQvPhone').classList.remove('is-invalid');
+
+  const bsModal = new bootstrap.Modal(fpModal);
+  bsModal.show();
+}
+
+(function () {
+  const submitBtn = document.getElementById('fpQvSubmitBtn');
+  if (!submitBtn) return;
+
+  const spinner = document.getElementById('fpQvSpinner');
+  const nameInput = document.getElementById('fpQvName');
+  const phoneInput = document.getElementById('fpQvPhone');
+  const nameError = document.getElementById('fpQvNameError');
+  const phoneError = document.getElementById('fpQvPhoneError');
+  const saleIdInput = document.getElementById('fpQvSaleId');
+  const languageInput = document.getElementById('fpQvLanguage');
+
+  submitBtn.addEventListener('click', () => {
+    let hasError = false;
+    nameInput.classList.remove('is-invalid');
+    phoneInput.classList.remove('is-invalid');
+
+    if (!nameInput.value.trim()) {
+      nameInput.classList.add('is-invalid');
+      nameError.textContent = 'Please enter visitor name.';
+      hasError = true;
+    }
+    if (!phoneInput.value.trim()) {
+      phoneInput.classList.add('is-invalid');
+      phoneError.textContent = 'Please enter phone number.';
+      hasError = true;
+    }
+    if (hasError) return;
+
+    submitBtn.disabled = true;
+    spinner.classList.remove('d-none');
+
+    fetch(`/buy-sale/${saleIdInput.value}/quotation-visitor`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        visitor_name: nameInput.value.trim(),
+        visitor_phone: phoneInput.value.trim(),
+        language: languageInput.value,
+      }),
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Update cached data so next open shows new values
+        if (currentDbData) {
+          currentDbData.avail_name = nameInput.value.trim();
+          currentDbData.avail_tel = phoneInput.value.trim();
+        }
+        window.open(data.redirect_url, '_blank');
+        bootstrap.Modal.getInstance(document.getElementById('fpQuotationModal')).hide();
+      } else {
+        alert('Failed to save visitor information.');
+      }
+    })
+    .catch(() => alert('An error occurred. Please try again.'))
+    .finally(() => {
+      submitBtn.disabled = false;
+      spinner.classList.add('d-none');
+    });
+  });
+})();
 
 // -------------------- Init --------------------
 loadData();

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Sale;
+use App\Models\SaleTransfer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -140,10 +142,91 @@ class FinanceController extends Controller
             }
         }
 
+        // ── Transfer Readiness ─────────────────────────────────
+        $transferBase = DB::table('sales')
+            ->whereIn('sales.status', ['installment', 'transferred'])
+            ->whereYear('sales.created_at', $year);
+
+        $transferStats = (object) [
+            'total'      => (clone $transferBase)->count(),
+            'approved'   => (clone $transferBase)->join('sale_transfers as st', 'sales.id', '=', 'st.sale_id')->where('st.transfer_readiness', 'approved')->count(),
+            'on_process' => (clone $transferBase)->join('sale_transfers as st', 'sales.id', '=', 'st.sale_id')->where('st.transfer_readiness', 'on_process')->count(),
+            'bank_loan'  => (clone $transferBase)->join('sale_transfers as st', 'sales.id', '=', 'st.sale_id')->where('st.transfer_payment_type', 'bank_loan')->count(),
+            'cash'       => (clone $transferBase)->join('sale_transfers as st', 'sales.id', '=', 'st.sale_id')->where('st.transfer_payment_type', 'cash')->count(),
+        ];
+
+        $transferCustomers = DB::table('sales')
+            ->join('listings', 'sales.listing_id', '=', 'listings.id')
+            ->join('projects', 'listings.project_id', '=', 'projects.id')
+            ->join('users', 'sales.user_id', '=', 'users.id')
+            ->leftJoin('sale_transfers as st', 'sales.id', '=', 'st.sale_id')
+            ->whereIn('sales.status', ['installment', 'transferred'])
+            ->whereYear('sales.created_at', $year)
+            ->select(
+                'sales.id as sale_id',
+                'sales.sale_number',
+                'sales.status',
+                DB::raw("TRIM(CONCAT(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(sales.reservation_data, '$.first_name')), ''), ' ', COALESCE(JSON_UNQUOTE(JSON_EXTRACT(sales.reservation_data, '$.last_name')), ''))) as customer_name"),
+                'listings.unit_code',
+                'listings.price_per_room',
+                'projects.name as project_name',
+                'projects.default_transfer_payment_type',
+                'users.name as salesperson',
+                DB::raw("COALESCE(st.transfer_payment_type, projects.default_transfer_payment_type) as transfer_payment_type"),
+                'st.transfer_readiness',
+                'st.bank_name',
+                'st.bank_account_number',
+                'st.loan_amount',
+                'st.actual_loan_amount',
+                'st.customer_extra_payment',
+                'st.bank_approved_at',
+            )
+            ->orderByDesc('sales.created_at')
+            ->get();
+
         return view('finance.index', compact(
             'kpis', 'yearlyChart', 'quarterChartLabels', 'quarterChartValues',
             'quarterMonths', 'personData', 'personDeals',
+            'transferStats', 'transferCustomers',
             'year', 'quarter'
         ));
+    }
+
+    public function storeTransfer(Request $request, Sale $sale)
+    {
+        $request->validate([
+            'transfer_payment_type'  => 'required|in:bank_loan,cash',
+            'transfer_readiness'     => 'required|in:on_process,approved,not_ready',
+            'bank_name'              => 'nullable|string|max:255',
+            'bank_account_number'    => 'nullable|string|max:255',
+            'loan_amount'            => 'nullable|numeric|min:0',
+            'actual_loan_amount'     => 'nullable|numeric|min:0',
+            'customer_extra_payment' => 'nullable|numeric|min:0',
+            'bank_approved_at'       => 'nullable|date',
+        ]);
+
+        abort_unless(in_array($sale->status, ['installment', 'transferred']), 422, 'Sale must be in installment or transferred status.');
+
+        $data = $request->only([
+            'transfer_payment_type', 'transfer_readiness',
+            'bank_name', 'bank_account_number', 'loan_amount',
+            'actual_loan_amount', 'customer_extra_payment', 'bank_approved_at',
+        ]);
+
+        if ($data['transfer_payment_type'] === 'cash') {
+            $data['bank_name'] = null;
+            $data['bank_account_number'] = null;
+            $data['loan_amount'] = null;
+            $data['actual_loan_amount'] = null;
+            $data['customer_extra_payment'] = null;
+            $data['bank_approved_at'] = null;
+        }
+
+        SaleTransfer::updateOrCreate(
+            ['sale_id' => $sale->id],
+            $data
+        );
+
+        return response()->json(['success' => true, 'message' => 'Transfer details saved.']);
     }
 }

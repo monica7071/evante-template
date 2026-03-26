@@ -114,6 +114,67 @@
         .cal-table td { height: 60px; padding: 0.2rem; }
         .cal-event { font-size: 0.55rem; }
     }
+    @media (max-width: 480px) {
+        .cal-table th { font-size: 0.6rem; padding: 0.3rem 0.1rem; }
+        .cal-table td { min-height: 44px; height: auto; padding: 0.15rem; }
+        .cal-day-num { font-size: 0.62rem; }
+        .cal-event { font-size: 0.58rem; padding: 1px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block; }
+        .cal-more { font-size: 0.52rem; }
+    }
+
+    /* ── Calendar Event Popup ── */
+    .cal-popup-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45); z-index: 1050;
+        align-items: center; justify-content: center;
+    }
+    .cal-popup-overlay.active { display: flex; }
+    .cal-popup {
+        background: #fff; border-radius: 14px; width: 380px; max-width: 92%;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        animation: cpopSlideUp 0.2s ease; position: relative;
+        overflow: hidden;
+    }
+    @keyframes cpopSlideUp {
+        from { transform: translateY(12px); opacity: 0; }
+        to   { transform: translateY(0); opacity: 1; }
+    }
+    .cal-popup-close {
+        position: absolute; top: 10px; right: 12px;
+        background: none; border: none; font-size: 20px; color: #94a3b8;
+        cursor: pointer; line-height: 1; z-index: 2;
+    }
+    .cal-popup-close:hover { color: #475569; }
+
+    .cpop-header { padding: 16px 20px 12px; border-bottom: 1px solid #f1f5f9; }
+    .cpop-status {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.82rem; font-weight: 700; padding: 4px 12px;
+        border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .cpop-status.appointment { background: rgba(124,58,237,0.12); color: #7c3aed; }
+    .cpop-status.transferred { background: rgba(16,24,40,0.08); color: #475569; }
+
+    .cpop-body { padding: 14px 20px; }
+    .cpop-row {
+        display: flex; justify-content: space-between; align-items: baseline;
+        padding: 6px 0; border-bottom: 1px solid #f8fafc;
+    }
+    .cpop-row:last-child { border-bottom: none; }
+    .cpop-row-full { flex-direction: column; gap: 2px; }
+    .cpop-label { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.03em; }
+    .cpop-value { font-size: 0.88rem; font-weight: 600; color: #1e293b; }
+    .cpop-row-full .cpop-value { font-weight: 400; color: #475569; font-size: 0.82rem; }
+
+    .cpop-footer {
+        padding: 12px 20px; border-top: 1px solid #f1f5f9;
+        text-align: center;
+    }
+    .cpop-link {
+        font-size: 0.82rem; font-weight: 600; color: var(--primary, #2A8B92);
+        text-decoration: none;
+    }
+    .cpop-link:hover { text-decoration: underline; }
 </style>
 @endsection
 
@@ -180,10 +241,23 @@
                             @if($isValid)
                                 <div class="cal-day-num {{ $isToday ? 'today' : '' }}">{{ $dayNum }}</div>
                                 @foreach(array_slice($dayEvents, 0, $maxShow) as $ev)
-                                    @php $sc = $statusColors[$ev->status] ?? ['bg' => '#eee', 'color' => '#666']; @endphp
-                                    <span class="cal-event" style="background: {{ $sc['bg'] }}; color: {{ $sc['color'] }};"
-                                          title="{{ $ev->sale_number }} · {{ $ev->unit_code }} · {{ ucfirst($ev->status) }}">
-                                        {{ $ev->sale_number }}
+                                    @php
+                                        $sc = $statusColors[$ev->status] ?? ['bg' => '#eee', 'color' => '#666'];
+                                        $evTime = ($ev->status === 'appointment' && $ev->appointment_time)
+                                            ? \Carbon\Carbon::parse($ev->appointment_time)->format('H:i') . ' '
+                                            : '';
+                                        $evLabel = $evTime . ($ev->unit_code ?? $ev->sale_number);
+                                    @endphp
+                                    <span class="cal-event cal-event-click" style="background: {{ $sc['bg'] }}; color: {{ $sc['color'] }}; cursor: pointer;"
+                                       data-status="{{ $ev->status }}"
+                                       data-sale-number="{{ $ev->sale_number }}"
+                                       data-unit-code="{{ $ev->unit_code ?? '-' }}"
+                                       data-user-name="{{ $ev->user_name ?? '-' }}"
+                                       data-appointment-date="{{ $ev->appointment_date ?? '' }}"
+                                       data-appointment-time="{{ $ev->appointment_time ?? '' }}"
+                                       data-remark="{{ $ev->remark ?? '' }}"
+                                       data-sale-id="{{ $ev->sale_id }}">
+                                        {{ $evLabel }}
                                     </span>
                                 @endforeach
                                 @if(count($dayEvents) > $maxShow)
@@ -262,11 +336,8 @@
                                             @if($appt->appointment_time)
                                                 <i class="bi bi-clock"></i>{{ \Carbon\Carbon::parse($appt->appointment_time)->format('H:i') }}
                                             @endif
-                                            @if($appt->appointment_name)
-                                                <span class="ms-2"><i class="bi bi-person"></i>{{ $appt->appointment_name }}</span>
-                                            @endif
-                                            @if($appt->appointment_phone)
-                                                <span class="ms-2"><i class="bi bi-telephone"></i>{{ $appt->appointment_phone }}</span>
+                                            @if(!empty($appt->appointment_remark))
+                                                <span class="ms-2 text-muted">{{ Str::limit($appt->appointment_remark, 50) }}</span>
                                             @endif
                                         </div>
                                     </div>
@@ -284,4 +355,76 @@
             </div>
         </div>
     </div>
+
+    {{-- ── Event Detail Popup ── --}}
+    <div class="cal-popup-overlay" id="calPopupOverlay">
+        <div class="cal-popup">
+            <button class="cal-popup-close" id="calPopupClose">&times;</button>
+            <div id="calPopupContent"></div>
+        </div>
+    </div>
 @endsection
+
+@section('scripts')
+<script>
+(function () {
+    const overlay = document.getElementById('calPopupOverlay');
+    const content = document.getElementById('calPopupContent');
+    const closeBtn = document.getElementById('calPopupClose');
+    if (!overlay) return;
+
+    const statusLabels = {
+        appointment: { label: 'Appointment', icon: 'bi-calendar-event', cls: 'appointment' },
+        transferred: { label: 'Transferred', icon: 'bi-patch-check', cls: 'transferred' },
+    };
+
+    document.querySelectorAll('.cal-event-click').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            const d = this.dataset;
+            const info = statusLabels[d.status] || { label: d.status, icon: 'bi-circle', cls: '' };
+
+            let html = '';
+            html += `<div class="cpop-header">`;
+            html += `<span class="cpop-status ${info.cls}"><i class="bi ${info.icon}"></i> ${info.label}</span>`;
+            html += `</div>`;
+
+            html += `<div class="cpop-body">`;
+            html += `<div class="cpop-row"><span class="cpop-label">Sale No.</span><span class="cpop-value">${d.saleNumber}</span></div>`;
+            html += `<div class="cpop-row"><span class="cpop-label">Unit</span><span class="cpop-value">${d.unitCode}</span></div>`;
+            html += `<div class="cpop-row"><span class="cpop-label">Agent</span><span class="cpop-value">${d.userName}</span></div>`;
+
+            if (d.status === 'appointment') {
+                if (d.appointmentDate) {
+                    const dt = new Date(d.appointmentDate);
+                    const dateStr = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                    html += `<div class="cpop-row"><span class="cpop-label">Date</span><span class="cpop-value">${dateStr}</span></div>`;
+                }
+                if (d.appointmentTime) {
+                    const timeParts = d.appointmentTime.split(':');
+                    html += `<div class="cpop-row"><span class="cpop-label">Time</span><span class="cpop-value">${timeParts[0]}:${timeParts[1]}</span></div>`;
+                }
+                if (d.remark) {
+                    html += `<div class="cpop-row cpop-row-full"><span class="cpop-label">Remark</span><span class="cpop-value">${d.remark}</span></div>`;
+                }
+            }
+
+            html += `</div>`;
+
+            html += `<div class="cpop-footer">`;
+            html += `<a href="/buy-sale?highlight=${d.saleId}" class="cpop-link"><i class="bi bi-box-arrow-up-right me-1"></i>View in Buy/Sale</a>`;
+            html += `</div>`;
+
+            content.innerHTML = html;
+            overlay.classList.add('active');
+        });
+    });
+
+    closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+    });
+})();
+</script>
+@endsection
+

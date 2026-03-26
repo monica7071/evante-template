@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Listing;
 use App\Models\PdfTemplate;
+use App\Models\Sale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\Tfpdf\Fpdi;
 
 class QuotationContractController extends Controller
 {
@@ -36,7 +37,7 @@ class QuotationContractController extends Controller
                 ->with('error', 'ยังไม่มี Quotation Template สำหรับภาษา ' . strtoupper($language));
         }
 
-        $contractData = $this->buildContractDataFromListing($listing);
+        $contractData = $this->buildContractDataFromListing($listing, $language);
 
         return view('contracts.quotation-preview', [
             'listing' => $listing,
@@ -67,10 +68,16 @@ class QuotationContractController extends Controller
                 ->with('error', 'Template file missing from storage.');
         }
 
+        if (!defined('_SYSTEM_TTFONTS')) {
+            define('_SYSTEM_TTFONTS', storage_path('fonts') . '/');
+        }
         $pdf = new Fpdi();
+        $pdf->AddFont('Sarabun', '', 'Sarabun-Regular.ttf', true);
+        $pdf->AddFont('Sarabun', 'B', 'Sarabun-Bold.ttf', true);
+
         $pageCount = $pdf->setSourceFile($templatePath);
         $groupedMappings = $template->mappings->groupBy('page_number');
-        $contractData = $this->buildContractDataFromListing($listing);
+        $contractData = $this->buildContractDataFromListing($listing, $language);
 
         for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
             $tplId = $pdf->importPage($pageNo);
@@ -85,7 +92,7 @@ class QuotationContractController extends Controller
             }
 
             $fontSizePt = 10;
-            $pdf->SetFont('Helvetica', '', $fontSizePt);
+            $pdf->SetFont('Sarabun', '', $fontSizePt);
             $pdf->SetTextColor(0, 0, 0);
 
             foreach ($groupedMappings->get($pageNo) as $mapping) {
@@ -119,7 +126,7 @@ class QuotationContractController extends Controller
         ]);
     }
 
-    private function buildContractDataFromListing(Listing $listing): array
+    private function buildContractDataFromListing(Listing $listing, string $language = 'th'): array
     {
         $project = $listing->project;
         $location = $listing->location;
@@ -127,6 +134,14 @@ class QuotationContractController extends Controller
         $formatMoney = fn($value) => $value !== null ? number_format((float) $value, 2) : '';
 
         $buildingName = $listing->building ?: ($project?->name ?? null);
+
+        // Use EN-specific fields when language is 'en', fall back to TH values
+        $installment15 = ($language === 'en' && $listing->installment_15_terms_en !== null)
+            ? $listing->installment_15_terms_en
+            : $listing->installment_15_terms;
+        $transferAmount = ($language === 'en' && $listing->transfer_amount_en !== null)
+            ? $listing->transfer_amount_en
+            : $listing->transfer_amount;
 
         return [
             'listing_building' => $buildingName,
@@ -144,10 +159,10 @@ class QuotationContractController extends Controller
             'listing_location_district' => $location?->district,
             'listing_reservation_deposit' => $formatMoney($listing->reservation_deposit),
             'listing_contract_payment' => $formatMoney($listing->contract_payment),
-            'listing_installment_15_terms' => $formatMoney($listing->installment_15_terms),
+            'listing_installment_15_terms' => $formatMoney($installment15),
             'listing_installment_12_terms' => $formatMoney($listing->installment_12_terms),
             'listing_special_installment_3_terms' => $formatMoney($listing->special_installment_3_terms),
-            'listing_transfer_amount' => $formatMoney($listing->transfer_amount),
+            'listing_transfer_amount' => $formatMoney($transferAmount),
             'listing_transfer_fee' => $formatMoney($listing->transfer_fee),
             'listing_annual_common_fee' => $formatMoney($listing->annual_common_fee),
             'listing_sinking_fund' => $formatMoney($listing->sinking_fund),
@@ -157,6 +172,8 @@ class QuotationContractController extends Controller
             'listing_room_layout_image' => $listing->room_layout_image ?: null,
             'user_name' => auth()->user()?->name,
             'user_phone' => auth()->user()?->phone,
+            'sale_avail_name' => Sale::where('listing_id', $listing->id)->latest()->value('avail_name'),
+            'sale_avail_tel' => Sale::where('listing_id', $listing->id)->latest()->value('avail_tel'),
         ];
     }
 
