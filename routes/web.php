@@ -36,6 +36,8 @@ use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\SuperAdminOrganizationController;
 use App\Http\Controllers\SuperAdmin\SuperAdminPlanController;
 use App\Http\Controllers\SuperAdmin\SuperAdminUserController;
+use App\Http\Controllers\Admin\ChatManagementController;
+use App\Http\Controllers\ChatPageController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -59,8 +61,26 @@ Route::get('/questionnaire', [QuestionnaireController::class, 'create'])->name('
 Route::post('/questionnaire', [QuestionnaireController::class, 'store'])->name('questionnaire.store');
 Route::get('/questionnaire/thank-you', [QuestionnaireController::class, 'thankYou'])->name('questionnaire.thank-you');
 
+// Chat (public — no auth required)
+Route::get('/chat', [ChatPageController::class, 'index'])->name('chat.index');
+Route::post('/chat/send', [ChatPageController::class, 'send'])->name('chat.send');
+Route::get('/chat/sessions', [ChatPageController::class, 'sessions'])->name('chat.sessions');
+Route::get('/chat/sessions/{id}/messages', [ChatPageController::class, 'messages'])->name('chat.messages');
+Route::post('/chat/upload', [ChatPageController::class, 'upload'])->name('chat.upload');
+
 // All protected routes
 Route::middleware('auth')->group(function () {
+    // Admin Chat Dashboard
+    Route::prefix('admin/chat')->name('admin.chat.')->group(function () {
+        Route::get('/', [ChatManagementController::class, 'index'])->name('index');
+        Route::get('/sessions', [ChatManagementController::class, 'sessions'])->name('sessions');
+        Route::get('/sessions/{session}/messages', [ChatManagementController::class, 'messages'])->name('messages');
+        Route::post('/sessions/{session}/send', [ChatManagementController::class, 'send'])->name('send');
+        Route::post('/sessions/{session}/takeover', [ChatManagementController::class, 'takeover'])->name('takeover');
+        Route::post('/sessions/{session}/handback', [ChatManagementController::class, 'handback'])->name('handback');
+        Route::post('/sessions/{session}/resolve', [ChatManagementController::class, 'resolve'])->name('resolve');
+    });
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/report', [ReportController::class, 'index'])->name('report.index');
     Route::get('/report/export-pdf', [ReportController::class, 'exportPdf'])->name('report.export-pdf');

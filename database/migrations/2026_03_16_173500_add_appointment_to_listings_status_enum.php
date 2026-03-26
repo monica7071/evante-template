@@ -7,11 +7,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE `listings` MODIFY COLUMN `status` ENUM('available','appointment','reserved','contract','installment','transferred') NOT NULL DEFAULT 'available'");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE `listings` MODIFY COLUMN `status` ENUM('available','appointment','reserved','contract','installment','transferred') NOT NULL DEFAULT 'available'"); }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE `listings` MODIFY COLUMN `status` ENUM('available','reserved','contract','installment','transferred') NOT NULL DEFAULT 'available'");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE `listings` MODIFY COLUMN `status` ENUM('available','reserved','contract','installment','transferred') NOT NULL DEFAULT 'available'"); }
     }
 };

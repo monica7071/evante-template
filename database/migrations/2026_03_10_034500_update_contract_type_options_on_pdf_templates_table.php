@@ -16,11 +16,11 @@ return new class extends Migration
     public function up(): void
     {
         $enumList = "'" . implode("','", $this->types) . "'";
-        DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM({$enumList}) NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM({$enumList}) NOT NULL"); }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM('reservation','purchase','quotation') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM('reservation','purchase','quotation') NOT NULL"); }
     }
 };
