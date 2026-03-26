@@ -7,11 +7,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM('reservation','purchase','quotation') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM('reservation','purchase','quotation') NOT NULL");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM('reservation','purchase') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE `pdf_templates` MODIFY `contract_type` ENUM('reservation','purchase') NOT NULL");
+        }
     }
 };
