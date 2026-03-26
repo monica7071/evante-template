@@ -616,21 +616,6 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════════════ --}}
-    {{-- ── PRODUCTION ─────────────────────────────────────── --}}
-    <div class="category-header"><i class="bi bi-graph-up-arrow"></i> Production</div>
-
-    {{-- ── Production Line Chart ─────────────────────────── --}}
-    <div class="section-card">
-        <div class="section-card-header">
-            <i class="bi bi-graph-up"></i> Production ({{ $year }})
-        </div>
-        <div class="section-card-body">
-            <div class="chart-container">
-                <canvas id="productionChart"></canvas>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
@@ -815,39 +800,6 @@
     });
     @endif
 
-    // ── Production Area Chart ──
-    new Chart(document.getElementById('productionChart'), {
-        type: 'line',
-        data: {
-            labels: @json($productionChart->labels),
-            datasets: [{
-                label: 'Transferred Value',
-                data: @json($productionChart->values),
-                borderColor: '#2A8B92',
-                backgroundColor: 'rgba(42, 139, 146, 0.1)',
-                fill: true, tension: 0.4, borderWidth: 2,
-                pointBackgroundColor: '#2A8B92', pointRadius: 3, pointHoverRadius: 5
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1a2e35', padding: 10, cornerRadius: 8,
-                    callbacks: { label: ctx => '฿' + Number(ctx.raw).toLocaleString() }
-                }
-            },
-            scales: {
-                x: { grid: { display: false } },
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.04)' },
-                    ticks: { callback: v => '฿' + (v >= 1e6 ? (v/1e6).toFixed(1) + 'M' : v >= 1e3 ? (v/1e3).toFixed(0) + 'K' : v) }
-                }
-            }
-        }
-    });
     // ── Export PDF button ──
     document.getElementById('exportPdfBtn').href =
         '{{ route("report.export-pdf") }}?month={{ $month }}&year={{ $year }}&view={{ $view }}'

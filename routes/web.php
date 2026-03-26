@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/report/budget', [ReportController::class, 'saveBudget'])->name('report.save-budget');
     Route::delete('/report/budget/{budget}', [ReportController::class, 'deleteBudget'])->name('report.delete-budget');
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+    Route::post('/finance/transfer/{sale}', [FinanceController::class, 'storeTransfer'])->name('finance.transfer.store');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 
     // Profile

@@ -75,6 +75,11 @@ class Sale extends Model
         return $this->hasOne(DealSlipApproval::class);
     }
 
+    public function saleTransfer(): HasOne
+    {
+        return $this->hasOne(SaleTransfer::class);
+    }
+
     protected static function booted(): void
     {
         static::creating(function ($sale) {

@@ -16,6 +16,7 @@ class Project extends Model
         'name',
         'total_floors',
         'total_units',
+        'default_transfer_payment_type',
     ];
 
     public function location(): BelongsTo

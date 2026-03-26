@@ -422,33 +422,5 @@
 
     <div class="category-title">📈 Production</div>
 
-    {{-- 6. Production (yearly) --}}
-    <div class="section">
-        <div class="section-title">Production ({{ $year }})</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Month</th>
-                    <th class="text-right">Transferred Value (฿)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $totalProd = 0; @endphp
-                @for($i = 0; $i < 12; $i++)
-                    @php $totalProd += $productionChart->values[$i]; @endphp
-                    <tr>
-                        <td>{{ $productionChart->labels[$i] }}</td>
-                        <td class="text-right {{ $productionChart->values[$i] > 0 ? 'font-bold' : '' }}">
-                            {{ number_format($productionChart->values[$i], 0) }}
-                        </td>
-                    </tr>
-                @endfor
-                <tr style="border-top: 2px solid #999;">
-                    <td class="font-bold">Total</td>
-                    <td class="text-right font-bold">{{ number_format($totalProd, 0) }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
 </body>
 </html>

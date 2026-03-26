@@ -324,32 +324,9 @@ class ReportController extends Controller
             ->groupBy('nationality', 'payment_type')
             ->get();
 
-        // ── 8. Production Line Chart (monthly, full year) ───────────
-        $prodRaw = DB::table('sales')
-            ->join('listings', 'sales.listing_id', '=', 'listings.id')
-            ->where('sales.status', 'transferred')
-            ->whereYear('sales.created_at', $year)
-            ->select(
-                DB::raw('MONTH(sales.created_at) as m'),
-                DB::raw('SUM(listings.price_per_room) as val'),
-                DB::raw('COUNT(sales.id) as cnt')
-            )
-            ->groupBy('m')
-            ->pluck('val', 'm')
-            ->toArray();
-
-        $productionChart = (object) [
-            'labels' => [],
-            'values' => [],
-        ];
-        for ($i = 1; $i <= 12; $i++) {
-            $productionChart->labels[] = Carbon::create($year, $i)->format('M');
-            $productionChart->values[] = (float) ($prodRaw[$i] ?? 0);
-        }
-
         return compact(
             'teamChart', 'saleChart', 'top5', 'unitTypeBar', 'unitTypeMax',
-            'customerSplit', 'nationalitySplit', 'paymentByNationality', 'productionChart'
+            'customerSplit', 'nationalitySplit', 'paymentByNationality'
         );
     }
 }
