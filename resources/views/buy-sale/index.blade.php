@@ -308,9 +308,11 @@
     {{-- Header --}}
     <div class="page-header">
         <h3>Buy/Sale</h3>
+        @permission('buy_sale.create')
         <button class="btn-create" data-bs-toggle="modal" data-bs-target="#createSaleModal">
             <i class="bi bi-plus me-1"></i> Create Appointment
         </button>
+        @endpermission
     </div>
 
     {{-- Project + Unit Search --}}
@@ -417,6 +419,7 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 {{-- 1. Make / Advance action --}}
+                                @permission('buy_sale.advance')
                                 @if($nextStatus && $sale->status !== 'transferred')
                                     @if(in_array($nextStatus, $availableStatuses))
                                         <li>
@@ -461,6 +464,7 @@
                                         </li>
                                     @endif
                                 @endif
+                                @endpermission
 
                                 {{-- 2. Print menu --}}
                                 @php
@@ -518,6 +522,7 @@
                                 @endif
 
                                 {{-- 4. Note / Remark --}}
+                                @permission('buy_sale.remarks')
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <button type="button"
@@ -530,8 +535,10 @@
                                         Note / Remark
                                     </button>
                                 </li>
+                                @endpermission
 
                                 {{-- 5. Cancel --}}
+                                @permission('buy_sale.cancel')
                                 @if($sale->status !== 'appointment' && $sale->status !== 'transferred')
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
@@ -545,6 +552,7 @@
                                         </form>
                                     </li>
                                 @endif
+                                @endpermission
                             </ul>
                         </div>
                     </div>

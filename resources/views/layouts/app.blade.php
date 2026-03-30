@@ -451,46 +451,58 @@
                 <ul class="navbar-nav align-items-lg-stretch me-auto">
 
                     {{-- Overview --}}
+                    @permission('dashboard.view')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                            href="{{ route('dashboard') }}">
                             <i class="bi bi-speedometer2 me-1"></i> Overview
                         </a>
                     </li>
+                    @endpermission
 
                     {{-- Buy/Sale --}}
+                    @permission('buy_sale.view')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('buy-sale.*') ? 'active' : '' }}"
                            href="{{ route('buy-sale.index') }}">
                             <i class="bi bi-shuffle me-1"></i> Buy/Sale
                         </a>
                     </li>
+                    @endpermission
 
                     {{-- Listing Setting dropdown --}}
+                    @if(auth()->check() && auth()->user()->hasAnyPermission(['listing_locations.view', 'listing_projects.view', 'listing_units.view', 'listing_units.import']))
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ $isListing ? 'active' : '' }}"
                            href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Listing Setting
                         </a>
                         <ul class="dropdown-menu">
+                            @permission('listing_locations.view')
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('locations.*') ? 'active-item' : '' }}"
                                    href="{{ route('locations.index') }}">
                                     <i class="bi bi-geo-alt me-2 text-secondary"></i>Location
                                 </a>
                             </li>
+                            @endpermission
+                            @permission('listing_projects.view')
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('projects.*') ? 'active-item' : '' }}"
                                    href="{{ route('projects.index') }}">
                                     <i class="bi bi-buildings me-2 text-secondary"></i>Project
                                 </a>
                             </li>
+                            @endpermission
+                            @permission('listing_units.view')
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('units.*') ? 'active-item' : '' }}"
                                    href="{{ route('units.index') }}">
                                     <i class="bi bi-door-open me-2 text-secondary"></i>Listing
                                 </a>
                             </li>
+                            @endpermission
+                            @permission('listing_units.import')
                             <li><hr class="dropdown-divider my-1"></li>
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('units.import.*') ? 'active-item' : '' }}"
@@ -498,40 +510,50 @@
                                     <i class="bi bi-file-earmark-arrow-up me-2 text-secondary"></i>Import Excel
                                 </a>
                             </li>
+                            @endpermission
                         </ul>
                     </li>
+                    @endif
 
                     {{-- Floor Plan --}}
+                    @permission('floor_plan.view')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('floor-plan.*') ? 'active' : '' }}"
                            href="{{ route('floor-plan.index') }}">
                             <i class="bi bi-grid-3x3-gap me-1"></i> Floor Plan
                         </a>
                     </li>
+                    @endpermission
 
                     {{-- Report --}}
+                    @permission('report.view')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('report.*') ? 'active' : '' }}"
                            href="{{ route('report.index') }}">
                             <i class="bi bi-graph-up-arrow me-1"></i> Report
                         </a>
                     </li>
+                    @endpermission
 
                     {{-- Finance --}}
+                    @permission('finance.view')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('finance.*') ? 'active' : '' }}"
                            href="{{ route('finance.index') }}">
                             <i class="bi bi-cash-coin me-1"></i> Finance
                         </a>
                     </li>
+                    @endpermission
 
                     {{-- Activity --}}
+                    @permission('activity.view')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('activity.*') ? 'active' : '' }}"
                            href="{{ route('activity.index') }}">
                             <i class="bi bi-lightning-charge me-1"></i> Activity
                         </a>
                     </li>
+                    @endpermission
 
                 </ul>
 
@@ -539,18 +561,21 @@
                 @auth
                     <ul class="navbar-nav align-items-lg-center ms-auto gap-lg-2">
                         {{-- Template dropdown --}}
+                        @permission('templates.view')
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ $isTemplate ? 'active' : '' }}"
                                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Template
                             </a>
                             <ul class="dropdown-menu">
+                                @permission('templates.upload')
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('upload-template.*') ? 'active-item' : '' }}"
                                        href="{{ route('upload-template.create') }}">
                                         <i class="bi bi-upload me-2 text-secondary"></i>Upload Template
                                     </a>
                                 </li>
+                                @endpermission
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('templates.*') ? 'active-item' : '' }}"
                                        href="{{ route('templates.index') }}">
@@ -559,47 +584,71 @@
                                 </li>
                             </ul>
                         </li>
+                        @endpermission
 
                         {{-- Employee dropdown --}}
+                        @if(auth()->user()->hasAnyPermission(['employee_company.view', 'employee_profile_fields.view', 'employee_list.view', 'employee_positions.view', 'employee_teams.view', 'roles.view']))
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ $isEmployee ? 'active' : '' }}"
                                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-people-fill me-1"></i><span class="nav-label-employee">Employee</span>
                             </a>
                             <ul class="dropdown-menu">
+                                @permission('employee_company.view')
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('employee.company.*') ? 'active-item' : '' }}"
                                        href="{{ route('employee.company.index') }}">
                                         <i class="bi bi-building-gear me-2 text-secondary"></i>Company Information
                                     </a>
                                 </li>
+                                @endpermission
+                                @permission('employee_profile_fields.view')
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('employee.profile-info.*') ? 'active-item' : '' }}"
                                        href="{{ route('employee.profile-info.index') }}">
                                         <i class="bi bi-card-list me-2 text-secondary"></i>Profile Information
                                     </a>
                                 </li>
+                                @endpermission
+                                @if(auth()->user()->hasAnyPermission(['employee_list.view', 'employee_positions.view', 'employee_teams.view']))
                                 <li><hr class="dropdown-divider"></li>
+                                @endif
+                                @permission('employee_list.view')
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('employee.list.*') ? 'active-item' : '' }}"
                                        href="{{ route('employee.list.index') }}">
                                         <i class="bi bi-person-lines-fill me-2 text-secondary"></i>Employee
                                     </a>
                                 </li>
+                                @endpermission
+                                @permission('employee_positions.view')
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('employee.positions.*') ? 'active-item' : '' }}"
                                        href="{{ route('employee.positions.index') }}">
                                         <i class="bi bi-diagram-3 me-2 text-secondary"></i>Position
                                     </a>
                                 </li>
+                                @endpermission
+                                @permission('employee_teams.view')
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('employee.teams.*') ? 'active-item' : '' }}"
                                        href="{{ route('employee.teams.index') }}">
                                         <i class="bi bi-people-fill me-2 text-secondary"></i>Team
                                     </a>
                                 </li>
+                                @endpermission
+                                @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('employee.roles.*') ? 'active-item' : '' }}"
+                                       href="{{ route('employee.roles.index') }}">
+                                        <i class="bi bi-shield-check me-2 text-secondary"></i>Roles & Permissions
+                                    </a>
+                                </li>
+                                @endif
                             </ul>
                         </li>
+                        @endif
 
                         {{-- User dropdown --}}
                         <li class="nav-item dropdown ms-lg-2">
@@ -618,7 +667,7 @@
                                 <span class="user-btn-name small fw-semibold">{{ Auth::user()->name }}</span>
                                 <span class="user-btn-role badge"
                                       style="background:rgba(255,255,255,.15);font-size:0.6rem;font-weight:500;">
-                                    {{ ucfirst(Auth::user()->role) }}
+                                    {{ Auth::user()->role_display_name }}
                                 </span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end"

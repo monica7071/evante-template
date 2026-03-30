@@ -159,9 +159,11 @@
 @section('content')
     <div class="page-header">
         <h3>Report</h3>
+        @permission('report.export')
         <a id="exportPdfBtn" href="#" class="btn btn-sm" style="background: var(--primary); color: #fff; font-size: 0.82rem; font-weight: 600; padding: 0.4rem 1rem; border-radius: var(--radius-sm);">
             <i class="bi bi-file-earmark-pdf"></i> Export PDF
         </a>
+        @endpermission
     </div>
 
     <div class="view-toggle-wrapper">
@@ -541,6 +543,7 @@
 
     {{-- ══════════════════════════════════════════════════════ --}}
     {{-- ── MARKETING BUDGET ────────────────────────────────── --}}
+    @permission('report.manage_budget')
     <div class="category-header"><i class="bi bi-megaphone"></i> Marketing Budget</div>
 
     {{-- Summary Cards --}}
@@ -615,6 +618,7 @@
             </div>
         </div>
     </div>
+    @endpermission
 
 @endsection
 
@@ -808,6 +812,7 @@
         @if($teamId) + '&team_id={{ $teamId }}' @endif
     ;
     // ── Budget AJAX ──
+    const canManageBudget = {{ auth()->user()->hasPermission('report.manage_budget') ? 'true' : 'false' }};
     const budgetState = { budgets: @json($budgets), editing: false };
     const csrfToken = '{{ csrf_token() }}';
     const budgetYear = {{ $year }};
@@ -837,7 +842,7 @@
                 <th class="text-right" style="${thStyle}">Online (฿)</th>
                 <th class="text-right" style="${thStyle}">Offline (฿)</th>
                 <th class="text-right" style="${thStyle}">Total (฿)</th>
-                <th style="width:80px;"></th>
+                ${canManageBudget ? '<th style="width:80px;"></th>' : ''}
             </tr></thead><tbody>`;
 
         b.forEach(r => {
@@ -848,12 +853,12 @@
                 <td class="text-right">${fmt(on)}</td>
                 <td class="text-right">${fmt(off)}</td>
                 <td class="text-right" style="font-weight:700;">${fmt(on + off)}</td>
-                <td class="text-right">
+                ${canManageBudget ? `<td class="text-right">
                     <button type="button" class="btn btn-sm" style="font-size:0.72rem;padding:0.15rem 0.5rem;border:1px solid var(--primary);color:var(--primary);border-radius:var(--radius-sm);background:transparent;margin-right:2px;"
                             onclick="budgetEdit(${r.week},${on},${off})"><i class="bi bi-pencil"></i></button>
                     <button type="button" class="btn btn-sm" style="font-size:0.72rem;padding:0.15rem 0.5rem;border:1px solid #dc3545;color:#dc3545;border-radius:var(--radius-sm);background:transparent;"
                             onclick="budgetDelete(${r.id},${r.week})"><i class="bi bi-trash"></i></button>
-                </td>
+                </td>` : ''}
             </tr>`;
         });
 
@@ -862,7 +867,7 @@
             <td class="text-right" style="font-weight:700;">${fmt(totOn)}</td>
             <td class="text-right" style="font-weight:700;">${fmt(totOff)}</td>
             <td class="text-right" style="font-weight:700;">${fmt(totOn + totOff)}</td>
-            <td></td></tr></tbody></table>`;
+            ${canManageBudget ? '<td></td>' : ''}</tr></tbody></table>`;
 
         wrap.innerHTML = html;
         budgetUpdateWeekOpts();

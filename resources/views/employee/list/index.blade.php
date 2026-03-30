@@ -215,9 +215,11 @@
 @section('content')
     <div class="page-header">
         <h3 class="fw-bold mb-0">Employees</h3>
+        @permission('employee_list.create')
         <a href="{{ route('employee.list.create') }}" class="btn-add">
             <i class="bi bi-plus-lg me-1"></i> Add Employee
         </a>
+        @endpermission
     </div>
 
     {{-- Filters --}}
@@ -307,15 +309,19 @@
                         </div>
 
                         <div class="emp-card-footer">
+                            @permission('employee_list.edit')
                             <a href="{{ route('employee.list.edit', $emp) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-pencil me-1"></i>Edit
                             </a>
+                            @endpermission
+                            @permission('employee_list.delete')
                             <form action="{{ route('employee.list.destroy', $emp) }}" method="POST" class="flex-fill" onsubmit="return confirm('Delete this employee?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger w-100">
                                     <i class="bi bi-trash me-1"></i>Delete
                                 </button>
                             </form>
+                            @endpermission
                         </div>
                     </div>
                 </div>

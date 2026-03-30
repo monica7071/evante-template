@@ -9,6 +9,18 @@
         </a>
     </div>
 
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-3">
+            <strong><i class="bi bi-exclamation-triangle me-1"></i> Please fix the following errors:</strong>
+            <ul class="mb-0 mt-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="card border-0 shadow-sm" style="border-radius:16px;">
         <div class="card-body p-0">
             <form action="{{ $isEdit ? route('employee.list.update', $employee) : route('employee.list.store') }}"
@@ -53,8 +65,8 @@
                                 @error('first_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-5">
-                                <label class="form-label fw-semibold">Last Name <span class="text-danger">*</span></label>
-                                <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror" value="{{ old('last_name', $employee->last_name) }}" required>
+                                <label class="form-label fw-semibold">Last Name</label>
+                                <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror" value="{{ old('last_name', $employee->last_name) }}">
                                 @error('last_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-5">
@@ -84,7 +96,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">National ID</label>
-                                <input type="text" name="national_id" class="form-control" value="{{ old('national_id', $employee->national_id) }}">
+                                <input type="text" name="national_id" class="form-control" autocomplete="off" value="{{ old('national_id', $employee->national_id) }}">
                             </div>
                         </div>
                     </div>
@@ -204,28 +216,32 @@
                                 <div class="alert alert-info py-2 small">
                                     <i class="bi bi-info-circle me-1"></i>
                                     Account status: <strong>{{ $employee->user->is_active ? 'Active' : 'Deactivated' }}</strong>
-                                    &middot; Role: <strong>{{ ucfirst($employee->user->role) }}</strong>
+                                    &middot; Role: <strong>{{ $employee->user->role_display_name }}</strong>
                                 </div>
                             @endif
 
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
-                                    <input type="email" name="account_email" id="accountEmail" class="form-control"
+                                    <input type="email" name="account_email" id="accountEmail" class="form-control @error('account_email') is-invalid @enderror"
                                            value="{{ old('account_email', $employee->user->email ?? $employee->email ?? '') }}">
+                                    @error('account_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Role <span class="text-danger">*</span></label>
-                                    <select name="account_role" class="form-select">
-                                        @foreach(['admin'=>'Admin','agent'=>'Agent','leader'=>'Leader'] as $k => $v)
-                                            <option value="{{ $k }}" {{ old('account_role', $employee->user->role ?? 'agent') == $k ? 'selected' : '' }}>{{ $v }}</option>
+                                    <select name="account_role_id" class="form-select @error('account_role_id') is-invalid @enderror">
+                                        <option value="">-- Select --</option>
+                                        @foreach($roles as $role)
+                                            <option value="{{ $role->id }}" {{ old('account_role_id', $employee->user->role_id ?? '') == $role->id ? 'selected' : '' }}>{{ $role->display_name }}</option>
                                         @endforeach
                                     </select>
+                                    @error('account_role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Password {{ $isEdit && $employee->user ? '(leave blank to keep)' : '' }}</label>
-                                    <input type="password" name="account_password" class="form-control" minlength="6"
+                                    <input type="password" name="account_password" class="form-control @error('account_password') is-invalid @enderror" autocomplete="new-password" minlength="6"
                                            {{ !$isEdit || !$employee->user ? 'required' : '' }}>
+                                    @error('account_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
                         </div>
@@ -248,5 +264,10 @@
 document.getElementById('createAccountToggle').addEventListener('change', function() {
     document.getElementById('accountFields').classList.toggle('d-none', !this.checked);
 });
+
+// Auto-switch to Account tab if there are account validation errors
+@if($errors->hasAny(['account_email', 'account_role_id', 'account_password']))
+    document.querySelector('a[href="#tabAccount"]').click();
+@endif
 </script>
 @endsection

@@ -172,9 +172,11 @@
 @section('content')
     <div class="page-header">
         <h3 class="fw-bold mb-0">Profile Information</h3>
+        @permission('employee_profile_fields.manage')
         <button class="btn-add-field" data-bs-toggle="modal" data-bs-target="#addFieldModal">
             <i class="bi bi-plus-lg me-1"></i> Add Custom Field
         </button>
+        @endpermission
     </div>
 
     @php
@@ -205,6 +207,7 @@
                             {{ ucfirst($field->field_type) }}
                         </span>
 
+                        @permission('employee_profile_fields.manage')
                         <div class="field-controls">
                             <div class="toggle-wrap">
                                 <span class="toggle-label">Active</span>
@@ -225,6 +228,7 @@
                                 </form>
                             </div>
                         </div>
+                        @endpermission
                     </div>
                 @endforeach
             </div>

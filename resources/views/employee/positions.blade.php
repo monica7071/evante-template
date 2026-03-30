@@ -149,9 +149,11 @@
 @section('content')
     <div class="page-header">
         <h3 class="fw-bold mb-0">Positions</h3>
+        @permission('employee_positions.manage')
         <button class="btn-add" data-bs-toggle="modal" data-bs-target="#positionModal" onclick="document.getElementById('positionForm').reset(); document.getElementById('positionForm').action='{{ route('employee.positions.store') }}'; document.getElementById('positionMethod').innerHTML=''; document.getElementById('positionModalLabel').textContent='Add Position';">
             <i class="bi bi-plus-lg me-1"></i> Add Position
         </button>
+        @endpermission
     </div>
 
     @if($positions->count())
@@ -160,6 +162,7 @@
                 <div class="pos-card">
                     <div class="pos-card-top">
                         <span class="pos-icon"><i class="bi bi-diagram-3"></i></span>
+                        @permission('employee_positions.manage')
                         <form action="{{ route('employee.positions.toggle', $position) }}" method="POST">
                             @csrf
                             <button type="submit" class="status-toggle">
@@ -168,6 +171,11 @@
                                 </span>
                             </button>
                         </form>
+                        @else
+                        <span class="{{ $position->is_active ? 'status-active' : 'status-inactive' }}">
+                            {{ $position->is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                        @endpermission
                     </div>
                     <div class="pos-name">{{ $position->name }}</div>
                     @if($position->name_th)
@@ -182,6 +190,7 @@
                         <span class="pos-tag"><i class="bi bi-people"></i> {{ $position->employees_count }} employees</span>
                     </div>
 
+                    @permission('employee_positions.manage')
                     <div class="pos-card-footer">
                         <button class="btn btn-sm btn-outline-primary" onclick="editPosition({{ $position->toJson() }})">
                             <i class="bi bi-pencil me-1"></i>Edit
@@ -195,6 +204,7 @@
                             </form>
                         @endif
                     </div>
+                    @endpermission
                 </div>
             @endforeach
         </div>
