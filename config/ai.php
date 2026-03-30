@@ -7,6 +7,10 @@ return [
     // Default organization ID used for the public chat (no auth context)
     'default_organization_id' => (int) env('AI_DEFAULT_ORGANIZATION_ID', 1),
 
+    // Remote API for AI tools — when set, chat tools fetch data from this remote server instead of local DB.
+    'remote_api_base_url' => env('CHATBOT_API_BASE_URL', ''),
+    'remote_api_key'      => env('CHATBOT_REMOTE_API_KEY', ''),
+
     'anthropic' => [
         'api_key'    => env('CHATBOT_API_KEY') ?: env('ANTHROPIC_API_KEY', ''),
         'api_url'    => env('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1'),
