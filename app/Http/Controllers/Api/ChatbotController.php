@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Listing;
 use App\Models\Project;
+use App\Models\Promotion;
 use App\Models\Sale;
 use App\Models\StatusHistory;
 use App\Services\RoundRobinAssignmentService;
@@ -271,5 +272,59 @@ class ChatbotController extends Controller
             'price_per_sqm'=> $listing->price_per_sqm ? (float) $listing->price_per_sqm : null,
             'bedrooms'     => $listing->bedrooms,
         ];
+    }
+
+    // GET /api/v1/units/{unit_code}/price
+    public function unitPrice(string $unitCode): JsonResponse
+    {
+        $listing = Listing::where('unit_code', $unitCode)->first();
+
+        if (! $listing) {
+            return response()->json(['success' => false, 'message' => "Unit '{$unitCode}' not found."], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'unit_code'              => $listing->unit_code,
+                'price_per_room'         => $listing->price_per_room ? (float) $listing->price_per_room : null,
+                'price_per_sqm'          => $listing->price_per_sqm ? (float) $listing->price_per_sqm : null,
+                'reservation_deposit'    => $listing->reservation_deposit ? (float) $listing->reservation_deposit : null,
+                'contract_payment'       => $listing->contract_payment ? (float) $listing->contract_payment : null,
+                'installment_15_terms'   => $listing->installment_15_terms ? (float) $listing->installment_15_terms : null,
+                'installment_12_terms'   => $listing->installment_12_terms ? (float) $listing->installment_12_terms : null,
+                'special_installment_3_terms' => $listing->special_installment_3_terms ? (float) $listing->special_installment_3_terms : null,
+                'transfer_amount'        => $listing->transfer_amount ? (float) $listing->transfer_amount : null,
+                'transfer_fee'           => $listing->transfer_fee ? (float) $listing->transfer_fee : null,
+                'annual_common_fee'      => $listing->annual_common_fee ? (float) $listing->annual_common_fee : null,
+                'sinking_fund'           => $listing->sinking_fund ? (float) $listing->sinking_fund : null,
+                'utility_fee'            => $listing->utility_fee ? (float) $listing->utility_fee : null,
+                'total_misc_fee'         => $listing->total_misc_fee ? (float) $listing->total_misc_fee : null,
+            ],
+        ]);
+    }
+
+    // GET /api/v1/promotions
+    public function promotions(): JsonResponse
+    {
+        $promotions = Promotion::active()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($p) => [
+                'id'             => $p->id,
+                'title'          => $p->title,
+                'description'    => $p->description,
+                'discount_type'  => $p->discount_type,
+                'discount_value' => $p->discount_value,
+                'start_date'     => $p->start_date?->format('Y-m-d'),
+                'end_date'       => $p->end_date?->format('Y-m-d'),
+                'conditions'     => $p->conditions,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'total'   => $promotions->count(),
+            'data'    => $promotions,
+        ]);
     }
 }
