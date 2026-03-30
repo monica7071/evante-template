@@ -7,6 +7,7 @@ use App\Models\Listing;
 use App\Models\Sale;
 use App\Models\SalePurchaseAgreement;
 use App\Models\SalePurchaseAgreementInstallment;
+use App\Services\PromptPayService;
 use App\Services\RoundRobinAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -109,23 +110,35 @@ class PaymentController extends Controller
     public function generateQr(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'amount'         => 'required|numeric|min:1',
-            'sale_number'    => 'required|string',
-            'promptpay_id'   => 'nullable|string',
+            'amount'       => 'required|numeric|min:1',
+            'sale_number'  => 'required|string',
+            'promptpay_id' => 'nullable|string',
         ]);
 
-        // Generate PromptPay QR payload (Thai standard)
-        $promptpayId = $validated['promptpay_id'] ?? config('services.promptpay.id', '');
-        $amount = number_format($validated['amount'], 2, '.', '');
+        $promptpayId = $validated['promptpay_id']
+            ?? config('services.promptpay.id', '');
+
+        if (empty($promptpayId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PromptPay ID not configured. Set PROMPTPAY_ID in .env or pass promptpay_id in request.',
+            ], 422);
+        }
+
+        $service = new PromptPayService();
+        $amount  = (float) $validated['amount'];
+
+        $payload    = $service->generatePayload($promptpayId, $amount);
+        $qrBase64   = $service->generateQrBase64($promptpayId, $amount);
 
         return response()->json([
             'success' => true,
             'data'    => [
                 'sale_number'  => $validated['sale_number'],
-                'amount'       => (float) $validated['amount'],
+                'amount'       => $amount,
                 'promptpay_id' => $promptpayId,
-                'qr_payload'   => "promptpay://{$promptpayId}?amount={$amount}",
-                'note'         => 'Integrate with PromptPay QR library for actual QR image generation.',
+                'qr_payload'   => $payload,
+                'qr_image'     => $qrBase64,   // data:image/png;base64,...
             ],
         ]);
     }
