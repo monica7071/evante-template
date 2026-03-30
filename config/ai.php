@@ -15,8 +15,8 @@ return [
         'api_key'    => env('CHATBOT_API_KEY') ?: env('ANTHROPIC_API_KEY', ''),
         'api_url'    => env('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1'),
         'version'    => env('ANTHROPIC_VERSION', '2023-06-01'),
-        'model'      => env('ANTHROPIC_MODEL', 'claude-sonnet-4-6'),
-        'max_tokens' => (int) env('ANTHROPIC_MAX_TOKENS', 1024),
+        'model'      => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
+        'max_tokens' => (int) env('ANTHROPIC_MAX_TOKENS', 512),
         'timeout'    => (int) env('ANTHROPIC_TIMEOUT', 30),
     ],
 

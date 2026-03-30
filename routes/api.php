@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\ChatbotController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SupportController;
 use App\Http\Controllers\Api\V2\AdminChatController;
 use App\Http\Controllers\Api\V2\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -47,10 +50,34 @@ Route::prefix('v2')->middleware(['api.key', 'throttle:300,1'])->group(function (
 });
 
 Route::prefix('v1')->middleware(['api.key', 'throttle:60,1'])->group(function () {
+    // ── ข้อมูลโครงการ/ห้อง ──
     Route::get('/projects', [ChatbotController::class, 'projects']);
     Route::get('/rooms', [ChatbotController::class, 'availableRooms']);
     Route::get('/rooms/{unit_code}', [ChatbotController::class, 'roomDetail']);
-   
+    Route::get('/units/{unit_code}/price', [ChatbotController::class, 'unitPrice']);
+    Route::get('/promotions', [ChatbotController::class, 'promotions']);
+
+    // ── นัดหมาย ──
     Route::post('/appointments', [ChatbotController::class, 'bookAppointment'])->middleware('throttle:10,1');
     Route::post('/appointments/{unit_code}/cancel', [ChatbotController::class, 'cancelAppointment'])->middleware('throttle:10,1');
+    Route::get('/appointments/slots', [AppointmentController::class, 'slots']);
+
+    // ── จอง & ชำระเงิน ──
+    Route::post('/bookings', [PaymentController::class, 'createBooking'])->middleware('throttle:10,1');
+    Route::get('/payments/schedule', [PaymentController::class, 'schedule']);
+    Route::post('/payments/qr', [PaymentController::class, 'generateQr']);
+    Route::post('/payments/omise', [PaymentController::class, 'omiseCharge']);
+    Route::get('/payments/status', [PaymentController::class, 'status']);
+    Route::get('/payments/overdue', [PaymentController::class, 'overdue']);
+
+    // ── แจ้งเตือน ──
+    Route::post('/notify/reminder', [AppointmentController::class, 'sendReminder']);
+
+    // ── Support APIs ──
+    Route::get('/knowledge/search', [SupportController::class, 'knowledgeSearch']);
+    Route::get('/customers/{id}', [SupportController::class, 'customer'])->where('id', '[0-9]+');
+    Route::post('/chat/handoff', [SupportController::class, 'chatHandoff']);
+    Route::post('/documents/upload', [SupportController::class, 'uploadDocument']);
+    Route::get('/loan-calculator', [SupportController::class, 'loanCalculator']);
+    Route::post('/verify-slip', [SupportController::class, 'verifySlip']);
 });
