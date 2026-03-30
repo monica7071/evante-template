@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('report_budgets', 'week')) {
+            return;
+        }
+
         Schema::table('report_budgets', function (Blueprint $table) {
             $table->unsignedTinyInteger('week')->default(1)->after('month');
 

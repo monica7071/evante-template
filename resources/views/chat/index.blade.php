@@ -795,7 +795,7 @@
                 <p>
                     <span class="status-dot"></span>
                     ออนไลน์ · ตอบด้วย AI
-                    @if(!env('ANTHROPIC_API_KEY'))
+                    @if(!config('ai.anthropic.api_key'))
                         <span class="badge bg-warning text-dark ms-1" style="font-size:.6rem;border-radius:6px;padding:2px 6px;">Mock Mode</span>
                     @endif
                 </p>
