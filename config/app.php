@@ -15,7 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
-    'chatbot_api_key' => env('CHATBOT_API_KEY'),
+    'chatbot_api_key' => env('API_AUTH_KEY'),
 
     /*
     |--------------------------------------------------------------------------

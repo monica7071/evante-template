@@ -8,6 +8,7 @@ use App\Models\Listing;
 use App\Models\Sale;
 use App\Services\AI\ClaudeService;
 use App\Services\AI\MockAgentService;
+use App\Services\AI\RemoteApiClient;
 use Illuminate\Support\Facades\Log;
 
 class AgentOrchestrator
@@ -16,11 +17,13 @@ class AgentOrchestrator
 
     private ClaudeService    $claude;
     private MockAgentService $mock;
+    private RemoteApiClient  $remote;
 
-    public function __construct(ClaudeService $claude, MockAgentService $mock)
+    public function __construct(ClaudeService $claude, MockAgentService $mock, RemoteApiClient $remote)
     {
         $this->claude = $claude;
         $this->mock   = $mock;
+        $this->remote = $remote;
     }
 
     /**
@@ -212,6 +215,10 @@ PROMPT;
 
     private function toolGetProjects(): array
     {
+        if ($this->remote->isConfigured()) {
+            return $this->remote->getProjects();
+        }
+
         $projects = \App\Models\Project::with('location')->orderBy('name')->get()
             ->map(fn ($p) => [
                 'project_id'   => $p->id,
@@ -226,6 +233,10 @@ PROMPT;
 
     private function toolSearchRooms(array $input): array
     {
+        if ($this->remote->isConfigured()) {
+            return $this->remote->searchRooms($input);
+        }
+
         $query = Listing::with('project')
             ->whereHas('sales', fn ($q) => $q->where('status', 'available'))
             ->whereDoesntHave('sales', fn ($q) => $q->whereNotIn('status', ['available', 'transferred']));
@@ -266,6 +277,10 @@ PROMPT;
 
     private function toolGetRoomDetail(string $unitCode): array
     {
+        if ($this->remote->isConfigured()) {
+            return $this->remote->getRoomDetail($unitCode);
+        }
+
         $listing = Listing::with('project')->where('unit_code', $unitCode)->first();
 
         if (! $listing) {
@@ -305,6 +320,10 @@ PROMPT;
 
     private function toolBookAppointment(array $input): array
     {
+        if ($this->remote->isConfigured()) {
+            return $this->remote->bookAppointment($input);
+        }
+
         $listing = Listing::where('unit_code', $input['unit_code'])->first();
 
         if (! $listing) {
@@ -348,6 +367,10 @@ PROMPT;
 
     private function toolCancelAppointment(string $unitCode): array
     {
+        if ($this->remote->isConfigured()) {
+            return $this->remote->cancelAppointment($unitCode);
+        }
+
         $listing = Listing::where('unit_code', $unitCode)->first();
 
         if (! $listing) {
