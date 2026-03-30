@@ -596,6 +596,24 @@
                         </div>
                     @endif
 
+                    @if($sale->user && $sale->status === 'appointment')
+                        <div class="mt-2">
+                            <div class="card-label text-uppercase mb-1">เซลผู้ดูแล</div>
+                            <div class="d-flex align-items-center gap-2">
+                                @if($sale->user->avatar)
+                                    <img src="{{ asset('storage/' . $sale->user->avatar) }}" alt=""
+                                         class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
+                                @else
+                                    <span class="rounded-circle d-flex align-items-center justify-content-center fw-semibold"
+                                          style="width:24px;height:24px;background:#d0d5dd;color:#475467;font-size:0.65rem;">
+                                        {{ strtoupper(Str::limit($sale->user->name, 2, '')) }}
+                                    </span>
+                                @endif
+                                <span class="small fw-medium" style="color:#475467;">{{ $sale->user->name }}</span>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Price + Contract Info --}}
                     <div class="mt-3 d-flex flex-wrap gap-4 align-items-end">
                         @if($hasListing)

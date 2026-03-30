@@ -994,7 +994,7 @@
 
             if (!res.ok) {
                 this.hideTyping();
-                this.renderMessage('bot', '⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งครับ', null, ['ลองใหม่'], null, true);
+                this.renderMessage('bot', '⚠️ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งนะคะ', null, ['ลองใหม่'], null, true);
                 return;
             }
 

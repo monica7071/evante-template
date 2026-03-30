@@ -7,6 +7,7 @@ use App\Models\Listing;
 use App\Models\Project;
 use App\Models\Sale;
 use App\Models\StatusHistory;
+use App\Services\RoundRobinAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -178,11 +179,14 @@ class ChatbotController extends Controller
             ]
         );
 
+        // Round-robin assign sales agent
+        $assignedAgent = RoundRobinAssignmentService::assignToSale($sale);
+
         $sale->statusHistories()->create([
             'status'          => 'appointment',
             'previous_status' => $previousStatus,
             'notes'           => 'Booked via chatbot by ' . $validated['visitor_name'],
-            'user_id'         => null,
+            'user_id'         => $assignedAgent?->id,
         ]);
 
         return response()->json([
@@ -198,6 +202,7 @@ class ChatbotController extends Controller
                 'visitor_name'     => $validated['visitor_name'],
                 'visitor_phone'    => $validated['visitor_phone'],
                 'visitor_email'    => $validated['visitor_email'] ?? null,
+                'assigned_to'     => $assignedAgent?->name,
             ],
         ], 201);
     }
