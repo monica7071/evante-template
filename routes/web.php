@@ -64,6 +64,7 @@ Route::get('/questionnaire/thank-you', [QuestionnaireController::class, 'thankYo
 // Chat (public — no auth required)
 Route::get('/chat', [ChatPageController::class, 'index'])->name('chat.index');
 Route::post('/chat/send', [ChatPageController::class, 'send'])->name('chat.send');
+Route::get('/chat/csrf-token', fn () => response()->json(['token' => csrf_token()]))->name('chat.csrf-token');
 Route::get('/chat/sessions', [ChatPageController::class, 'sessions'])->name('chat.sessions');
 Route::get('/chat/sessions/{id}/messages', [ChatPageController::class, 'messages'])->name('chat.messages');
 Route::post('/chat/upload', [ChatPageController::class, 'upload'])->name('chat.upload');
