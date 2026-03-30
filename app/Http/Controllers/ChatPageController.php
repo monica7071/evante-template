@@ -7,6 +7,7 @@ use App\Models\ChatMessage;
 use App\Models\ChatSession;
 use App\Services\AI\ClaudeService;
 use App\Services\AI\MockAgentService;
+use App\Services\AI\RemoteApiClient;
 use App\Services\AI\Tools\AppointmentBookTool;
 use App\Services\AI\Tools\FacilitiesTool;
 use App\Services\AI\Tools\FinancialCalculatorTool;
@@ -20,14 +21,16 @@ class ChatPageController extends Controller
 {
     private MockAgentService $mock;
     private ClaudeService    $claude;
+    private RemoteApiClient  $remote;
 
     /** @var array<string, \App\Services\AI\Tools\ToolInterface> */
     private array $tools;
 
-    public function __construct(MockAgentService $mock, ClaudeService $claude)
+    public function __construct(MockAgentService $mock, ClaudeService $claude, RemoteApiClient $remote)
     {
         $this->mock   = $mock;
         $this->claude = $claude;
+        $this->remote = $remote;
         $this->tools  = $this->buildTools();
     }
 
@@ -332,6 +335,31 @@ SYSTEM
 
     private function executeTool(string $name, array $input, int $organizationId): array
     {
+        // If remote API is configured, route tools through it instead of local DB
+        if ($this->remote->isConfigured()) {
+            try {
+                $result = match ($name) {
+                    'property_search'      => $this->remote->searchRooms($input),
+                    'project_info'         => $this->remote->getProjects(),
+                    'appointment_book'     => $this->remote->bookAppointment([
+                        'unit_code'        => $input['listing_id'] ?? null,
+                        'appointment_date' => $input['appointment_date'] ?? null,
+                        'appointment_time' => $input['appointment_time'] ?? null,
+                        'visitor_name'     => $input['customer_name'] ?? null,
+                        'visitor_phone'    => $input['customer_phone'] ?? null,
+                    ]),
+                    default => null,
+                };
+
+                if ($result !== null) {
+                    Log::debug("ChatAgent tool '{$name}' via remote API", ['status' => 'success']);
+                    return $result;
+                }
+            } catch (\Throwable $e) {
+                Log::warning("ChatAgent: remote API for '{$name}' failed, falling back to local", ['error' => $e->getMessage()]);
+            }
+        }
+
         if (! isset($this->tools[$name])) {
             return [
                 'status'  => 'error',
