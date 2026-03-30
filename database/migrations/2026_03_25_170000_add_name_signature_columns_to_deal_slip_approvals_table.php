@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('deal_slip_approvals', 'prepared_name')) {
+            return;
+        }
+
         Schema::table('deal_slip_approvals', function (Blueprint $table) {
             $table->string('prepared_name')->nullable()->after('prepared_by');
             $table->text('prepared_signature')->nullable()->after('prepared_name');
@@ -15,7 +19,9 @@ return new class extends Migration
             $table->text('checked_signature')->nullable()->after('checked_name');
             $table->string('approved_name')->nullable()->after('approved_by');
             $table->text('approved_signature')->nullable()->after('approved_name');
-            $table->dropColumn('signature_data');
+            if (Schema::hasColumn('deal_slip_approvals', 'signature_data')) {
+                $table->dropColumn('signature_data');
+            }
         });
     }
 
