@@ -966,15 +966,31 @@
 
         // ── 2c. Override fetchResponse for admin-mode detection ──
         mgr.fetchResponse = async function (message, imageUrl) {
-            const res = await fetch('/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ message, image_url: imageUrl, session_id: this.sessionId }),
-            });
+            const sendRequest = async () => {
+                return await fetch('/chat/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ message, image_url: imageUrl, session_id: this.sessionId }),
+                });
+            };
+
+            let res = await sendRequest();
+
+            // Auto-refresh CSRF token on 419 and retry once
+            if (res.status === 419) {
+                try {
+                    const tokenRes = await fetch('/chat/csrf-token');
+                    const tokenData = await tokenRes.json();
+                    document.querySelector('meta[name="csrf-token"]').content = tokenData.token;
+                    res = await sendRequest();
+                } catch (e) {
+                    console.warn('[CSRF] Refresh failed:', e.message);
+                }
+            }
 
             if (!res.ok) {
                 this.hideTyping();
