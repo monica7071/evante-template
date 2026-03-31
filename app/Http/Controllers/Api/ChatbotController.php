@@ -59,11 +59,20 @@ class ChatbotController extends Controller
         }
 
         if ($request->filled('unit_type')) {
-            $query->where('unit_type', $request->unit_type);
+            $term = $request->unit_type;
+            $query->where(function ($q) use ($term) {
+                $q->where('unit_type', $term)
+                  ->orWhere('bedrooms', 'like', '%' . $term . '%');
+            });
         }
 
         if ($request->filled('bedrooms')) {
-            $query->where('bedrooms', $request->bedrooms);
+            $term = $request->bedrooms;
+            // Support both integer (1) and text ("1 Bed Smart")
+            $query->where(function ($q) use ($term) {
+                $q->where('bedrooms', $term)
+                  ->orWhere('bedrooms', 'like', '%' . $term . '%');
+            });
         }
 
         if ($request->filled('min_price')) {
