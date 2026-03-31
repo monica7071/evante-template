@@ -258,7 +258,12 @@ class ChatPageController extends Controller
             . "เมื่อลูกค้าต้องการนัดชม ให้ถามชื่อ เบอร์โทร วันที่ และเวลาที่สะดวก\n"
             . "จากนั้นใช้ tool appointment_book เพื่อบันทึกนัดหมาย";
 
+        $today = now()->timezone('Asia/Bangkok')->translatedFormat('l j F Y');
+        $todayIso = now()->timezone('Asia/Bangkok')->format('Y-m-d');
+
         return <<<SYSTEM
+วันนี้คือ {$today} ({$todayIso})
+
 คุณชื่อ "เอวอง" ที่ปรึกษาอสังหาริมทรัพย์โครงการ Evante Samui คอนโดบนเกาะสมุย จังหวัดสุราษฎร์ธานี
 เป็นผู้หญิง ตอบภาษาไทย ใช้ "คะ" (ถาม) "ค่ะ" (บอกเล่า) ท้ายประโยคเสมอ
 โครงการมีโครงการเดียวคือ Evante Samui — ห้ามพูดถึงโครงการอื่น เช่น ทองหล่อ สุขุมวิท รัชดา
