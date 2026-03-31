@@ -28,6 +28,10 @@ class PropertySearchTool extends AbstractTool
                     'type'        => 'integer',
                     'description' => 'Specific listing ID to retrieve details for a single unit',
                 ],
+                'unit_code' => [
+                    'type'        => 'string',
+                    'description' => 'Room/unit code e.g. "B422", "A106", "B349". Use this when customer mentions a specific room.',
+                ],
                 'project_id' => [
                     'type'        => 'integer',
                     'description' => 'ID of the project to filter by (optional)',
@@ -72,6 +76,36 @@ class PropertySearchTool extends AbstractTool
 
     public function execute(array $input, int $organizationId): array
     {
+        // Single room detail by unit_code
+        if (isset($input['unit_code'])) {
+            $listing = Listing::withoutGlobalScope(OrganizationScope::class)
+                ->where('organization_id', $organizationId)
+                ->where('unit_code', $input['unit_code'])
+                ->with(['project:id,name'])
+                ->first();
+
+            if (! $listing) {
+                return $this->notFound("ไม่พบห้อง '{$input['unit_code']}'");
+            }
+
+            return $this->success([
+                'id'             => $listing->id,
+                'project'        => $listing->project?->name ?? $listing->project_name,
+                'unit_code'      => $listing->unit_code,
+                'room_number'    => $listing->room_number,
+                'floor'          => $listing->floor,
+                'building'       => $listing->building,
+                'bedrooms'       => $listing->bedrooms,
+                'area_sqm'       => (float) $listing->area,
+                'unit_type'      => $listing->unit_type,
+                'price'          => (float) $listing->price_per_room,
+                'price_per_sqm'  => (float) $listing->price_per_sqm,
+                'status'         => $listing->status,
+                'floor_plan_image' => $listing->floor_plan_image ? asset('storage/' . $listing->floor_plan_image) : null,
+                'room_layout_image' => $listing->room_layout_image ? asset('storage/' . $listing->room_layout_image) : null,
+            ]);
+        }
+
         // Single room detail by listing_id
         if (isset($input['listing_id'])) {
             $listing = Listing::withoutGlobalScope(OrganizationScope::class)
