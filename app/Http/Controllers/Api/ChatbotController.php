@@ -195,19 +195,26 @@ class ChatbotController extends Controller
             ->where('status', 'available')
             ->first();
 
-        if (!$sale) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This room is not available for appointment.',
-            ], 422);
+        $previousStatus = $sale?->status;
+
+        if ($sale) {
+            $sale->update([
+                'status'          => 'appointment',
+                'previous_status' => $previousStatus,
+            ]);
+        } else {
+            // No existing sale record — create one (room may never have been sold)
+            $today = now()->format('Ymd');
+            $count = Sale::withoutGlobalScope(\App\Scopes\OrganizationScope::class)
+                ->whereDate('created_at', today())->count() + 1;
+
+            $sale = Sale::create([
+                'listing_id'      => $listing->id,
+                'organization_id' => $listing->organization_id,
+                'status'          => 'appointment',
+                'sale_number'     => 'SL-' . $today . '-' . str_pad($count, 4, '0', STR_PAD_LEFT),
+            ]);
         }
-
-        $previousStatus = $sale->status;
-
-        $sale->update([
-            'status'           => 'appointment',
-            'previous_status'  => $previousStatus,
-        ]);
 
         $sale->appointment()->updateOrCreate(
             ['sale_id' => $sale->id],
