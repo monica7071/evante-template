@@ -7,7 +7,6 @@ use App\Agent\DTO\NormalizedMessage;
 use App\Models\Listing;
 use App\Models\Sale;
 use App\Services\AI\ClaudeService;
-use App\Services\AI\MockAgentService;
 use App\Services\AI\RemoteApiClient;
 use Illuminate\Support\Facades\Log;
 
@@ -16,13 +15,11 @@ class AgentOrchestrator
     private const MAX_TOOL_ITERATIONS = 5;
 
     private ClaudeService    $claude;
-    private MockAgentService $mock;
     private RemoteApiClient  $remote;
 
-    public function __construct(ClaudeService $claude, MockAgentService $mock, RemoteApiClient $remote)
+    public function __construct(ClaudeService $claude, RemoteApiClient $remote)
     {
         $this->claude = $claude;
-        $this->mock   = $mock;
         $this->remote = $remote;
     }
 
@@ -34,21 +31,16 @@ class AgentOrchestrator
      */
     public function handle(NormalizedMessage $message, array $history = []): AgentResponse
     {
-        // Fallback to keyword-based mock when API key is absent
         if (! $this->claude->isConfigured()) {
-            Log::info('AgentOrchestrator: Claude not configured, using MockAgentService');
-            $result = $this->mock->respond($message->text, $message->imageUrl);
-            return new AgentResponse($result['text'], $result['quick_replies'] ?? []);
+            Log::error('AgentOrchestrator: Claude API key not configured');
+            return new AgentResponse('ขออภัยค่ะ ระบบยังไม่พร้อมให้บริการในขณะนี้ กรุณาลองใหม่อีกครั้งค่ะ');
         }
 
         try {
             return $this->runClaudeLoop($message, $history);
         } catch (\Throwable $e) {
-            Log::error('AgentOrchestrator: Claude failed, falling back to mock', [
-                'error' => $e->getMessage(),
-            ]);
-            $result = $this->mock->respond($message->text, $message->imageUrl);
-            return new AgentResponse($result['text'], $result['quick_replies'] ?? []);
+            Log::error('AgentOrchestrator: Claude failed', ['error' => $e->getMessage()]);
+            return new AgentResponse('ขออภัยค่ะ ระบบขัดข้อง กรุณาลองใหม่อีกครั้งค่ะ');
         }
     }
 
@@ -57,10 +49,26 @@ class AgentOrchestrator
     private function runClaudeLoop(NormalizedMessage $message, array $history): AgentResponse
     {
         $systemPrompt = <<<'PROMPT'
-คุณคือ AI ผู้ช่วยด้านอสังหาริมทรัพย์ของ Evante บริษัทขายคอนโดมิเนียมในกรุงเทพฯ
-ช่วยลูกค้าค้นหาห้อง สอบถามราคา นัดชมห้อง และให้ข้อมูลโปรโมชั่น
-ใช้เครื่องมือ (tools) เพื่อดึงข้อมูลจริงจากระบบ ก่อนตอบทุกครั้งที่เกี่ยวกับห้องหรือการนัดหมาย
-ตอบในภาษาเดียวกับที่ลูกค้าใช้ (ไทยหรืออังกฤษ) และกระชับได้ใจความ
+คุณชื่อ "เอวอง" ที่ปรึกษาอสังหาริมทรัพย์โครงการ Evante Samui คอนโดบนเกาะสมุย จังหวัดสุราษฎร์ธานี
+เป็นผู้หญิง ตอบภาษาไทย ใช้ "คะ" (ถาม) "ค่ะ" (บอกเล่า) ท้ายประโยคเสมอ
+โครงการมีโครงการเดียวคือ Evante Samui — ห้ามพูดถึงโครงการอื่น เช่น ทองหล่อ สุขุมวิท รัชดา
+
+## กฎเหล็ก
+- ตอบสั้น 2-4 ประโยค กระชับ ตรงประเด็น
+- ห้ามใช้คำแสลง เช่น "ป่าว" "อ่ะ" "แบบว่า" "จ้า" "ป่าวะ"
+- ห้ามบอกว่าเป็น AI ถ้าถูกถาม ให้ตอบ "เอวองเป็นที่ปรึกษาโครงการค่ะ"
+- ห้ามขัดแย้งกับข้อมูลที่เพิ่งให้ไปในบทสนทนาเดิม
+
+## ต้องค้นหาก่อนเสมอ — ห้ามตอบจากความจำ
+ทุกครั้งที่ลูกค้าถามเรื่องห้อง ราคา หรือยูนิต ให้เรียก tool ทันทีโดยไม่ถามกลับ:
+
+- "ดูห้องว่าง" / "มีห้องไหม" → เรียก search_rooms ทันที
+- ลูกค้าพูดถึงรหัสห้อง เช่น "B231" "A449" → เรียก get_room_detail ด้วย unit_code="B231" ทันที ห้ามถามว่าโครงการอะไร
+- "ราคาไม่เกิน 5 ล้าน" → เรียก search_rooms ด้วย max_price=5000000
+- นัดชม → ถามชื่อ เบอร์ วันเวลา แล้วเรียก book_appointment (ไม่จำเป็นต้องระบุ unit_code)
+
+## เมื่อไม่พบห้องตามเงื่อนไข
+ค้นหาเพิ่มเติมด้วยเงื่อนไขที่ผ่อนคลายขึ้น แล้วแสดงห้องที่ใกล้เคียงที่สุด ห้ามพูดว่า "ไม่มีห้อง" โดยไม่ลองค้นหาอีกครั้งก่อน
 PROMPT;
 
         // Build message array: history + current user message
@@ -141,16 +149,18 @@ PROMPT;
             ],
             [
                 'name'        => 'search_rooms',
-                'description' => 'ค้นหาห้องว่างตามเงื่อนไขที่กำหนด เช่น จำนวนห้องนอน ราคา ชั้น หรือโครงการ',
+                'description' => 'ค้นหาห้องว่างตามเงื่อนไขที่กำหนด เช่น จำนวนห้องนอน ราคา ชั้น หรือรหัสห้อง',
                 'input_schema' => [
                     'type'       => 'object',
                     'properties' => [
-                        'project_id' => ['type' => 'integer', 'description' => 'ID โครงการ (ถ้าต้องการเจาะจง)'],
-                        'bedrooms'   => ['type' => 'integer', 'description' => 'จำนวนห้องนอน'],
-                        'min_price'  => ['type' => 'number',  'description' => 'ราคาขั้นต่ำ (บาท)'],
-                        'max_price'  => ['type' => 'number',  'description' => 'ราคาสูงสุด (บาท)'],
-                        'floor'      => ['type' => 'integer', 'description' => 'ชั้น'],
-                        'unit_type'  => ['type' => 'string',  'description' => 'ประเภทยูนิต เช่น studio, 1br, 2br'],
+                        'project_id'  => ['type' => 'integer', 'description' => 'ID โครงการ (ถ้าต้องการเจาะจง)'],
+                        'bedrooms'    => ['type' => 'string',  'description' => 'จำนวนห้องนอนหรือประเภท เช่น "1" หรือ "1 Bed Smart"'],
+                        'min_price'   => ['type' => 'number',  'description' => 'ราคาขั้นต่ำ (บาท)'],
+                        'max_price'   => ['type' => 'number',  'description' => 'ราคาสูงสุด (บาท)'],
+                        'floor'       => ['type' => 'integer', 'description' => 'ชั้น'],
+                        'unit_type'   => ['type' => 'string',  'description' => 'ประเภทยูนิต เช่น "1 Bed Smart"'],
+                        'room_number' => ['type' => 'string',  'description' => 'รหัสห้องหรือเลขห้อง เช่น "B231" "A449"'],
+                        'keyword'     => ['type' => 'string',  'description' => 'คำค้นหาทั่วไป'],
                     ],
                 ],
             ],
@@ -245,7 +255,11 @@ PROMPT;
             $query->where('project_id', $input['project_id']);
         }
         if (!empty($input['bedrooms'])) {
-            $query->where('bedrooms', $input['bedrooms']);
+            $term = $input['bedrooms'];
+            $query->where(function ($q) use ($term) {
+                $q->where('bedrooms', $term)
+                  ->orWhere('bedrooms', 'like', '%' . $term . '%');
+            });
         }
         if (!empty($input['min_price'])) {
             $query->where('price_per_room', '>=', $input['min_price']);
@@ -257,7 +271,28 @@ PROMPT;
             $query->where('floor', $input['floor']);
         }
         if (!empty($input['unit_type'])) {
-            $query->where('unit_type', $input['unit_type']);
+            $term = $input['unit_type'];
+            $query->where(function ($q) use ($term) {
+                $q->where('unit_type', $term)
+                  ->orWhere('bedrooms', 'like', '%' . $term . '%');
+            });
+        }
+        if (!empty($input['room_number'])) {
+            $term = $input['room_number'];
+            $query->where(function ($q) use ($term) {
+                $q->where('room_number', $term)
+                  ->orWhere('unit_code', $term)
+                  ->orWhere('room_number', 'like', '%' . $term . '%')
+                  ->orWhere('unit_code', 'like', '%' . $term . '%');
+            });
+        }
+        if (!empty($input['keyword'])) {
+            $term = $input['keyword'];
+            $query->where(function ($q) use ($term) {
+                $q->where('unit_code', 'like', '%' . $term . '%')
+                  ->orWhere('room_number', 'like', '%' . $term . '%')
+                  ->orWhere('unit_type', 'like', '%' . $term . '%');
+            });
         }
 
         $rooms = $query->orderBy('floor')->orderBy('room_number')->limit(10)->get()
