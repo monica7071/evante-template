@@ -13,7 +13,9 @@ use App\Services\AI\Tools\FinancialCalculatorTool;
 use App\Services\AI\Tools\KnowledgeBaseTool;
 use App\Services\AI\Tools\ProjectInfoTool;
 use App\Services\AI\Tools\PropertySearchTool;
+use App\Services\AI\Tools\ReservationPaymentTool;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ChatPageController extends Controller
@@ -162,7 +164,33 @@ class ChatPageController extends Controller
             array_pop($messages);
         }
 
+        // Slip detection: if image is sent and there's a pending slip cache entry, attach context for Claude
+        $slipHandled = false;
+        if ($imageUrl && $session) {
+            $slipData = Cache::get('slip_pending:' . $session->session_token);
+            if ($slipData) {
+                Cache::forget('slip_pending:' . $session->session_token);
+                // Save slip URL to the sale record
+                $sale = \App\Models\Sale::where('sale_number', $slipData['sale_number'])->first();
+                if ($sale) {
+                    $sale->update(['remark_available' => 'สลิปค่าจองจากแชท: ' . $imageUrl]);
+                }
+                // Build a combined message with context + image for Claude
+                $messages[] = [
+                    'role'    => 'user',
+                    'content' => [
+                        ['type' => 'text', 'text' => '[ลูกค้าส่งสลิปการโอนเงินค่าจองห้อง ' . $slipData['unit_code'] . ' จำนวน ' . number_format($slipData['amount'], 0) . ' บาท เลขที่ ' . $slipData['sale_number'] . ']'],
+                        ['type' => 'image', 'source' => ['type' => 'url', 'url' => $imageUrl]],
+                    ],
+                ];
+                // Clear imageUrl so the normal image block below is skipped
+                $imageUrl    = null;
+                $slipHandled = true;
+            }
+        }
+
         if ($imageUrl) {
+            // Normal image message (no pending slip)
             $content = [
                 ['type' => 'image', 'source' => ['type' => 'url', 'url' => $imageUrl]],
             ];
@@ -170,15 +198,18 @@ class ChatPageController extends Controller
                 $content[] = ['type' => 'text', 'text' => $message];
             }
             $messages[] = ['role' => 'user', 'content' => $content];
+        } elseif ($slipHandled ?? false) {
+            // Slip branch already appended the combined image+context message; nothing more to add
         } else {
             $messages[] = ['role' => 'user', 'content' => $message];
         }
 
         $toolDefs       = array_values(array_map(fn ($t) => $t->toDefinition(), $this->tools));
         $organizationId = (int) config('ai.default_organization_id', 1);
+        $sessionToken   = $session?->session_token;
 
         try {
-            $replyText = $this->runToolLoop($messages, $toolDefs, $organizationId);
+            $replyText = $this->runToolLoop($messages, $toolDefs, $organizationId, $sessionToken);
 
             if ($session) {
                 $aiMsg = ChatMessage::create([
@@ -258,6 +289,14 @@ class ChatPageController extends Controller
             . "เมื่อลูกค้าต้องการนัดชม ให้ถามชื่อ เบอร์โทร วันที่ และเวลาที่สะดวก\n"
             . "จากนั้นใช้ tool appointment_book เพื่อบันทึกนัดหมาย";
 
+        $paymentInfo = "\n\n## การชำระค่าจอง\n"
+            . "เมื่อลูกค้าต้องการจอง/ชำระค่าจอง:\n"
+            . "1. ถามรหัสห้องถ้ายังไม่ทราบ\n"
+            . "2. เรียก reservation_payment ด้วย unit_code (และ sale_number ถ้ามี)\n"
+            . "3. แสดง QR จากผลลัพธ์: ![QR PromptPay](qr_image) พร้อมบอกจำนวนเงิน\n"
+            . "4. บอกลูกค้าว่า \"กรุณาส่งสลิปในแชทนี้หลังโอนเงินค่ะ\"\n"
+            . "5. เมื่อลูกค้าส่งรูปสลิป → ขอบคุณและบอกว่าทีมจะยืนยันภายใน 2 ชั่วโมง";
+
         $today = now()->timezone('Asia/Bangkok')->translatedFormat('l j F Y');
         $todayIso = now()->timezone('Asia/Bangkok')->format('Y-m-d');
 
@@ -300,22 +339,22 @@ class ChatPageController extends Controller
 ค้นหาเพิ่มเติมด้วยเงื่อนไขที่ผ่อนคลายขึ้น แล้วแสดงห้องที่ใกล้เคียงที่สุด ห้ามพูดว่า "ไม่มีห้อง" หรือ "หมดสต็อก" โดยไม่ลองค้นหาอีกครั้งก่อน
 
 ## ขอบเขตของเอวอง — ทีมจะดูแลต่อ
-เอวองดูแลได้ถึงขั้น: ค้นหาห้อง → แนะนำโปรโมชั่น → คำนวณผ่อน → นัดชม
+เอวองดูแลได้ถึงขั้น: ค้นหาห้อง → แนะนำโปรโมชั่น → คำนวณผ่อน → นัดชม → ชำระค่าจอง
 สิ่งต่อไปนี้ให้ตอบว่า "ทีมงานจะติดต่อกลับเพื่อดำเนินการต่อค่ะ" แล้วหยุด:
 - สัญญาจะซื้อจะขาย / สัญญาจอง
 - การกู้สินเชื่อธนาคาร / ยื่นเอกสารกู้
 - การโอนกรรมสิทธิ์ / ค่าโอน
-- การชำระเงินจริง / โอนเงิน
 - เอกสารทะเบียนบ้าน / โฉนด
 SYSTEM
             . $promoLines
-            . $appointmentInfo;
+            . $appointmentInfo
+            . $paymentInfo;
     }
 
     /**
      * Run the Claude tool-use loop until end_turn or max iterations.
      */
-    private function runToolLoop(array $messages, array $toolDefs, int $organizationId): string
+    private function runToolLoop(array $messages, array $toolDefs, int $organizationId, ?string $sessionToken = null): string
     {
         $maxIterations = 4;
         $systemPrompt  = $this->buildSystemPrompt($organizationId);
@@ -342,7 +381,12 @@ SYSTEM
 
                 $toolResultBlocks = [];
                 foreach ($toolUses as $toolUse) {
-                    $result    = $this->executeTool($toolUse['name'], $toolUse['input'], $organizationId);
+                    $toolInput = $toolUse['input'];
+                    // Inject session_token for reservation_payment so it can cache slip state
+                    if ($toolUse['name'] === 'reservation_payment' && $sessionToken) {
+                        $toolInput['session_token'] = $sessionToken;
+                    }
+                    $result    = $this->executeTool($toolUse['name'], $toolInput, $organizationId);
                     $isError   = ($result['status'] ?? '') === 'error';
                     $resultMsg = $this->claude->buildToolResultMessage($toolUse['id'], $result, $isError);
 
@@ -350,7 +394,7 @@ SYSTEM
 
                     Log::debug('ChatAgent tool executed', [
                         'tool'   => $toolUse['name'],
-                        'input'  => $toolUse['input'],
+                        'input'  => $toolInput,
                         'status' => $result['status'] ?? 'unknown',
                     ]);
                 }
@@ -383,6 +427,7 @@ SYSTEM
                         'visitor_name'     => $input['customer_name'] ?? null,
                         'visitor_phone'    => $input['customer_phone'] ?? null,
                     ]),
+                    'reservation_payment'  => null, // handle locally only (needs session_token)
                     default => null,
                 };
 
@@ -431,6 +476,7 @@ SYSTEM
             new AppointmentBookTool(),
             new KnowledgeBaseTool(),
             new FacilitiesTool(),
+            new ReservationPaymentTool(),
         ];
 
         $indexed = [];
