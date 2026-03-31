@@ -108,7 +108,7 @@ class ChatPageController extends Controller
         if ($session) {
             $dbMessages = $session->messages()
                 ->orderByDesc('created_at')
-                ->limit(40)
+                ->limit(20)
                 ->get()
                 ->reverse()
                 ->values();
@@ -312,7 +312,7 @@ SYSTEM
         $systemPrompt  = $this->buildSystemPrompt($organizationId);
 
         for ($i = 0; $i < $maxIterations; $i++) {
-            $response   = $this->claude->chat($messages, $toolDefs, ['system' => $systemPrompt, 'max_tokens' => 4096]);
+            $response   = $this->claude->chat($messages, $toolDefs, ['system' => $systemPrompt, 'max_tokens' => 1024]);
             $stopReason = $response['stop_reason'] ?? 'end_turn';
 
             $messages[] = [
