@@ -38,11 +38,17 @@ class ChatbotController extends Controller
     // GET /api/v1/rooms
     public function availableRooms(Request $request): JsonResponse
     {
-        // Show listings where active sale is 'available'
-        // (has an available sale AND no sale in any other active status)
+        // Show listings that are available:
+        // 1. Has a sale record with status 'available' (and no other active sale), OR
+        // 2. Has NO sale record at all (never been sold/reserved)
         $query = Listing::with('project')
-            ->whereHas('sales', fn ($q) => $q->where('status', 'available'))
-            ->whereDoesntHave('sales', fn ($q) => $q->whereNotIn('status', ['available', 'transferred']));
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    // Has an 'available' sale and no other active status
+                    $sub->whereHas('sales', fn ($s) => $s->where('status', 'available'))
+                        ->whereDoesntHave('sales', fn ($s) => $s->whereNotIn('status', ['available', 'transferred']));
+                })->orWhereDoesntHave('sales'); // No sale record = available
+            });
 
         if ($request->filled('project_id')) {
             $query->where('project_id', $request->project_id);
