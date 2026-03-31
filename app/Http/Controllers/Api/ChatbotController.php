@@ -260,17 +260,19 @@ class ChatbotController extends Controller
     private function formatRoom(Listing $listing): array
     {
         return [
-            'listing_id'   => $listing->id,
-            'unit_code'    => $listing->unit_code,
-            'project'      => $listing->project->name ?? null,
-            'building'     => $listing->building,
-            'floor'        => $listing->floor,
-            'room_number'  => $listing->room_number,
-            'unit_type'    => $listing->unit_type,
-            'area'         => $listing->area ? (float) $listing->area : null,
-            'price'        => $listing->price_per_room ? (float) $listing->price_per_room : null,
-            'price_per_sqm'=> $listing->price_per_sqm ? (float) $listing->price_per_sqm : null,
-            'bedrooms'     => $listing->bedrooms,
+            'listing_id'        => $listing->id,
+            'unit_code'         => $listing->unit_code,
+            'project'           => $listing->project->name ?? null,
+            'building'          => $listing->building,
+            'floor'             => $listing->floor,
+            'room_number'       => $listing->room_number,
+            'unit_type'         => $listing->unit_type,
+            'area'              => $listing->area ? (float) $listing->area : null,
+            'price'             => $listing->price_per_room ? (float) $listing->price_per_room : null,
+            'price_per_sqm'     => $listing->price_per_sqm ? (float) $listing->price_per_sqm : null,
+            'bedrooms'          => $listing->bedrooms,
+            'floor_plan_image'  => $listing->floor_plan_image ? asset('storage/' . $listing->floor_plan_image) : null,
+            'room_layout_image' => $listing->room_layout_image ? asset('storage/' . $listing->room_layout_image) : null,
         ];
     }
 
