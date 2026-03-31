@@ -96,8 +96,8 @@ class PropertySearchTool extends AbstractTool
                 'price'          => (float) $listing->price_per_room,
                 'price_per_sqm'  => (float) $listing->price_per_sqm,
                 'status'         => $listing->status,
-                'floor_plan_image' => $listing->floor_plan_image,
-                'room_layout_image' => $listing->room_layout_image,
+                'floor_plan_image' => $listing->floor_plan_image ? asset('storage/' . $listing->floor_plan_image) : null,
+                'room_layout_image' => $listing->room_layout_image ? asset('storage/' . $listing->room_layout_image) : null,
             ]);
         }
 
@@ -158,8 +158,8 @@ class PropertySearchTool extends AbstractTool
             'price'             => (float) $l->price_per_room,
             'price_per_sqm'     => (float) $l->price_per_sqm,
             'status'            => $l->status,
-            'floor_plan_image'  => $l->floor_plan_image,
-            'room_layout_image' => $l->room_layout_image,
+            'floor_plan_image'  => $l->floor_plan_image ? asset('storage/' . $l->floor_plan_image) : null,
+            'room_layout_image' => $l->room_layout_image ? asset('storage/' . $l->room_layout_image) : null,
         ])->values()->all();
 
         return $this->success($items, "พบ {$listings->count()} ยูนิต");
