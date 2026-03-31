@@ -174,7 +174,7 @@ class ChatbotController extends Controller
     public function bookAppointment(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'unit_code'        => 'required|string',
+            'unit_code'        => 'nullable|string',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
             'visitor_name'     => 'required|string|max:255',
@@ -182,55 +182,38 @@ class ChatbotController extends Controller
             'visitor_email'    => 'nullable|email|max:255',
         ]);
 
-        $listing = Listing::where('unit_code', $validated['unit_code'])->first();
-
-        if (!$listing) {
-            return response()->json([
-                'success' => false,
-                'message' => "Room '{$validated['unit_code']}' not found.",
-            ], 404);
+        // Resolve listing (optional)
+        $listing = null;
+        if (!empty($validated['unit_code'])) {
+            $listing = Listing::where('unit_code', $validated['unit_code'])->first();
         }
 
-        $sale = Sale::where('listing_id', $listing->id)
-            ->where('status', 'available')
-            ->first();
+        // Generate sale number
+        $today = now()->format('Ymd');
+        $count = Sale::withoutGlobalScope(\App\Scopes\OrganizationScope::class)
+            ->whereDate('created_at', today())->count() + 1;
+        $saleNumber = 'SL-' . $today . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
 
-        $previousStatus = $sale?->status;
+        // Always create a new appointment sale — no availability check
+        $sale = Sale::create([
+            'listing_id'      => $listing?->id,
+            'organization_id' => $listing?->organization_id ?? (int) config('ai.default_organization_id', 1),
+            'status'          => 'appointment',
+            'sale_number'     => $saleNumber,
+        ]);
 
-        if ($sale) {
-            $sale->update([
-                'status'          => 'appointment',
-                'previous_status' => $previousStatus,
-            ]);
-        } else {
-            // No existing sale record — create one (room may never have been sold)
-            $today = now()->format('Ymd');
-            $count = Sale::withoutGlobalScope(\App\Scopes\OrganizationScope::class)
-                ->whereDate('created_at', today())->count() + 1;
-
-            $sale = Sale::create([
-                'listing_id'      => $listing->id,
-                'organization_id' => $listing->organization_id,
-                'status'          => 'appointment',
-                'sale_number'     => 'SL-' . $today . '-' . str_pad($count, 4, '0', STR_PAD_LEFT),
-            ]);
-        }
-
-        $sale->appointment()->updateOrCreate(
-            ['sale_id' => $sale->id],
-            [
-                'appointment_date' => $validated['appointment_date'],
-                'appointment_time' => $validated['appointment_time'] . ':00',
-                'remark' => $validated['visitor_name'] . ' / ' . $validated['visitor_phone'],
-            ]
-        );
+        $sale->appointment()->create([
+            'appointment_date' => $validated['appointment_date'],
+            'appointment_time' => $validated['appointment_time'] . ':00',
+            'remark'           => $validated['visitor_name'] . ' / ' . $validated['visitor_phone'],
+        ]);
 
         // Round-robin assign sales agent
         $assignedAgent = RoundRobinAssignmentService::assignToSale($sale);
 
         $sale->statusHistories()->create([
             'status'          => 'appointment',
-            'previous_status' => $previousStatus,
+            'previous_status' => null,
             'notes'           => 'Booked via chatbot by ' . $validated['visitor_name'],
             'user_id'         => $assignedAgent?->id,
         ]);
@@ -239,16 +222,17 @@ class ChatbotController extends Controller
             'success' => true,
             'message' => 'Appointment booked successfully.',
             'data'    => [
-                'unit_code'        => $listing->unit_code,
-                'project'          => $listing->project->name ?? null,
-                'floor'            => $listing->floor,
-                'room_number'      => $listing->room_number,
+                'sale_number'      => $saleNumber,
+                'unit_code'        => $listing?->unit_code,
+                'project'          => $listing?->project?->name,
+                'floor'            => $listing?->floor,
+                'room_number'      => $listing?->room_number,
                 'appointment_date' => $validated['appointment_date'],
                 'appointment_time' => $validated['appointment_time'],
                 'visitor_name'     => $validated['visitor_name'],
                 'visitor_phone'    => $validated['visitor_phone'],
                 'visitor_email'    => $validated['visitor_email'] ?? null,
-                'assigned_to'     => $assignedAgent?->name,
+                'assigned_to'      => $assignedAgent?->name,
             ],
         ], 201);
     }
