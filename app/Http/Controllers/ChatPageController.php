@@ -355,7 +355,9 @@ SYSTEM
         if ($this->remote->isConfigured()) {
             try {
                 $result = match ($name) {
-                    'property_search'      => $this->remote->searchRooms($input),
+                    'property_search'      => isset($input['unit_code'])
+                        ? $this->remote->getRoomDetail($input['unit_code'])
+                        : $this->remote->searchRooms($input),
                     'project_info'         => $this->remote->getProjects(),
                     'appointment_book'     => $this->remote->bookAppointment([
                         'unit_code'        => $input['listing_id'] ?? null,

@@ -17,14 +17,17 @@ class AppointmentController extends Controller
         $date = $request->date;
         $allSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
 
-        $bookedTimes = SaleAppointment::where('appointment_date', $date)
-            ->pluck('appointment_time')
-            ->map(fn ($t) => substr($t, 0, 5))
+        // Count bookings per slot (multiple bookings per slot allowed — round-robin to different agents)
+        $bookedCounts = SaleAppointment::where('appointment_date', $date)
+            ->selectRaw("substr(appointment_time, 1, 5) as slot, count(*) as cnt")
+            ->groupBy('slot')
+            ->pluck('cnt', 'slot')
             ->toArray();
 
         $available = collect($allSlots)->map(fn ($slot) => [
             'time'      => $slot,
-            'available' => ! in_array($slot, $bookedTimes),
+            'available' => true,
+            'booked'    => (int) ($bookedCounts[$slot] ?? 0),
         ]);
 
         return response()->json([

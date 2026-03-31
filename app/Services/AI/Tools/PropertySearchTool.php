@@ -37,6 +37,10 @@ class PropertySearchTool extends AbstractTool
                     'type'        => 'string',
                     'description' => 'Free-text keyword to search across unit_code, room_number, unit_type',
                 ],
+                'unit_code' => [
+                    'type'        => 'string',
+                    'description' => 'Room/unit code e.g. "B422", "A106", "B349". Use this when customer mentions a specific room.',
+                ],
                 'project_id' => [
                     'type'        => 'integer',
                     'description' => 'ID of the project to filter by (optional)',
@@ -81,6 +85,11 @@ class PropertySearchTool extends AbstractTool
 
     public function execute(array $input, int $organizationId): array
     {
+        // unit_code is an alias for listing_id when a room code is given
+        if (isset($input['unit_code']) && ! isset($input['listing_id'])) {
+            $input['listing_id'] = $input['unit_code'];
+        }
+
         // Single room detail by listing_id (integer ID or room code string)
         if (isset($input['listing_id'])) {
             $lookupValue = $input['listing_id'];
