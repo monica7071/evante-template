@@ -46,8 +46,8 @@ class PropertySearchTool extends AbstractTool
                     'description' => 'Maximum price in THB',
                 ],
                 'bedrooms' => [
-                    'type'        => 'integer',
-                    'description' => 'Number of bedrooms (0 = studio)',
+                    'type'        => 'string',
+                    'description' => 'Room type text, e.g. "1 Bed Smart", "1 Bed Plus", "2 Beds Smart", "2 Beds Plus", "Studio"',
                 ],
                 'min_area' => [
                     'type'        => 'number',
@@ -123,7 +123,7 @@ class PropertySearchTool extends AbstractTool
         }
 
         if (isset($input['bedrooms'])) {
-            $query->where('bedrooms', $input['bedrooms']);
+            $query->where('bedrooms', 'like', '%' . $input['bedrooms'] . '%');
         }
 
         if (isset($input['min_area'])) {
