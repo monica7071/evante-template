@@ -297,6 +297,15 @@ class ChatbotController extends Controller
 
     private function formatRoom(Listing $listing): array
     {
+        // Per-listing images take priority; fall back to project_images lookup
+        $floorPlanImage  = $listing->floor_plan_image
+            ? asset('storage/' . $listing->floor_plan_image)
+            : $this->resolveProjectImage('floor_plan', $listing->project_id, $listing->floor, null);
+
+        $roomLayoutImage = $listing->room_layout_image
+            ? asset('storage/' . $listing->room_layout_image)
+            : $this->resolveProjectImage('room_layout', $listing->project_id, null, $listing->unit_type);
+
         return [
             'listing_id'        => $listing->id,
             'unit_code'         => $listing->unit_code,
@@ -309,9 +318,25 @@ class ChatbotController extends Controller
             'price'             => $listing->price_per_room ? (float) $listing->price_per_room : null,
             'price_per_sqm'     => $listing->price_per_sqm ? (float) $listing->price_per_sqm : null,
             'bedrooms'          => $listing->bedrooms,
-            'floor_plan_image'  => $listing->floor_plan_image ? asset('storage/' . $listing->floor_plan_image) : null,
-            'room_layout_image' => $listing->room_layout_image ? asset('storage/' . $listing->room_layout_image) : null,
+            'floor_plan_image'  => $floorPlanImage,
+            'room_layout_image' => $roomLayoutImage,
         ];
+    }
+
+    private function resolveProjectImage(string $type, ?int $projectId, ?int $floor, ?string $unitType): ?string
+    {
+        $query = \App\Models\ProjectImage::where('type', $type);
+
+        if ($type === 'floor_plan' && $projectId && $floor !== null) {
+            $query->where('project_id', $projectId)->where('floor', $floor);
+        } elseif ($type === 'room_layout' && $unitType) {
+            $query->where('unit_type', strtoupper($unitType));
+        } else {
+            return null;
+        }
+
+        $img = $query->first();
+        return $img ? asset('storage/' . $img->image_path) : null;
     }
 
     // GET /api/v1/units/{unit_code}/price
