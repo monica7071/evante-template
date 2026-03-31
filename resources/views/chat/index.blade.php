@@ -752,7 +752,7 @@
         <div class="sidebar-head">
             <div class="sidebar-brand">
                 Evante
-                <span>Property Assistant</span>
+                <span>ที่ปรึกษาโครงการ</span>
             </div>
             <button class="btn-new-chat" id="newChatBtn" type="button">
                 <i class="bi bi-plus-lg"></i> ใหม่

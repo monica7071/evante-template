@@ -68,10 +68,32 @@ class ChatbotController extends Controller
 
         if ($request->filled('bedrooms')) {
             $term = $request->bedrooms;
-            // Support both integer (1) and text ("1 Bed Smart")
             $query->where(function ($q) use ($term) {
                 $q->where('bedrooms', $term)
                   ->orWhere('bedrooms', 'like', '%' . $term . '%');
+            });
+        }
+
+        if ($request->filled('room_number')) {
+            $term = $request->room_number;
+            $query->where(function ($q) use ($term) {
+                $q->where('room_number', $term)
+                  ->orWhere('unit_code', $term)
+                  ->orWhere('room_number', 'like', '%' . $term . '%')
+                  ->orWhere('unit_code', 'like', '%' . $term . '%');
+            });
+        }
+
+        if ($request->filled('unit_code')) {
+            $query->where('unit_code', $request->unit_code);
+        }
+
+        if ($request->filled('keyword')) {
+            $term = $request->keyword;
+            $query->where(function ($q) use ($term) {
+                $q->where('unit_code', 'like', '%' . $term . '%')
+                  ->orWhere('room_number', 'like', '%' . $term . '%')
+                  ->orWhere('unit_type', 'like', '%' . $term . '%');
             });
         }
 
@@ -83,7 +105,8 @@ class ChatbotController extends Controller
             $query->where('price_per_room', '<=', $request->max_price);
         }
 
-        $listings = $query->orderBy('floor')->orderBy('room_number')->get();
+        $limit    = min((int) ($request->input('limit', 20)), 50);
+        $listings = $query->orderBy('floor')->orderBy('room_number')->limit($limit)->get();
 
         $data = $listings->map(fn ($l) => $this->formatRoom($l));
 

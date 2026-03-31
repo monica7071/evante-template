@@ -6,7 +6,6 @@ use App\Events\NewChatMessage;
 use App\Models\ChatMessage;
 use App\Models\ChatSession;
 use App\Services\AI\ClaudeService;
-use App\Services\AI\MockAgentService;
 use App\Services\AI\RemoteApiClient;
 use App\Services\AI\Tools\AppointmentBookTool;
 use App\Services\AI\Tools\FacilitiesTool;
@@ -19,16 +18,14 @@ use Illuminate\Support\Facades\Log;
 
 class ChatPageController extends Controller
 {
-    private MockAgentService $mock;
     private ClaudeService    $claude;
     private RemoteApiClient  $remote;
 
     /** @var array<string, \App\Services\AI\Tools\ToolInterface> */
     private array $tools;
 
-    public function __construct(MockAgentService $mock, ClaudeService $claude, RemoteApiClient $remote)
+    public function __construct(ClaudeService $claude, RemoteApiClient $remote)
     {
-        $this->mock   = $mock;
         $this->claude = $claude;
         $this->remote = $remote;
         $this->tools  = $this->buildTools();
@@ -125,32 +122,29 @@ class ChatPageController extends Controller
             }
         }
 
-        if ($this->claude->isConfigured()) {
-            return $this->handleWithClaude($message, $imageUrl, $history, $session);
-        }
-
-        $result = $this->mock->respond($message, $imageUrl);
-
-        if ($session) {
-            $aiMsg = ChatMessage::create([
-                'session_id'  => $session->id,
-                'sender_type' => 'ai',
-                'content'     => $result['text'],
-                'metadata'    => ['quick_replies' => $result['quick_replies'] ?? []],
-            ]);
-            $session->update(['last_message_at' => now()]);
-            try { broadcast(new NewChatMessage($aiMsg)); } catch (\Throwable $e) {
-                Log::warning('ChatPageController broadcast failed (mock ai)', ['error' => $e->getMessage()]);
+        if (! $this->claude->isConfigured()) {
+            $errorText = 'ขออภัยค่ะ ระบบยังไม่พร้อมให้บริการในขณะนี้ กรุณาลองใหม่อีกครั้งค่ะ';
+            if ($session) {
+                $aiMsg = ChatMessage::create([
+                    'session_id'  => $session->id,
+                    'sender_type' => 'ai',
+                    'content'     => $errorText,
+                ]);
+                $session->update(['last_message_at' => now()]);
+                try { broadcast(new NewChatMessage($aiMsg)); } catch (\Throwable $e) {
+                    Log::warning('ChatPageController broadcast failed (not configured)', ['error' => $e->getMessage()]);
+                }
             }
+            return response()->json([
+                'message'        => $errorText,
+                'quick_replies'  => [],
+                'db_session_id'  => $session?->id,
+                'timestamp'      => now()->toISOString(),
+                'source'         => 'error',
+            ]);
         }
 
-        return response()->json([
-            'message'        => $result['text'],
-            'quick_replies'  => $result['quick_replies'] ?? [],
-            'db_session_id'  => $session?->id,
-            'timestamp'      => now()->toISOString(),
-            'source'         => 'mock',
-        ]);
+        return $this->handleWithClaude($message, $imageUrl, $history, $session);
     }
 
     private function handleWithClaude(
@@ -206,29 +200,28 @@ class ChatPageController extends Controller
                 'source'         => 'claude',
             ]);
         } catch (\RuntimeException $e) {
-            Log::warning('Claude API failed, falling back to mock: ' . $e->getMessage());
+            Log::error('ChatPageController: Claude API failed: ' . $e->getMessage());
 
-            $result = $this->mock->respond($message, $imageUrl);
+            $errorText = 'ขออภัยค่ะ ระบบขัดข้อง กรุณาลองใหม่อีกครั้งค่ะ';
 
             if ($session) {
                 $aiMsg = ChatMessage::create([
                     'session_id'  => $session->id,
                     'sender_type' => 'ai',
-                    'content'     => $result['text'],
-                    'metadata'    => ['quick_replies' => $result['quick_replies'] ?? []],
+                    'content'     => $errorText,
                 ]);
                 $session->update(['last_message_at' => now()]);
                 try { broadcast(new NewChatMessage($aiMsg)); } catch (\Throwable $e) {
-                    Log::warning('ChatPageController broadcast failed (mock fallback)', ['error' => $e->getMessage()]);
+                    Log::warning('ChatPageController broadcast failed (error)', ['error' => $e->getMessage()]);
                 }
             }
 
             return response()->json([
-                'message'        => $result['text'],
-                'quick_replies'  => $result['quick_replies'] ?? [],
+                'message'        => $errorText,
+                'quick_replies'  => [],
                 'db_session_id'  => $session?->id,
                 'timestamp'      => now()->toISOString(),
-                'source'         => 'mock_fallback',
+                'source'         => 'error',
             ]);
         }
     }
@@ -266,18 +259,33 @@ class ChatPageController extends Controller
             . "จากนั้นใช้ tool appointment_book เพื่อบันทึกนัดหมาย";
 
         return <<<SYSTEM
-คุณชื่อ "เอวอง" ที่ปรึกษาอสังหาฯ โครงการ Evante เป็นผู้หญิง ตอบภาษาไทย
+คุณชื่อ "เอวอง" ที่ปรึกษาอสังหาริมทรัพย์โครงการ Evante Samui คอนโดบนเกาะสมุย จังหวัดสุราษฎร์ธานี
+เป็นผู้หญิง ตอบภาษาไทย ใช้ "คะ" (ถาม) "ค่ะ" (บอกเล่า) ท้ายประโยคเสมอ
+โครงการมีโครงการเดียวคือ Evante Samui — ห้ามพูดถึงโครงการอื่น เช่น ทองหล่อ สุขุมวิท รัชดา
 
-## กฎสำคัญ
-- ใช้ "คะ" (ถาม) "ค่ะ" (บอกเล่า) ท้ายประโยค ตอบสั้น 2-3 ประโยค
-- ห้ามบอกว่าเป็น AI ถ้าถูกถามให้ตอบ "เอวองเป็นที่ปรึกษาโครงการค่ะ"
+## กฎเหล็ก
+- ตอบสั้น 2-4 ประโยค กระชับ ตรงประเด็น
+- ห้ามใช้คำแสลง เช่น "ป่าว" "อ่ะ" "แบบว่า" "จ้า" "ป่าวะ"
+- ห้ามบอกว่าเป็น AI ถ้าถูกถาม ให้ตอบ "เอวองเป็นที่ปรึกษาโครงการค่ะ"
+- ห้ามขัดแย้งกับข้อมูลที่เพิ่งให้ไปในบทสนทนาเดิม
 
-## ต้องใช้ tool เสมอ — ห้ามตอบจากความจำ
-- ถามห้อง/ราคา/ยูนิตว่าง → ต้องเรียก tool property_search ก่อนตอบทุกครั้ง
-- ถามข้อมูลโครงการ → ต้องเรียก tool project_info
-- นัดชม → ถามชื่อ เบอร์ วัน เวลา แล้วเรียก tool appointment_book (ไม่จำเป็นต้องระบุห้อง)
-- คำนวณผ่อน → เรียก tool financial_calculator
-- ถ้ามี floor_plan_image/room_layout_image ในผลลัพธ์ ให้แสดงด้วย ![name](url)
+## ต้องค้นหาก่อนเสมอ — ห้ามตอบจากความจำ
+ทุกครั้งที่ลูกค้าถามเรื่องห้อง ราคา หรือยูนิต ให้เรียก tool ทันทีโดยไม่ถามกลับ:
+
+- "ดูห้องว่าง" / "มีห้องไหม" → เรียก property_search ด้วย status="available" ทันที
+- ลูกค้าพูดถึงรหัสห้อง เช่น "B231" "A449" → เรียก property_search ด้วย room_number="B231" ทันที ห้ามถามว่าโครงการอะไร
+- "ส่งมา 10 ยูนิต" → เรียก property_search ด้วย limit=10
+- "ราคาไม่เกิน 5 ล้าน" → เรียก property_search ด้วย max_price=5000000
+- ถามข้อมูลโครงการ/ที่ตั้ง → เรียก project_info
+- ถามสิ่งอำนวยความสะดวก → เรียก get_facilities
+- นัดชม → ถามชื่อ เบอร์ วันเวลา แล้วเรียก appointment_book (ไม่จำเป็นต้องระบุห้อง)
+- คำนวณผ่อน → เรียก financial_calculator
+
+## แสดงรูปภาพ
+ถ้าผลลัพธ์ tool มี floor_plan_image หรือ room_layout_image ที่ไม่เป็น null ให้แสดง: ![ผังห้อง](url)
+
+## เมื่อไม่พบห้องตามเงื่อนไข
+ค้นหาเพิ่มเติมด้วยเงื่อนไขที่ผ่อนคลายขึ้น แล้วแสดงห้องที่ใกล้เคียงที่สุด ห้ามพูดว่า "ไม่มีห้อง" หรือ "หมดสต็อก" โดยไม่ลองค้นหาอีกครั้งก่อน
 SYSTEM
             . $promoLines
             . $appointmentInfo;

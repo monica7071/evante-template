@@ -16,6 +16,7 @@ class PropertySearchTool extends AbstractTool
     {
         return 'ค้นหาห้อง/ยูนิตในโครงการตามเงื่อนไขที่ลูกค้าระบุ เช่น ราคา จำนวนห้องนอน พื้นที่ใช้สอย สถานะ '
             . 'Use this tool when the customer asks about available units, rooms, prices, or room details. '
+            . 'Use room_number to find a specific room like "B231" or "A449". '
             . 'Also use when customer wants to see a specific room by listing_id.';
     }
 
@@ -25,8 +26,16 @@ class PropertySearchTool extends AbstractTool
             'type'       => 'object',
             'properties' => [
                 'listing_id' => [
-                    'type'        => 'integer',
-                    'description' => 'Specific listing ID to retrieve details for a single unit',
+                    'type'        => 'string',
+                    'description' => 'Specific listing ID (integer) or room code like "B231" to retrieve a single unit',
+                ],
+                'room_number' => [
+                    'type'        => 'string',
+                    'description' => 'Room number or unit code to search, e.g. "B231", "A449"',
+                ],
+                'keyword' => [
+                    'type'        => 'string',
+                    'description' => 'Free-text keyword to search across unit_code, room_number, unit_type',
                 ],
                 'project_id' => [
                     'type'        => 'integer',
@@ -47,7 +56,7 @@ class PropertySearchTool extends AbstractTool
                 ],
                 'bedrooms' => [
                     'type'        => 'string',
-                    'description' => 'Room type text, e.g. "1 Bed Smart", "1 Bed Plus", "2 Beds Smart", "2 Beds Plus", "Studio"',
+                    'description' => 'Room type text, e.g. "1 Bed Smart", "1 Bed Plus", "2 Beds Smart", "2 Beds Plus", "Studio", or just a number like "1" or "2"',
                 ],
                 'min_area' => [
                     'type'        => 'number',
@@ -72,15 +81,24 @@ class PropertySearchTool extends AbstractTool
 
     public function execute(array $input, int $organizationId): array
     {
-        // Single room detail by listing_id
+        // Single room detail by listing_id (integer ID or room code string)
         if (isset($input['listing_id'])) {
-            $listing = Listing::withoutGlobalScope(OrganizationScope::class)
+            $lookupValue = $input['listing_id'];
+            $baseQuery   = Listing::withoutGlobalScope(OrganizationScope::class)
                 ->where('organization_id', $organizationId)
-                ->with(['project:id,name'])
-                ->find($input['listing_id']);
+                ->with(['project:id,name']);
+
+            if (is_numeric($lookupValue)) {
+                $listing = $baseQuery->find((int) $lookupValue);
+            } else {
+                $listing = (clone $baseQuery)->where('unit_code', $lookupValue)->first()
+                    ?? (clone $baseQuery)->where('room_number', $lookupValue)->first()
+                    ?? (clone $baseQuery)->where('unit_code', 'like', '%' . $lookupValue . '%')->first()
+                    ?? (clone $baseQuery)->where('room_number', 'like', '%' . $lookupValue . '%')->first();
+            }
 
             if (! $listing) {
-                return $this->notFound("ไม่พบยูนิต ID {$input['listing_id']}");
+                return $this->notFound("ไม่พบยูนิต '{$lookupValue}'");
             }
 
             return $this->success([
@@ -123,7 +141,11 @@ class PropertySearchTool extends AbstractTool
         }
 
         if (isset($input['bedrooms'])) {
-            $query->where('bedrooms', 'like', '%' . $input['bedrooms'] . '%');
+            $term = $input['bedrooms'];
+            $query->where(function ($q) use ($term) {
+                $q->where('bedrooms', $term)
+                  ->orWhere('bedrooms', 'like', '%' . $term . '%');
+            });
         }
 
         if (isset($input['min_area'])) {
@@ -136,6 +158,25 @@ class PropertySearchTool extends AbstractTool
 
         if (isset($input['unit_type'])) {
             $query->where('unit_type', 'like', '%' . $input['unit_type'] . '%');
+        }
+
+        if (isset($input['room_number'])) {
+            $term = $input['room_number'];
+            $query->where(function ($q) use ($term) {
+                $q->where('room_number', $term)
+                  ->orWhere('unit_code', $term)
+                  ->orWhere('room_number', 'like', '%' . $term . '%')
+                  ->orWhere('unit_code', 'like', '%' . $term . '%');
+            });
+        }
+
+        if (isset($input['keyword'])) {
+            $term = $input['keyword'];
+            $query->where(function ($q) use ($term) {
+                $q->where('unit_code', 'like', '%' . $term . '%')
+                  ->orWhere('room_number', 'like', '%' . $term . '%')
+                  ->orWhere('unit_type', 'like', '%' . $term . '%');
+            });
         }
 
         $limit    = min((int) ($input['limit'] ?? 10), 20);

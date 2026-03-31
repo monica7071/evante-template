@@ -34,12 +34,17 @@ class RemoteApiClient
     public function searchRooms(array $filters): array
     {
         $query = array_filter([
-            'project_id' => $filters['project_id'] ?? null,
-            'bedrooms'   => $filters['bedrooms'] ?? null,
-            'min_price'  => $filters['min_price'] ?? null,
-            'max_price'  => $filters['max_price'] ?? null,
-            'floor'      => $filters['floor'] ?? null,
-            'unit_type'  => $filters['unit_type'] ?? null,
+            'project_id'  => $filters['project_id'] ?? null,
+            'bedrooms'    => $filters['bedrooms'] ?? null,
+            'min_price'   => $filters['min_price'] ?? null,
+            'max_price'   => $filters['max_price'] ?? null,
+            'floor'       => $filters['floor'] ?? null,
+            'unit_type'   => $filters['unit_type'] ?? null,
+            'room_number' => $filters['room_number'] ?? null,
+            'unit_code'   => $filters['unit_code'] ?? null,
+            'keyword'     => $filters['keyword'] ?? null,
+            'status'      => $filters['status'] ?? null,
+            'limit'       => $filters['limit'] ?? null,
         ], fn ($v) => $v !== null);
 
         $response = $this->get('/rooms', $query);
