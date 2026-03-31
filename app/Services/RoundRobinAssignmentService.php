@@ -36,8 +36,11 @@ class RoundRobinAssignmentService
     public static function nextAgent(int $organizationId): ?User
     {
         $agents = User::where('organization_id', $organizationId)
-            ->where('role', 'agent')
             ->where('is_active', true)
+            ->where(function ($q) {
+                $q->where('role', 'agent')
+                  ->orWhereHas('dynamicRole', fn ($r) => $r->where('name', 'agent'));
+            })
             ->orderBy('id')
             ->get();
 
