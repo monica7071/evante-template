@@ -302,9 +302,11 @@ class ChatbotController extends Controller
             ? asset('storage/' . $listing->floor_plan_image)
             : $this->resolveProjectImage('floor_plan', $listing->project_id, $listing->floor, null);
 
+        // Try unit_type first, then bedrooms as fallback key
         $roomLayoutImage = $listing->room_layout_image
             ? asset('storage/' . $listing->room_layout_image)
-            : $this->resolveProjectImage('room_layout', $listing->project_id, null, $listing->unit_type);
+            : ($this->resolveProjectImage('room_layout', $listing->project_id, null, $listing->unit_type)
+                ?? $this->resolveProjectImage('room_layout', $listing->project_id, null, $listing->bedrooms));
 
         return [
             'listing_id'        => $listing->id,
@@ -325,18 +327,37 @@ class ChatbotController extends Controller
 
     private function resolveProjectImage(string $type, ?int $projectId, ?int $floor, ?string $unitType): ?string
     {
-        $query = \App\Models\ProjectImage::where('type', $type);
-
-        if ($type === 'floor_plan' && $projectId && $floor !== null) {
-            $query->where('project_id', $projectId)->where('floor', $floor);
-        } elseif ($type === 'room_layout' && $unitType) {
-            $query->where('unit_type', strtoupper($unitType));
-        } else {
-            return null;
+        if ($type === 'floor_plan') {
+            if (! $projectId || $floor === null) {
+                return null;
+            }
+            $img = \App\Models\ProjectImage::where('type', 'floor_plan')
+                ->where('project_id', $projectId)
+                ->where('floor', $floor)
+                ->first();
+            return $img ? asset('storage/' . $img->image_path) : null;
         }
 
-        $img = $query->first();
-        return $img ? asset('storage/' . $img->image_path) : null;
+        if ($type === 'room_layout') {
+            if (! $unitType) {
+                return null;
+            }
+            $upper = strtoupper($unitType);
+
+            // 1. Exact match
+            $img = \App\Models\ProjectImage::where('type', 'room_layout')
+                ->where('unit_type', $upper)
+                ->first();
+
+            // 2. Any room_layout image as last resort
+            if (! $img) {
+                $img = \App\Models\ProjectImage::where('type', 'room_layout')->first();
+            }
+
+            return $img ? asset('storage/' . $img->image_path) : null;
+        }
+
+        return null;
     }
 
     // GET /api/v1/units/{unit_code}/price
