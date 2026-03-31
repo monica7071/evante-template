@@ -59,7 +59,7 @@ class PropertySearchTool extends AbstractTool
                 ],
                 'unit_type' => [
                     'type'        => 'string',
-                    'description' => 'Unit type string, e.g. "1BR", "2BR", "Studio"',
+                    'description' => 'Unit type code (e.g. "A", "B", "C"). Do NOT put room names here, use bedrooms instead.',
                 ],
                 'limit' => [
                     'type'        => 'integer',
