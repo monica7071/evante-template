@@ -35,6 +35,7 @@ class RoundRobinAssignmentService
      */
     public static function nextAgent(int $organizationId): ?User
     {
+        // Prefer agent role; fallback to any active staff in the org
         $agents = User::where('organization_id', $organizationId)
             ->where('is_active', true)
             ->where(function ($q) {
@@ -43,6 +44,14 @@ class RoundRobinAssignmentService
             })
             ->orderBy('id')
             ->get();
+
+        if ($agents->isEmpty()) {
+            $agents = User::where('organization_id', $organizationId)
+                ->where('is_active', true)
+                ->whereNotIn('role', ['super_admin'])
+                ->orderBy('id')
+                ->get();
+        }
 
         if ($agents->isEmpty()) {
             return null;
