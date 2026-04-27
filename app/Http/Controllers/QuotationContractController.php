@@ -135,14 +135,6 @@ class QuotationContractController extends Controller
 
         $buildingName = $listing->building ?: ($project?->name ?? null);
 
-        // Use EN-specific fields when language is 'en', fall back to TH values
-        $installment15 = ($language === 'en' && $listing->installment_15_terms_en !== null)
-            ? $listing->installment_15_terms_en
-            : $listing->installment_15_terms;
-        $transferAmount = ($language === 'en' && $listing->transfer_amount_en !== null)
-            ? $listing->transfer_amount_en
-            : $listing->transfer_amount;
-
         return [
             'listing_building' => $buildingName,
             'listing_unit_code' => $listing->unit_code,
@@ -159,10 +151,14 @@ class QuotationContractController extends Controller
             'listing_location_district' => $location?->district,
             'listing_reservation_deposit' => $formatMoney($listing->reservation_deposit),
             'listing_contract_payment' => $formatMoney($listing->contract_payment),
-            'listing_installment_15_terms' => $formatMoney($installment15),
+            'listing_installment_15_terms' => $formatMoney($listing->installment_15_terms),
+            'listing_installment_15_terms_en' => $formatMoney($listing->installment_15_terms_en),
             'listing_installment_12_terms' => $formatMoney($listing->installment_12_terms),
+            'listing_installment_12_terms_en' => $formatMoney($listing->installment_12_terms_en),
             'listing_special_installment_3_terms' => $formatMoney($listing->special_installment_3_terms),
-            'listing_transfer_amount' => $formatMoney($transferAmount),
+            'listing_special_installment_3_terms_en' => $formatMoney($listing->special_installment_3_terms_en),
+            'listing_transfer_amount' => $formatMoney($listing->transfer_amount),
+            'listing_transfer_amount_en' => $formatMoney($listing->transfer_amount_en),
             'listing_transfer_fee' => $formatMoney($listing->transfer_fee),
             'listing_annual_common_fee' => $formatMoney($listing->annual_common_fee),
             'listing_sinking_fund' => $formatMoney($listing->sinking_fund),

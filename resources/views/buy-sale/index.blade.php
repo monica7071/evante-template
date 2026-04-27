@@ -435,29 +435,14 @@
                                             </a>
                                         </li>
                                     @else
-                                        @php
-                                            $blockAdvance = false;
-                                            if ($sale->status === 'installment') {
-                                                $inst = $sale->purchaseAgreement?->installments ?? collect();
-                                                $blockAdvance = $inst->isEmpty() || $inst->contains(fn($i) => !$i->proof_image);
-                                            }
-                                        @endphp
                                         <li>
-                                            @if($blockAdvance)
-                                                <button type="button" class="dropdown-item text-muted" disabled title="ต้องชำระค่างวดให้ครบทุกงวดก่อน">
-                                                    <i class="bi bi-lock me-2"></i>
+                                            <form action="{{ route('buy-sale.advance', $sale) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-arrow-right-circle me-2 text-success"></i>
                                                     Advance to {{ $nextLabel }}
-                                                    <span class="d-block small text-danger" style="margin-left:1.5rem;">ผ่อนยังไม่ครบ</span>
                                                 </button>
-                                            @else
-                                                <form action="{{ route('buy-sale.advance', $sale) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="bi bi-arrow-right-circle me-2 text-success"></i>
-                                                        Advance to {{ $nextLabel }}
-                                                    </button>
-                                                </form>
-                                            @endif
+                                            </form>
                                         </li>
                                     @endif
                                 @endif
@@ -585,6 +570,24 @@
                         <div class="mt-2">
                             <div class="card-label text-uppercase mb-1">หมายเหตุ</div>
                             <div class="small" style="color:#667085; white-space:pre-line;">{{ $sale->appointment->remark }}</div>
+                        </div>
+                    @endif
+
+                    @if($sale->user && $sale->status === 'appointment')
+                        <div class="mt-2">
+                            <div class="card-label text-uppercase mb-1">Agent</div>
+                            <div class="d-flex align-items-center gap-2">
+                                @if($sale->user->avatar)
+                                    <img src="{{ asset('storage/' . $sale->user->avatar) }}" alt=""
+                                         class="rounded-circle" style="width:24px;height:24px;object-fit:cover;">
+                                @else
+                                    <span class="rounded-circle d-flex align-items-center justify-content-center fw-semibold"
+                                          style="width:24px;height:24px;background:#d0d5dd;color:#475467;font-size:0.65rem;">
+                                        {{ strtoupper(Str::limit($sale->user->name, 2, '')) }}
+                                    </span>
+                                @endif
+                                <span class="small fw-medium" style="color:#475467;">{{ $sale->user->name }}</span>
+                            </div>
                         </div>
                     @endif
 
