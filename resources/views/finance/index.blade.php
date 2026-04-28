@@ -8,16 +8,20 @@
     .page-header h3 { font-weight: 700; margin: 0; }
 
     /* KPI mini cards */
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     @media (max-width: 1199px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 575px) { .kpi-grid { grid-template-columns: 1fr; } }
     @media (min-width: 480px) and (max-width: 575px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
     .kpi-mini {
         background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--radius); padding: 1rem 1.25rem;
+        border-radius: var(--radius); padding: 2rem 1.25rem;
     }
-    .kpi-mini-label { font-size: 0.72rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.03em; }
-    .kpi-mini-value { font-size: 1.25rem; font-weight: 800; color: var(--text-dark); margin-top: 4px; line-height: 1.2; }
+    .kpi-mini.kpi-reservation    { background: #facc158c; border-color: #facc15; }
+    .kpi-mini.kpi-contract  { background: #3b83f68c; border-color: #3b82f6; }
+    .kpi-mini.kpi-transfer  { background: #ef44448c;  border-color: #ef4444; }
+    .kpi-mini.kpi-fees    { background: rgba(42,139,146,0.08); border-color: rgba(42,139,146,0.2); }
+    .kpi-mini-label { font-size: 0.72rem; font-weight: 600; color: #2d3c3f; text-transform: uppercase; letter-spacing: 0.03em; }
+    .kpi-mini-value { font-size: 1.25rem; font-weight: 800; color: #2d3c3f; margin-top: 15px; line-height: 1.2; }
 
     /* Section card */
     .section-card {
@@ -170,21 +174,17 @@
 
     {{-- ── 4 KPI Mini-Cards ──────────────────────────────────────── --}}
     <div class="kpi-grid">
-        <div class="kpi-mini">
+        <div class="kpi-mini kpi-reservation">
             <div class="kpi-mini-label">Reservation Deposits</div>
             <div class="kpi-mini-value">฿{{ number_format($kpis->reservation_total, 0) }}</div>
         </div>
-        <div class="kpi-mini">
+        <div class="kpi-mini kpi-contract">
             <div class="kpi-mini-label">Contract Payments</div>
             <div class="kpi-mini-value">฿{{ number_format($kpis->contract_payment_total, 0) }}</div>
         </div>
-        <div class="kpi-mini">
+        <div class="kpi-mini kpi-transfer">
             <div class="kpi-mini-label">Transfer Amount</div>
             <div class="kpi-mini-value">฿{{ number_format($kpis->transfer_amount_total, 0) }}</div>
-        </div>
-        <div class="kpi-mini">
-            <div class="kpi-mini-label">Fees Collected</div>
-            <div class="kpi-mini-value">฿{{ number_format($kpis->fees_total, 0) }}</div>
         </div>
     </div>
 
