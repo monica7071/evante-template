@@ -31,6 +31,8 @@ class Questionnaire extends Model
         'household_income',
         'source',
         'source_other',
+        'source_billboard_detail',
+        'source_online_media_detail',
         'visit_reasons',
         'visit_reasons_other',
         'promotions',
@@ -39,7 +41,6 @@ class Questionnaire extends Model
         'purchase_purpose',
         'purchase_purpose_other',
         'finance_plan',
-        'finance_plan_other',
     ];
 
     protected $casts = [

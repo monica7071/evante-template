@@ -35,8 +35,12 @@ return new class extends Migration
             // Household income
             $table->string('household_income')->nullable()->after('children_count');
 
+            // Source detail fields
+            $table->string('source_billboard_detail')->nullable()->after('source_other');
+            $table->string('source_online_media_detail')->nullable()->after('source_billboard_detail');
+
             // Visit reasons (multiple choice - stored as JSON)
-            $table->json('visit_reasons')->nullable()->after('source_other');
+            $table->json('visit_reasons')->nullable()->after('source_online_media_detail');
             $table->string('visit_reasons_other')->nullable()->after('visit_reasons');
 
             // Promotions (multiple choice - stored as JSON)
@@ -74,6 +78,8 @@ return new class extends Migration
                 'marital_status',
                 'children_count',
                 'household_income',
+                'source_billboard_detail',
+                'source_online_media_detail',
                 'visit_reasons',
                 'visit_reasons_other',
                 'promotions',

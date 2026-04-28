@@ -42,7 +42,7 @@
             border-radius: 16px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
             width: 100%;
-            max-width: 640px;
+            max-width: 840px;
             padding: 3rem 2.5rem;
             position: relative;
         }
@@ -376,34 +376,16 @@
 
             {{-- ===== ชื่อ-นามสกุล (ช่องเดียว) ===== --}}
             <div class="form-group">
-                <label data-th="ชื่อ-นามสกุล" data-en="Full Name">ชื่อ-นามสกุล <span class="required">*</span></label>
-                <input type="text" name="full_name" value="{{ old('full_name') }}" class="@error('full_name') is-invalid @enderror" data-placeholder-th="ชื่อ-นามสกุล" data-placeholder-en="Full Name" placeholder="ชื่อ-นามสกุล">
+                <label data-th="ชื่อ-นามสกุล" data-en="Name-Surname">ชื่อ-นามสกุล <span class="required">*</span></label>
+                <input type="text" name="full_name" value="{{ old('full_name') }}" class="@error('full_name') is-invalid @enderror" data-placeholder-th="ชื่อ-นามสกุล" data-placeholder-en="Name-Surname" placeholder="ชื่อ-นามสกุล">
                 @error('full_name')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            {{-- ===== เบอร์โทร & อีเมล ===== --}}
-            <div class="form-row">
-                <div class="form-group">
-                    <label data-th="เบอร์โทรศัพท์" data-en="Phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
-                    <input type="tel" name="phone" value="{{ old('phone') }}" class="@error('phone') is-invalid @enderror" data-placeholder-th="เบอร์โทรศัพท์" data-placeholder-en="Phone Number" placeholder="เบอร์โทรศัพท์">
-                    @error('phone')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="form-group">
-                    <label data-th="อีเมล" data-en="Email">อีเมล</label>
-                    <input type="email" name="email" value="{{ old('email') }}" class="@error('email') is-invalid @enderror" data-placeholder-th="อีเมล" data-placeholder-en="Email" placeholder="อีเมล">
-                    @error('email')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-
             {{-- ===== เพศ ===== --}}
             <div class="source-section">
-                <label data-th="เพศ" data-en="Gender">เพศ <span class="required" style="color: var(--error);">*</span></label>
+                <label data-th="กรุณาระบุเพศของคุณ" data-en="Please specify your gender">กรุณาระบุเพศของคุณ<span class="required" style="color: var(--error);">*</span></label>
                 @error('gender')
                     <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
                 @enderror
@@ -435,7 +417,7 @@
                 <label class="section-title" data-th="ที่อยู่ปัจจุบัน" data-en="Current Address">ที่อยู่ปัจจุบัน</label>
                 <div class="address-grid">
                     <div class="form-group">
-                        <label data-th="บ้านเลขที่" data-en="House No.">บ้านเลขที่</label>
+                        <label data-th="บ้านเลขที่" data-en="House number">บ้านเลขที่</label>
                         <input type="text" name="address_house_no" value="{{ old('address_house_no') }}" data-placeholder-th="บ้านเลขที่" data-placeholder-en="House No." placeholder="บ้านเลขที่">
                     </div>
                     <div class="form-group">
@@ -443,11 +425,11 @@
                         <input type="text" name="address_street" value="{{ old('address_street') }}" data-placeholder-th="ถนน" data-placeholder-en="Street" placeholder="ถนน">
                     </div>
                     <div class="form-group">
-                        <label data-th="แขวง/ตำบล" data-en="Sub-district">แขวง/ตำบล</label>
+                        <label data-th="แขวง/ตำบล" data-en="Subdistrict/Tambon">แขวง/ตำบล</label>
                         <input type="text" name="address_subdistrict" value="{{ old('address_subdistrict') }}" data-placeholder-th="แขวง/ตำบล" data-placeholder-en="Sub-district" placeholder="แขวง/ตำบล">
                     </div>
                     <div class="form-group">
-                        <label data-th="เขต/อำเภอ" data-en="District">เขต/อำเภอ</label>
+                        <label data-th="เขต/อำเภอ" data-en="District/Amphoe">เขต/อำเภอ</label>
                         <input type="text" name="address_district" value="{{ old('address_district') }}" data-placeholder-th="เขต/อำเภอ" data-placeholder-en="District" placeholder="เขต/อำเภอ">
                     </div>
                     <div class="form-group">
@@ -459,9 +441,27 @@
                         <input type="text" name="address_postal_code" value="{{ old('address_postal_code') }}" data-placeholder-th="รหัสไปรษณีย์" data-placeholder-en="Postal Code" placeholder="รหัสไปรษณีย์">
                     </div>
                     <div class="form-group full-width">
-                        <label data-th="ประเทศ (กรณีชาวต่างชาติ)" data-en="Country (for foreigners)">ประเทศ (กรณีชาวต่างชาติ)</label>
+                        <label data-th="ประเทศ (กรณีชาวต่างชาติ)" data-en="Country (for foreign nationals)">ประเทศ (กรณีชาวต่างชาติ)</label>
                         <input type="text" name="address_country" value="{{ old('address_country') }}" data-placeholder-th="ประเทศ" data-placeholder-en="Country" placeholder="ประเทศ">
                     </div>
+                </div>
+            </div>
+
+            {{-- ===== เบอร์โทร & อีเมล ===== --}}
+            <div class="form-row">
+                <div class="form-group">
+                    <label data-th="เบอร์โทรศัพท์" data-en="Phone">เบอร์โทรศัพท์ <span class="required">*</span></label>
+                    <input type="tel" name="phone" value="{{ old('phone') }}" class="@error('phone') is-invalid @enderror" data-placeholder-th="เบอร์โทรศัพท์" data-placeholder-en="Phone Number" placeholder="เบอร์โทรศัพท์">
+                    @error('phone')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="form-group">
+                    <label data-th="อีเมล" data-en="Email">อีเมล</label>
+                    <input type="email" name="email" value="{{ old('email') }}" class="@error('email') is-invalid @enderror" data-placeholder-th="อีเมล" data-placeholder-en="Email" placeholder="อีเมล">
+                    @error('email')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
@@ -474,12 +474,15 @@
                 <div class="radio-grid">
                     @php
                         $ageRanges = [
-                            'under_25' => ['th' => 'ไม่เกิน 25 ปี', 'en' => 'Under 25'],
-                            '26_30'    => ['th' => '26-30 ปี',       'en' => '26-30'],
-                            '31_35'    => ['th' => '31-35 ปี',       'en' => '31-35'],
-                            '36_40'    => ['th' => '36-40 ปี',       'en' => '36-40'],
-                            '41_50'    => ['th' => '41-50 ปี',       'en' => '41-50'],
-                            'over_50'  => ['th' => 'มากกว่า 50 ปี',   'en' => 'Over 50'],
+                            'under_25' => ['th' => 'ไม่เกิน 25 ปี', 'en' => 'Less than 25 years old'],
+                            '26_30'    => ['th' => '26-30 ปี',       'en' => '26-30 years old'],
+                            '31_35'    => ['th' => '31-35 ปี',       'en' => '31-35 years old'],
+                            '36_40'    => ['th' => '36-40 ปี',       'en' => '36-40 years old'],
+                            '41_45'    => ['th' => '41-45 ปี',       'en' => '41-45 years old'],
+                            '46_50'    => ['th' => '46-50 ปี',       'en' => '46-50 years old'],
+                            '51_55'    => ['th' => '51-55 ปี',       'en' => '51-55 years old'],
+                            '56_60'    => ['th' => '56-60 ปี',       'en' => '56-60 years old'],
+                            'over_61'  => ['th' => '61 ปีขึ้นไป',   'en' => '61 years and older'],
                         ];
                     @endphp
                     @foreach ($ageRanges as $value => $labels)
@@ -493,7 +496,7 @@
 
             {{-- ===== สถานภาพสมรส ===== --}}
             <div class="source-section">
-                <label data-th="สถานภาพสมรส" data-en="Marital Status">สถานภาพสมรส <span class="required" style="color: var(--error);">*</span></label>
+                <label data-th="ขอทราบสถานภาพสมรสของคุณในปัจจุบัน" data-en="Please tell me your current marital status ">ขอทราบสถานภาพสมรสของคุณในปัจจุบัน <span class="required" style="color: var(--error);">*</span></label>
                 @error('marital_status')
                     <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
                 @enderror
@@ -527,12 +530,16 @@
                 <div class="radio-grid single-col">
                     @php
                         $incomeRanges = [
-                            'under_30k'   => ['th' => 'ต่ำกว่า 30,000 บาท',          'en' => 'Below 30,000 THB'],
-                            '30k_50k'     => ['th' => '30,001 - 50,000 บาท',         'en' => '30,001 - 50,000 THB'],
-                            '50k_80k'     => ['th' => '50,001 - 80,000 บาท',         'en' => '50,001 - 80,000 THB'],
-                            '80k_100k'    => ['th' => '80,001 - 100,000 บาท',        'en' => '80,001 - 100,000 THB'],
-                            '100k_150k'   => ['th' => '100,001 - 150,000 บาท',       'en' => '100,001 - 150,000 THB'],
-                            'over_150k'   => ['th' => 'มากกว่า 150,000 บาท',          'en' => 'Over 150,000 THB'],
+                            'under_40k'   => ['th' => 'น้อยกว่า 40,000 บาท',          'en' => 'Less than 40,000 baht'],
+                            '40k_60k'     => ['th' => '40,000–60,000 บาท',         'en' => '40,000–60,000 baht'],
+                            '60k_80k'     => ['th' => '60,001–80,000 บาท',         'en' => '60,001–80,000 baht'],
+                            '80k_100k'    => ['th' => '80,001 - 100,000 บาท',        'en' => '80,001 - 100,000 baht'],
+                            '100k_120k'   => ['th' => '100,001 - 120,000 บาท',       'en' => '100,001 - 120,000 baht'],
+                            '120k_140k'   => ['th' => '120,001 - 140,000 บาท',          'en' => '120,001 - 140,000 baht'],
+                            '140k_180k'   => ['th' => '140,001 - 180,000 บาท',          'en' => '140,001 - 180,000 baht'],
+                            '180k_200k'   => ['th' => '180,001 - 200,000 บาท',          'en' => '180,001 - 200,000 baht'],
+                            '200k_220k'   => ['th' => '200,001 - 220,000 บาท',          'en' => '200,001 - 220,000 baht'],
+                            'over_220k'   => ['th' => 'มากกว่า 220,000 บาท ขึ้นไป',          'en' => 'More than 220,000 baht'],
                         ];
                     @endphp
                     @foreach ($incomeRanges as $value => $labels)
@@ -544,57 +551,21 @@
                 </div>
             </div>
 
-            {{-- ===== ทราบข่าวโครงการจากช่องทางใด ===== --}}
-            <div class="source-section">
-                <label data-th="ท่านทราบข่าวโครงการจากช่องทางใด?" data-en="How did you hear about us?">ท่านทราบข่าวโครงการจากช่องทางใด? <span class="required" style="color: var(--error);">*</span></label>
-                @error('source')
-                    <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
-                @enderror
-                <div class="radio-grid">
-                    @php
-                        $sources = [
-                            'facebook'  => ['th' => 'Facebook',       'en' => 'Facebook'],
-                            'google'    => ['th' => 'Google',         'en' => 'Google'],
-                            'website'   => ['th' => 'เว็บไซต์',         'en' => 'Website'],
-                            'line'      => ['th' => 'LINE',           'en' => 'LINE'],
-                            'agent'     => ['th' => 'ตัวแทน/นายหน้า',   'en' => 'Agent'],
-                            'friend'    => ['th' => 'เพื่อน/คนรู้จัก',    'en' => 'Friend'],
-                            'billboard' => ['th' => 'ป้ายโฆษณา',       'en' => 'Billboard'],
-                            'event'     => ['th' => 'งานอีเวนต์',       'en' => 'Event'],
-                            'other'     => ['th' => 'อื่นๆ',            'en' => 'Other'],
-                        ];
-                    @endphp
-                    @foreach ($sources as $value => $labels)
-                        <div class="radio-option">
-                            <input type="radio" name="source" id="source_{{ $value }}" value="{{ $value }}" {{ old('source') == $value ? 'checked' : '' }}>
-                            <label for="source_{{ $value }}" data-th="{{ $labels['th'] }}" data-en="{{ $labels['en'] }}">{{ $labels['th'] }}</label>
-                        </div>
-                    @endforeach
-                    <div class="other-input-wrapper {{ old('source') == 'other' ? 'show' : '' }}" id="sourceOtherWrapper">
-                        <input type="text" name="source_other" value="{{ old('source_other') }}" data-placeholder-th="กรุณาระบุ..." data-placeholder-en="Please specify..." placeholder="กรุณาระบุ..." class="@error('source_other') is-invalid @enderror">
-                        @error('source_other')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
             {{-- ===== เหตุผลหลักที่เข้าชมโครงการ (เลือกได้หลายข้อ) ===== --}}
             <div class="source-section">
-                <label data-th="เหตุผลหลักที่ท่านตัดสินใจเข้าชมโครงการในวันนี้ (ระบุได้มากกว่า 1 ข้อ)" data-en="Main reasons for visiting the project today (select all that apply)">เหตุผลหลักที่ท่านตัดสินใจเข้าชมโครงการในวันนี้ (ระบุได้มากกว่า 1 ข้อ) <span class="required" style="color: var(--error);">*</span></label>
+                <label data-th="เหตุผลหลักที่ท่านตัดสินใจเข้าชมโครงการในวันนี้ (ระบุได้มากกว่า 1 ข้อ)" data-en="What are the main reasons you decided to visit the project today? (You can select more than one answer)">เหตุผลหลักที่ท่านตัดสินใจเข้าชมโครงการในวันนี้ (ระบุได้มากกว่า 1 ข้อ) <span class="required" style="color: var(--error);">*</span></label>
                 @error('visit_reasons')
                     <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
                 @enderror
                 <div class="radio-grid single-col">
                     @php
                         $visitReasons = [
-                            'location'    => ['th' => 'ทำเลที่ตั้ง',              'en' => 'Location'],
-                            'price'       => ['th' => 'ราคา',                    'en' => 'Price'],
-                            'design'      => ['th' => 'ดีไซน์/แบบบ้าน',           'en' => 'Design/Floor plan'],
-                            'promotion'   => ['th' => 'โปรโมชั่น',                'en' => 'Promotion'],
-                            'brand'       => ['th' => 'ชื่อเสียงของโครงการ',        'en' => 'Brand reputation'],
-                            'recommend'   => ['th' => 'คนรู้จักแนะนำ',             'en' => 'Recommendation'],
-                            'other'       => ['th' => 'อื่นๆ',                    'en' => 'Other'],
+                            'price'       => ['th' => 'ช่วงราคาของห้องชุด/บ้าน',          'en' => 'Price range of condominium/house'],
+                            'promotion'   => ['th' => 'Promotionของโครงการ ในช่วงนี้',                'en' => 'Promotion for the project during this period'],
+                            'design_room'      => ['th' => 'Design รูปแบบห้องชุด/บ้าน',   'en' => 'Condominium/house design'],
+                            'design_entrance'   => ['th' => 'Design ทางเข้าโครงการ',   'en' => 'Project entrance design'],
+                            'location'    => ['th' => 'ทำเลที่ตั้งโครงการ',               'en' => 'Project location'],
+                            'other'       => ['th' => 'อื่นๆ',                          'en' => 'Other'],
                         ];
                     @endphp
                     @foreach ($visitReasons as $value => $labels)
@@ -614,16 +585,20 @@
 
             {{-- ===== รายการ Promotion ที่ต้องการ (เลือกได้หลายข้อ) ===== --}}
             <div class="source-section">
-                <label data-th="รายการ Promotion ที่ท่านต้องการ (ระบุได้มากกว่า 1 ข้อ)" data-en="Promotions you are interested in (select all that apply)">รายการ Promotion ที่ท่านต้องการ (ระบุได้มากกว่า 1 ข้อ)</label>
+                <label data-th="รายการ Promotion ที่ท่านต้องการ (ระบุได้มากกว่า 1 ข้อ)" data-en="List of promotions you are interested in (You can select more than one answer)">รายการ Promotion ที่ท่านต้องการ (ระบุได้มากกว่า 1 ข้อ)</label>
                 @error('promotions')
                     <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
                 @enderror
                 <div class="radio-grid single-col">
                     @php
                         $promotions = [
-                            'discount'    => ['th' => 'ส่วนลดพิเศษ',            'en' => 'Special discount'],
-                            'free_gift'   => ['th' => 'ของแถม/เฟอร์นิเจอร์',     'en' => 'Free gift/Furniture'],
-                            'free_transfer' => ['th' => 'ฟรีค่าโอน',            'en' => 'Free transfer fee'],
+                            'special_financial_conditions'    => ['th' => 'เงื่อนไขพิเศษทางการเงิน',            'en' => 'Special financial conditions'],
+                            'free_appliance'   => ['th' => 'ฟรีเครื่องใช้ไฟฟ้า',     'en' => 'Free electrical appliances'],
+                            'free_aircon' => ['th' => 'ฟรีแอร์',            'en' => 'Free air conditioning'],
+                            'free_curtain' => ['th' => 'ฟรีผ้าม่าน/วอลเปเปอร์',            'en' => 'Free curtains/wallpaper'],
+                            'discount' => ['th' => 'บัตรกำนัลส่วนลด',            'en' => 'Discount voucher'],
+                            'free_furniture' => ['th' => 'เฟอร์นิเจอร์ครบชุด (Fully furnished)',            'en' => 'Fully furnished furniture'],
+                            'free_fitted' => ['th' => 'เฟอร์นิเจอร์ลอยตัว (Fully fitted)',            'en' => 'Fully fitted furniture'],
                             'other'       => ['th' => 'อื่นๆ',                  'en' => 'Other'],
                         ];
                     @endphp
@@ -642,20 +617,68 @@
                 </div>
             </div>
 
+            {{-- ===== ทราบข่าวโครงการจากช่องทางใด ===== --}}
+            <div class="source-section">
+                <label data-th="ท่านทราบข่าวโครงการจากแหล่งใด (ระบุได้มากกว่า 1 ข้อ)" data-en="How did you hear about the project? (You can select more than one answer)">ท่านทราบข่าวโครงการจากแหล่งใด (ระบุได้มากกว่า 1 ข้อ) <span class="required" style="color: var(--error);">*</span></label>
+                @error('source')
+                    <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
+                @enderror
+                <div class="radio-grid">
+                    @php
+                        $sources = [
+                            'pass_by'      => ['th' => 'ผ่านหน้าโครงการ',                   'en' => 'Passing by the project site / Site Signboard'],
+                            'edm'          => ['th' => 'อีเมล์',                             'en' => 'Electronic Direct Mail'],
+                            'sms'          => ['th' => 'SMS / ข้อความโทรศัพท์',               'en' => 'Short Message Service'],
+                            'friend'       => ['th' => 'เพื่อน หรือญาติแนะนำ',                'en' => 'Friends or Relatives recommended'],
+                            'website'      => ['th' => 'เว็บไซต์',                            'en' => 'Website'],
+                            'billboard'    => ['th' => 'ป้ายโฆษณา โปรดระบุสถานที่',            'en' => 'Billboard (please specify location)'],
+                            'online_media' => ['th' => 'สื่อออนไลน์ โปรดระบุช่องทาง',          'en' => 'Online Media (please specify channel)'],
+                            'other'        => ['th' => 'อื่นๆ',                              'en' => 'Other'],
+                        ];
+                    @endphp
+                    @foreach ($sources as $value => $labels)
+                        <div class="radio-option">
+                            <input type="radio" name="source" id="source_{{ $value }}" value="{{ $value }}" {{ old('source') == $value ? 'checked' : '' }}>
+                            <label for="source_{{ $value }}" data-th="{{ $labels['th'] }}" data-en="{{ $labels['en'] }}">{{ $labels['th'] }}</label>
+                        </div>
+                    @endforeach
+                    <div class="other-input-wrapper {{ old('source') == 'billboard' ? 'show' : '' }}" id="sourceBillboardWrapper">
+                        <input type="text" name="source_billboard_detail" value="{{ old('source_billboard_detail') }}" data-placeholder-th="ระบุสถานที่ป้ายโฆษณา..." data-placeholder-en="Specify billboard location..." placeholder="ระบุสถานที่ป้ายโฆษณา..." class="@error('source_billboard_detail') is-invalid @enderror">
+                        @error('source_billboard_detail')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="other-input-wrapper {{ old('source') == 'online_media' ? 'show' : '' }}" id="sourceOnlineMediaWrapper">
+                        <input type="text" name="source_online_media_detail" value="{{ old('source_online_media_detail') }}" data-placeholder-th="ระบุช่องทางสื่อออนไลน์..." data-placeholder-en="Specify online media channel..." placeholder="ระบุช่องทางสื่อออนไลน์..." class="@error('source_online_media_detail') is-invalid @enderror">
+                        @error('source_online_media_detail')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="other-input-wrapper {{ old('source') == 'other' ? 'show' : '' }}" id="sourceOtherWrapper">
+                        <input type="text" name="source_other" value="{{ old('source_other') }}" data-placeholder-th="กรุณาระบุ..." data-placeholder-en="Please specify..." placeholder="กรุณาระบุ..." class="@error('source_other') is-invalid @enderror">
+                        @error('source_other')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
             {{-- ===== งบประมาณ (ล้านบาท) ===== --}}
             <div class="source-section">
-                <label data-th="งบประมาณสำหรับการซื้อที่อยู่อาศัยใหม่ (ล้านบาท)" data-en="Budget for purchasing new residence (million THB)">งบประมาณสำหรับการซื้อที่อยู่อาศัยใหม่ (ล้านบาท) <span class="required" style="color: var(--error);">*</span></label>
+                <label data-th="งบประมาณสำหรับการซื้อที่อยู่อาศัยใหม่ (ล้านบาท)" data-en="Budget for purchasing a new home (in million baht)">งบประมาณสำหรับการซื้อที่อยู่อาศัยใหม่ (ล้านบาท) <span class="required" style="color: var(--error);">*</span></label>
                 @error('budget')
                     <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
                 @enderror
                 <div class="radio-grid single-col">
                     @php
                         $budgets = [
-                            'under_2m'  => ['th' => 'ต่ำกว่า 2 ล้านบาท',       'en' => 'Below 2 million'],
-                            '2m_3m'     => ['th' => '2 - 3 ล้านบาท',          'en' => '2 - 3 million'],
-                            '3m_5m'     => ['th' => '3 - 5 ล้านบาท',          'en' => '3 - 5 million'],
-                            '5m_10m'    => ['th' => '5 - 10 ล้านบาท',         'en' => '5 - 10 million'],
-                            'over_10m'  => ['th' => 'มากกว่า 10 ล้านบาท',      'en' => 'Over 10 million'],
+                            'under_1m'  => ['th' => 'น้อยกว่า 1 ล้านบาท',       'en' => 'Less than 1 million baht'],
+                            '1m_2m'     => ['th' => '1.1-2 ล้านบาท',          'en' => '1.1-2 million baht'],
+                            '2m_3m'     => ['th' => '2.1-3 ล้านบาท',          'en' => '2.1-3 million baht'],
+                            '3m_4m'    => ['th' => '3.1-4 ล้านบาท',         'en' => '3.1-4 million baht'],
+                            '4m_5m'    => ['th' => '4.1-5 ล้านบาท',         'en' => '4.1-5 million baht'],
+                            '5m_6m'    => ['th' => '5.1-6 ล้านบาท',         'en' => '5.1-6 million baht'],
+                            'over_6m'  => ['th' => 'มากกว่า 6 ล้านบาท',      'en' => 'More than 6 million baht'],
                         ];
                     @endphp
                     @foreach ($budgets as $value => $labels)
@@ -669,15 +692,15 @@
 
             {{-- ===== วัตถุประสงค์ซื้อ ===== --}}
             <div class="source-section">
-                <label data-th="วัตถุประสงค์ของคุณในการซื้อห้องชุด/บ้านที่โครงการนี้คืออะไร (คำตอบเดียว)" data-en="What is your purpose for purchasing at this project? (single answer)">วัตถุประสงค์ของคุณในการซื้อห้องชุด/บ้านที่โครงการนี้คืออะไร (คำตอบเดียว) <span class="required" style="color: var(--error);">*</span></label>
+                <label data-th="วัตถุประสงค์ของคุณในการซื้อห้องชุด/บ้านที่โครงการนี้คืออะไร" data-en="What is your purpose in purchasing a condo/house at this project?">วัตถุประสงค์ของคุณในการซื้อห้องชุด/บ้านที่โครงการนี้คืออะไร <span class="required" style="color: var(--error);">*</span></label>
                 @error('purchase_purpose')
                     <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
                 @enderror
                 <div class="radio-grid single-col">
                     @php
                         $purposes = [
-                            'self_use'   => ['th' => 'ซื้อเพื่ออยู่เอง',    'en' => 'For personal use'],
-                            'investment' => ['th' => 'ซื้อเพื่อลงทุน',     'en' => 'For investment'],
+                            'self_use'   => ['th' => 'ซื้อเพื่ออยู่เอง',    'en' => 'Bought for personal use'],
+                            'investment' => ['th' => 'ซื้อเพื่อลงทุน',     'en' => 'Purchased for investment purposes'],
                             'other'      => ['th' => 'อื่นๆ',             'en' => 'Other'],
                         ];
                     @endphp
@@ -698,17 +721,16 @@
 
             {{-- ===== วางแผนทางการเงิน ===== --}}
             <div class="source-section">
-                <label data-th="ท่านวางแผนทางการเงินในการซื้อห้องชุด/บ้านที่โครงการนี้ด้วยวิธีใด" data-en="How do you plan to finance your purchase at this project?">ท่านวางแผนทางการเงินในการซื้อห้องชุด/บ้านที่โครงการนี้ด้วยวิธีใด <span class="required" style="color: var(--error);">*</span></label>
+                <label data-th="ท่านวางแผนทางการเงินในการซื้อห้องชุด/บ้านที่โครงการนี้ด้วยวิธีใด" data-en="How do you plan to finance your purchase of a unit/house in this project?">ท่านวางแผนทางการเงินในการซื้อห้องชุด/บ้านที่โครงการนี้ด้วยวิธีใด <span class="required" style="color: var(--error);">*</span></label>
                 @error('finance_plan')
                     <div class="invalid-feedback" style="margin-bottom: 0.5rem;">{{ $message }}</div>
                 @enderror
                 <div class="radio-grid single-col">
                     @php
                         $financePlans = [
-                            'cash'       => ['th' => 'เงินสด',                    'en' => 'Cash'],
-                            'bank_loan'  => ['th' => 'สินเชื่อธนาคาร',              'en' => 'Bank loan'],
-                            'installment'=> ['th' => 'ผ่อนกับโครงการ',              'en' => 'Project installment'],
-                            'other'      => ['th' => 'อื่นๆ',                      'en' => 'Other'],
+                            'cash'       => ['th' => 'เงินสด เป็นเงินเก็บที่มีอยู่แล้ว',                    'en' => 'Purchased with cash, using existing savings'],
+                            'bank_loan'  => ['th' => 'ขอสินเชื่อจากธนาคาร โดยดำเนินการด้วยตนเอง',              'en' => 'Apply for a loan from the bank by doing it yourself'],
+                            'installment'=> ['th' => 'ขอสินเชื่อจากธนาคาร โดยให้โครงการดำเนินการให้',              'en' => 'Apply for a loan from the bank, with the project handling the process'],
                         ];
                     @endphp
                     @foreach ($financePlans as $value => $labels)
@@ -764,9 +786,19 @@
             });
         }
 
+        // Source radio: toggle billboard / online_media / other input
+        document.querySelectorAll('input[name="source"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.getElementById('sourceBillboardWrapper').classList.toggle('show', this.value === 'billboard');
+                document.getElementById('sourceOnlineMediaWrapper').classList.toggle('show', this.value === 'online_media');
+                document.getElementById('sourceOtherWrapper').classList.toggle('show', this.value === 'other');
+                const activeWrapper = document.querySelector('#sourceBillboardWrapper.show, #sourceOnlineMediaWrapper.show, #sourceOtherWrapper.show');
+                if (activeWrapper) activeWrapper.querySelector('input').focus();
+            });
+        });
+
         // Setup all "other" toggles
         setupRadioOther('gender', 'genderOtherWrapper');
-        setupRadioOther('source', 'sourceOtherWrapper');
         setupRadioOther('purchase_purpose', 'purposeOtherWrapper');
         setupRadioOther('finance_plan', 'financeOtherWrapper');
         setupCheckboxOther('visit_reasons[]', 'visitOtherWrapper');
