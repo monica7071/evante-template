@@ -136,7 +136,7 @@
     </div>
 
     {{-- ═══ Questionnaire Banner ═══ --}}
-    <a href="/questionnaire" class="questionnaire-banner">
+    <a href="/questionnaire?ref={{ Auth::id() }}" class="questionnaire-banner" target="_blank">
         <div class="questionnaire-banner-icon">
             <i class="bi bi-clipboard2-check"></i>
         </div>
@@ -152,10 +152,10 @@
     {{-- ═══ SECTION 1: KPI Cards ═══ --}}
     <div class="kpi-row">
         <div class="kpi-card">
-            <div class="kpi-card-title">Transferred ({{ $monthLabel }})</div>
-            <div class="kpi-card-units">{{ number_format($kpis->transferred->units) }} <small>units</small></div>
-            <div class="kpi-card-value">฿{{ number_format($kpis->transferred->value, 0) }}</div>
-            <a href="{{ route('buy-sale.index', ['status' => 'transferred']) }}" class="kpi-card-link">
+            <div class="kpi-card-title">Reserved</div>
+            <div class="kpi-card-units">{{ number_format($kpis->reserved->units) }} <small>units</small></div>
+            <div class="kpi-card-value">฿{{ number_format($kpis->reserved->value, 0) }}</div>
+            <a href="{{ route('buy-sale.index', ['status' => 'reserved']) }}" class="kpi-card-link">
                 View details <i class="bi bi-arrow-right"></i>
             </a>
         </div>
@@ -168,10 +168,10 @@
             </a>
         </div>
         <div class="kpi-card">
-            <div class="kpi-card-title">Reserved</div>
-            <div class="kpi-card-units">{{ number_format($kpis->reserved->units) }} <small>units</small></div>
-            <div class="kpi-card-value">฿{{ number_format($kpis->reserved->value, 0) }}</div>
-            <a href="{{ route('buy-sale.index', ['status' => 'reserved']) }}" class="kpi-card-link">
+            <div class="kpi-card-title">Transferred ({{ $monthLabel }})</div>
+            <div class="kpi-card-units">{{ number_format($kpis->transferred->units) }} <small>units</small></div>
+            <div class="kpi-card-value">฿{{ number_format($kpis->transferred->value, 0) }}</div>
+            <a href="{{ route('buy-sale.index', ['status' => 'transferred']) }}" class="kpi-card-link">
                 View details <i class="bi bi-arrow-right"></i>
             </a>
         </div>
@@ -315,15 +315,15 @@
             labels: labels,
             datasets: [
                 {
-                    label: 'Transferred',
-                    data: @json($yearlyChart->transferred),
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(42,139,146,0.08)',
+                    label: 'Reserved',
+                    data: @json($yearlyChart->reserved),
+                    borderColor: '#facc15',
+                    backgroundColor: 'rgba(99,102,241,0.08)',
                     fill: true,
                     tension: 0.35,
                     borderWidth: 2.5,
                     pointRadius: 3,
-                    pointBackgroundColor: '#ef4444',
+                    pointBackgroundColor: '#facc15',
                     pointHoverRadius: 5,
                 },
                 {
@@ -339,15 +339,15 @@
                     pointHoverRadius: 5,
                 },
                 {
-                    label: 'Reserved',
-                    data: @json($yearlyChart->reserved),
-                    borderColor: '#facc15',
-                    backgroundColor: 'rgba(99,102,241,0.08)',
+                    label: 'Transferred',
+                    data: @json($yearlyChart->transferred),
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(42,139,146,0.08)',
                     fill: true,
                     tension: 0.35,
                     borderWidth: 2.5,
                     pointRadius: 3,
-                    pointBackgroundColor: '#facc15',
+                    pointBackgroundColor: '#ef4444',
                     pointHoverRadius: 5,
                 },
             ]
@@ -380,9 +380,9 @@
             labels: labels,
             datasets: [
                 {
-                    label: 'Transferred',
-                    data: @json($yearlyChart->countTransferred),
-                    backgroundColor: '#ef4444',
+                    label: 'Reserved',
+                    data: @json($yearlyChart->countReserved),
+                    backgroundColor: '#facc15',
                     borderRadius: 4,
                 },
                 {
@@ -392,9 +392,9 @@
                     borderRadius: 4,
                 },
                 {
-                    label: 'Reserved',
-                    data: @json($yearlyChart->countReserved),
-                    backgroundColor: '#facc15',
+                    label: 'Transferred',
+                    data: @json($yearlyChart->countTransferred),
+                    backgroundColor: '#ef4444',
                     borderRadius: 4,
                 },
             ]

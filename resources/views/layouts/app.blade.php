@@ -641,9 +641,14 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="/questionnaire">
+                                    <a class="dropdown-item" href="/questionnaire?ref={{ Auth::id() }}" target="_blank">
                                         <i class="bi bi-clipboard2-check me-2 text-secondary"></i>Questionnaire
                                     </a>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item" onclick="copyQuestionnaireLink(this)">
+                                        <i class="bi bi-link-45deg me-2 text-secondary"></i>Copy Questionnaire Link
+                                    </button>
                                 </li>
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li>
@@ -724,6 +729,22 @@
             sessionStorage.setItem(key, window.scrollY);
         });
     })();
+    </script>
+
+    {{-- Copy Questionnaire Link --}}
+    <script>
+    function copyQuestionnaireLink(btn) {
+        var url = window.location.origin + '/questionnaire?ref={{ Auth::id() }}';
+        navigator.clipboard.writeText(url).then(function() {
+            var originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+            btn.style.color = '#155724';
+            setTimeout(function() {
+                btn.innerHTML = originalHTML;
+                btn.style.color = '';
+            }, 2000);
+        });
+    }
     </script>
 
     @yield('scripts')
