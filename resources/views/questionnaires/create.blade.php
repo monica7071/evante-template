@@ -108,13 +108,13 @@
         }
 
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 30px;
             flex: 1;
         }
 
         .form-group label {
             display: block;
-            font-size: 14px;
+            font-size: 20px;
             font-weight: 500;
             color: var(--text-mid);
             margin-bottom: 0.4rem;
@@ -163,7 +163,7 @@
 
         .source-section > label {
             display: block;
-            font-size: 14px;
+            font-size: 20px;
             font-weight: 500;
             color: var(--text-mid);
             margin-bottom: 0.75rem;
@@ -199,7 +199,7 @@
             border: 1.5px solid var(--border);
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             color: var(--text-mid);
             transition: all 0.2s;
             user-select: none;
@@ -320,7 +320,7 @@
         .address-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.75rem 1rem;
+            gap: 20px;
         }
 
         .address-grid .form-group {
@@ -329,6 +329,17 @@
 
         .address-grid .full-width {
             grid-column: 1 / -1;
+        }
+        @media (max-width: 767px) {
+            .source-section > label {
+                font-size: 18px; 
+            }
+            .radio-option label {
+                font-size: 16px;
+            }
+            .form-header {
+                margin-top: 30px;
+            }
         }
 
         @media (max-width: 480px) {
