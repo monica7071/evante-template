@@ -22,26 +22,25 @@ class FinanceController extends Controller
                 ->join('listings', 'sales.listing_id', '=', 'listings.id')
                 ->whereIn('sales.status', ['reserved', 'contract', 'installment', 'transferred'])
                 ->whereYear('sales.created_at', $year)
-                ->sum('listings.reservation_deposit'),
+                ->sum('listings.price_per_room'),
 
             'contract_payment_total' => DB::table('sales')
                 ->join('listings', 'sales.listing_id', '=', 'listings.id')
                 ->whereIn('sales.status', ['contract', 'installment', 'transferred'])
                 ->whereYear('sales.created_at', $year)
-                ->sum('listings.contract_payment'),
+                ->sum('listings.price_per_room'),
 
             'transfer_amount_total' => DB::table('sales')
                 ->join('listings', 'sales.listing_id', '=', 'listings.id')
                 ->where('sales.status', 'transferred')
                 ->whereYear('sales.created_at', $year)
-                ->sum('listings.transfer_amount'),
+                ->sum('listings.price_per_room'),
 
             'fees_total' => DB::table('sales')
                 ->join('listings', 'sales.listing_id', '=', 'listings.id')
                 ->where('sales.status', 'transferred')
                 ->whereYear('sales.created_at', $year)
-                ->select(DB::raw('COALESCE(SUM(listings.transfer_fee), 0) + COALESCE(SUM(listings.annual_common_fee), 0) + COALESCE(SUM(listings.sinking_fund), 0) as total'))
-                ->value('total'),
+                ->sum('listings.transfer_fee'),
         ];
 
         // ── Yearly Area Chart (Jan-Dec, transferred value) ───────

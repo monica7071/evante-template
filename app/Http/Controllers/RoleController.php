@@ -15,7 +15,7 @@ class RoleController extends Controller
             abort(403);
         }
 
-        $roles = Role::withCount('users')->get();
+        $roles = Role::withCount('users')->with('position')->get();
         $permissions = Permission::orderBy('module')->orderBy('action')->get();
 
         // Build menu-structured permission map matching actual navigation
@@ -249,6 +249,10 @@ class RoleController extends Controller
 
         if ($role->is_default) {
             return back()->with('error', 'Cannot delete a default role.');
+        }
+
+        if ($role->position) {
+            return back()->with('error', 'This role is linked to a position. Delete the position instead.');
         }
 
         if ($role->users()->count() > 0) {

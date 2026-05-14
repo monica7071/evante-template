@@ -127,7 +127,9 @@ class ListingImport implements ToModel, WithHeadingRow
             'installment_15_terms'       => $this->decimal($row['installment_15_terms'] ?? null) ?? $calc['installment_15_terms'],
             'installment_15_terms_en'    => $this->decimal($row['installment_15_terms_en'] ?? null) ?? $calc['installment_15_terms_en'],
             'installment_12_terms'       => $this->decimal($row['installment_12_terms'] ?? null) ?? $calc['installment_12_terms'],
+            'installment_12_terms_en'    => $this->decimal($row['installment_12_terms_en'] ?? null) ?? $calc['installment_12_terms_en'],
             'special_installment_3_terms'=> $this->decimal($row['special_installment_3_terms'] ?? null) ?? $calc['special_installment_3_terms'],
+            'special_installment_3_terms_en' => $this->decimal($row['special_installment_3_terms_en'] ?? null) ?? $calc['special_installment_3_terms_en'],
             'transfer_amount'            => $this->decimal($row['transfer_amount'] ?? null) ?? $calc['transfer_amount'],
             'transfer_amount_en'         => $this->decimal($row['transfer_amount_en'] ?? null) ?? $calc['transfer_amount_en'],
             'transfer_fee'               => $this->decimal($row['transfer_fee'] ?? null) ?? $calc['transfer_fee'],
@@ -171,7 +173,7 @@ class ListingImport implements ToModel, WithHeadingRow
         if (!$price) {
             return array_fill_keys([
                 'price_per_sqm','reservation_deposit','contract_payment',
-                'installment_15_terms','installment_15_terms_en','installment_12_terms','special_installment_3_terms',
+                'installment_15_terms','installment_15_terms_en','installment_12_terms','installment_12_terms_en','special_installment_3_terms','special_installment_3_terms_en',
                 'transfer_amount','transfer_amount_en','transfer_fee','annual_common_fee','sinking_fund','total_misc_fee',
             ], null);
         }
@@ -183,6 +185,8 @@ class ListingImport implements ToModel, WithHeadingRow
         $inst15En     = round($price * 0.27);
         $inst12       = ($inst15 > 0) ? round(0.8 * ($inst15 / 15))  : null;
         $special3     = ($inst15 > 0 && $inst12) ? round(($inst15 - ($inst12 * 12)) / 3) : null;
+        $inst12En     = ($inst15En > 0) ? round(0.8 * ($inst15En / 15))  : null;
+        $special3En   = ($inst15En > 0 && $inst12En) ? round(($inst15En - ($inst12En * 12)) / 3) : null;
         $transferAmt  = round($price * 0.875);
         $transferAmtEn = round($price * 0.70);
         $transferFee  = (int) ceil(($price * 0.02) / 2);
@@ -197,7 +201,9 @@ class ListingImport implements ToModel, WithHeadingRow
             'installment_15_terms'        => $inst15,
             'installment_15_terms_en'     => $inst15En,
             'installment_12_terms'        => $inst12,
+            'installment_12_terms_en'     => $inst12En,
             'special_installment_3_terms' => $special3,
+            'special_installment_3_terms_en' => $special3En,
             'transfer_amount'             => $transferAmt,
             'transfer_amount_en'          => $transferAmtEn,
             'transfer_fee'                => $transferFee,

@@ -8,7 +8,12 @@
       "Bash(/Applications/XAMPP/xamppfiles/bin/mysql.server start:*)",
       "Bash(/Applications/XAMPP/xamppfiles/bin/mysqladmin:*)",
       "Bash(sudo chown:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "Bash(git add:*)",
+      "Bash(composer require:*)",
+      "Bash(git status:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

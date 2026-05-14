@@ -76,7 +76,7 @@ class SalePipelineController extends Controller
         $unitType = $request->query('unit_type');
         $bedrooms = $request->query('bedrooms');
 
-        $query = Sale::with(['listing.project.location', 'user', 'purchaseAgreement.installments', 'appointment'])
+        $query = Sale::with(['listing.project.location', 'user', 'purchaseAgreement.installments', 'dealSlipApproval', 'appointment'])
             ->withSum('purchaseAgreementInstallments', 'amount_number');
 
         if ($status && array_key_exists($status, $this->statusFlow)) {
@@ -457,16 +457,7 @@ class SalePipelineController extends Controller
             }
         }
 
-        // Block advancing from installment → transferred if not all installments are paid
-        if ($sale->status === 'installment' && $nextStatus === 'transferred') {
-            $agreement = $sale->purchaseAgreement;
-            $installments = $agreement?->installments;
-            $allPaid = $installments && $installments->isNotEmpty() && $installments->every(fn($i) => $i->proof_image);
 
-            if (!$allPaid) {
-                return back()->with('error', 'ไม่สามารถเปลี่ยนสถานะได้ — ต้องชำระค่างวดให้ครบทุกงวดก่อน');
-            }
-        }
 
         if (!$isDraft) {
             $previousStatus = $sale->status;
@@ -546,21 +537,22 @@ class SalePipelineController extends Controller
             $sale->purchaseAgreement->delete();
         }
 
-        // Delete status histories except appointment
-        $sale->statusHistories()->where('status', '!=', 'appointment')->delete();
+        $sale->dealSlipApproval?->delete();
+
+        // Delete status histories except appointment/available
+        $sale->statusHistories()->whereNotIn('status', ['appointment', 'available'])->delete();
 
         // Reset listing status if linked
         if ($sale->listing_id) {
             Listing::where('id', $sale->listing_id)->update(['status' => 'available']);
         }
 
-        // Reset sale
-        $sale->status = 'appointment';
-        $sale->previous_status = null;
-        $sale->listing_id = null;
+        // Reset sale to available (keep listing linked)
+        $previousStatus = $sale->status;
+        $sale->status = 'available';
+        $sale->previous_status = $previousStatus;
         $sale->reservation_data = null;
         $sale->contract_data = null;
-        $sale->remark_available = null;
         $sale->remark_reserved = null;
         $sale->remark_contract = null;
         $sale->remark_installment = null;
@@ -568,8 +560,9 @@ class SalePipelineController extends Controller
         $sale->save();
 
         return redirect()->route('buy-sale.index', [
+            'status' => 'available',
             'highlight' => $sale->id,
-        ])->with('success', 'Sale has been cancelled and reset to Appointment.');
+        ])->with('success', 'Sale has been cancelled and reset to Available.');
     }
 
     public function updateRemark(Request $request, Sale $sale): RedirectResponse

@@ -160,7 +160,9 @@
                     'installment_15_terms' => ['label' => 'Down payment (TH 9.5%)', 'round' => 'nearest'],
                     'installment_15_terms_en' => ['label' => 'Down payment (EN 27%)', 'round' => 'nearest'],
                     'installment_12_terms' => ['label' => 'Normal down', 'round' => 'nearest'],
+                    'installment_12_terms_en' => ['label' => 'Normal down (EN)', 'round' => 'nearest'],
                     'special_installment_3_terms' => ['label' => 'Bullet on month', 'round' => 'nearest'],
+                    'special_installment_3_terms_en' => ['label' => 'Bullet on month (EN)', 'round' => 'nearest'],
                     'transfer_amount' => ['label' => 'Transfer (TH 87.5%)', 'round' => 'nearest'],
                     'transfer_amount_en' => ['label' => 'Transfer (EN 70%)', 'round' => 'nearest'],
                     'transfer_fee' => ['label' => 'Transfer fee', 'round' => 'up'],
@@ -540,6 +542,16 @@
             display: document.getElementById('special_installment_3_terms_display'),
             round: 'nearest',
         },
+        installment_12_terms_en: {
+            hidden: document.getElementById('installment_12_terms_en'),
+            display: document.getElementById('installment_12_terms_en_display'),
+            round: 'nearest',
+        },
+        special_installment_3_terms_en: {
+            hidden: document.getElementById('special_installment_3_terms_en'),
+            display: document.getElementById('special_installment_3_terms_en_display'),
+            round: 'nearest',
+        },
         transfer_amount: {
             hidden: document.getElementById('transfer_amount'),
             display: document.getElementById('transfer_amount_display'),
@@ -651,6 +663,8 @@
         const installment15En = price * 0.27;
         const installment12 = installment15 > 0 ? 0.8 * (installment15 / 15) : NaN;
         const special3 = installment15 > 0 ? (installment15 - (installment12 * 12)) / 3 : NaN;
+        const installment12En = installment15En > 0 ? 0.8 * (installment15En / 15) : NaN;
+        const special3En = installment15En > 0 ? (installment15En - (installment12En * 12)) / 3 : NaN;
         const transferAmount = price * 0.875;
         const transferAmountEn = price * 0.70;
         const transferFee = (price * 0.02) / 2;
@@ -663,7 +677,9 @@
         setNumericField('installment_15_terms', installment15);
         setNumericField('installment_15_terms_en', installment15En);
         setNumericField('installment_12_terms', installment12);
+        setNumericField('installment_12_terms_en', installment12En);
         setNumericField('special_installment_3_terms', special3);
+        setNumericField('special_installment_3_terms_en', special3En);
         setNumericField('transfer_amount', transferAmount);
         setNumericField('transfer_amount_en', transferAmountEn);
         setNumericField('transfer_fee', transferFee);

@@ -324,9 +324,43 @@ class ReportController extends Controller
             ->groupBy('nationality', 'payment_type')
             ->get();
 
+        // ── 8. Payment × Nationality monthly line chart ──────────
+        $yearStart = Carbon::create($year, 1, 1)->startOfYear();
+        $yearEnd = $yearStart->copy()->endOfYear();
+
+        $payNatMonthly = DB::table('sale_purchase_agreements')
+            ->join('sales', 'sale_purchase_agreements.sale_id', '=', 'sales.id')
+            ->join('listings', 'sales.listing_id', '=', 'listings.id')
+            ->leftJoin('reservations', 'reservations.listing_id', '=', 'sales.listing_id')
+            ->whereBetween('sales.created_at', [$yearStart, $yearEnd])
+            ->select(
+                DB::raw('MONTH(sales.created_at) as m'),
+                DB::raw("CASE WHEN reservations.buyer_id_type = 'passport' THEN 'Foreign' ELSE 'Thai' END as nationality"),
+                DB::raw("CASE WHEN sale_purchase_agreements.is_bank_loan = 1 THEN 'Bank Loan' ELSE 'Cash Transfer' END as payment_type"),
+                DB::raw('COUNT(*) as cnt'),
+                DB::raw('SUM(listings.price_per_room) as val')
+            )
+            ->groupBy('m', 'nationality', 'payment_type')
+            ->orderBy('m')
+            ->get();
+
+        // Build 12-month arrays for each series
+        $payNatSeries = [
+            'thai_bank' => ['cnt' => array_fill(0, 12, 0), 'val' => array_fill(0, 12, 0)],
+            'thai_cash' => ['cnt' => array_fill(0, 12, 0), 'val' => array_fill(0, 12, 0)],
+            'for_bank'  => ['cnt' => array_fill(0, 12, 0), 'val' => array_fill(0, 12, 0)],
+            'for_cash'  => ['cnt' => array_fill(0, 12, 0), 'val' => array_fill(0, 12, 0)],
+        ];
+        foreach ($payNatMonthly as $row) {
+            $idx = $row->m - 1;
+            $key = ($row->nationality === 'Thai' ? 'thai_' : 'for_') . ($row->payment_type === 'Bank Loan' ? 'bank' : 'cash');
+            $payNatSeries[$key]['cnt'][$idx] = (int) $row->cnt;
+            $payNatSeries[$key]['val'][$idx] = (float) $row->val;
+        }
+
         return compact(
             'teamChart', 'saleChart', 'top5', 'unitTypeBar', 'unitTypeMax',
-            'customerSplit', 'nationalitySplit', 'paymentByNationality'
+            'customerSplit', 'nationalitySplit', 'paymentByNationality', 'payNatSeries', 'year'
         );
     }
 }

@@ -257,8 +257,12 @@
     {{-- Documents Section --}}
     @php
         $totalInstallments = $installments->count();
-        $secondToLast = $totalInstallments >= 2 ? $totalInstallments - 1 : null;
-        $canPrintDealSlip = $secondToLast && $installments->firstWhere('sequence', $secondToLast)?->proof_image;
+        if ($totalInstallments === 1) {
+            $canPrintDealSlip = (bool) $installments->first()?->proof_image;
+        } else {
+            $secondToLast = $totalInstallments >= 2 ? $totalInstallments - 1 : null;
+            $canPrintDealSlip = $secondToLast && $installments->firstWhere('sequence', $secondToLast)?->proof_image;
+        }
         $hasOverdue = $installments->contains(fn($i) => !$i->proof_image && $i->due_date && $i->due_date->lt($today));
     @endphp
 

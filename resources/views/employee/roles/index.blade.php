@@ -66,6 +66,7 @@
     .role-tag i { font-size: 0.7rem; }
     .badge-default { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px; background: rgba(42,139,146,0.12); color: var(--primary); }
     .badge-custom { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px; background: rgba(107,140,147,0.15); color: #6b8c93; }
+    .badge-linked { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px; background: rgba(255,152,0,0.12); color: #e68a00; }
     .role-card-footer {
         display: flex; gap: 0.5rem; margin-top: 1rem;
         padding-top: 0.85rem; border-top: 1px solid var(--border);
@@ -238,6 +239,9 @@
                         </span>
                     </div>
                     <div class="role-name">{{ $role->display_name }}</div>
+                    @if($role->position)
+                        <span class="badge-linked"><i class="bi bi-link-45deg"></i> Linked: {{ $role->position->name }}</span>
+                    @endif
                     @if($role->description)
                         <div class="role-desc">{{ $role->description }}</div>
                     @endif
@@ -251,7 +255,7 @@
                         <button class="btn btn-sm btn-outline-primary" onclick="editRole({{ $role->id }}, {{ json_encode($role->toArray()) }}, {{ json_encode($role->permissions->pluck('id')) }})">
                             <i class="bi bi-pencil me-1"></i>Edit
                         </button>
-                        @if(!$role->is_default && $role->users_count === 0)
+                        @if(!$role->is_default && $role->users_count === 0 && !$role->position)
                             <form action="{{ route('employee.roles.destroy', $role) }}" method="POST" class="flex-fill" onsubmit="return confirm('Delete this role?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger w-100">

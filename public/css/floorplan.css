@@ -171,8 +171,8 @@
 .hotspot.available   { background: #12b76ae6; }
 .hotspot.reserved    { background: #facc15e6; }
 .hotspot.contract    { background: #3b82f6e6; }
-.hotspot.installment { background: #f97316e6; }
-.hotspot.transferred { background: dimgray; }
+.hotspot.installment { background: #696969e6; }
+.hotspot.transferred { background: #ef4444e6; }
 
 /* ---- Room Modal (custom overlay) ---- */
 .modal#roomModal {
@@ -238,7 +238,7 @@
 .rm-status.available   { background: #f0fdf4; color: #12b76a; }
 .rm-status.reserved    { background: #fef9c3; color: #a16207; }
 .rm-status.contract    { background: #eff6ff; color: #1d4ed8; }
-.rm-status.installment { background: #fff7ed; color: #c2410c; }
+.rm-status.installment { background: #696969; color: #ffffff; }
 .rm-status.transferred { background: #fee2e2; color: #b91c1c; }
 
 /* Body: side-by-side layout */
