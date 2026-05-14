@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Position;
+use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -45,11 +46,13 @@ class EmployeeController extends Controller
     {
         $positions = Position::where('is_active', true)->orderBy('name')->get();
         $teams = Team::where('is_active', true)->orderBy('name')->get();
+        $roles = Role::where('is_active', true)->orderBy('display_name')->get();
 
         return view('employee.list.form', [
             'employee' => new Employee(),
             'positions' => $positions,
             'teams' => $teams,
+            'roles' => $roles,
             'isEdit' => false,
         ]);
     }
@@ -57,8 +60,9 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateEmployee($request);
-        $employee = Employee::create($validated);
+        $this->validateAccount($request);
 
+        $employee = Employee::create($validated);
         $this->handleAccount($request, $employee);
 
         return redirect()->route('employee.list.index')->with('success', 'Employee created successfully.');
@@ -69,11 +73,13 @@ class EmployeeController extends Controller
         $employee->load('user');
         $positions = Position::where('is_active', true)->orderBy('name')->get();
         $teams = Team::where('is_active', true)->orderBy('name')->get();
+        $roles = Role::where('is_active', true)->orderBy('display_name')->get();
 
         return view('employee.list.form', [
             'employee' => $employee,
             'positions' => $positions,
             'teams' => $teams,
+            'roles' => $roles,
             'isEdit' => true,
         ]);
     }
@@ -81,13 +87,13 @@ class EmployeeController extends Controller
     public function update(Request $request, Employee $employee)
     {
         $validated = $this->validateEmployee($request);
+        $this->validateAccount($request, $employee);
 
         if ($request->hasFile('avatar')) {
             $validated['avatar'] = $request->file('avatar')->store('employees', 'public');
         }
 
         $employee->update($validated);
-
         $this->handleAccount($request, $employee);
 
         return redirect()->route('employee.list.index')->with('success', 'Employee updated successfully.');
@@ -105,7 +111,7 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             'prefix' => 'nullable|string|max:20',
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'first_name_th' => 'nullable|string|max:255',
             'last_name_th' => 'nullable|string|max:255',
             'nickname' => 'nullable|string|max:100',
@@ -137,33 +143,46 @@ class EmployeeController extends Controller
         return $validated;
     }
 
+    private function validateAccount(Request $request, ?Employee $employee = null): void
+    {
+        if (!$request->boolean('create_account')) {
+            return;
+        }
+
+        $hasExistingUser = $employee && $employee->user_id;
+
+        $request->validate([
+            'account_email' => 'required|email',
+            'account_role_id' => 'required|exists:roles,id',
+            'account_password' => $hasExistingUser ? 'nullable|min:6' : 'required|min:6',
+        ]);
+    }
+
     private function handleAccount(Request $request, Employee $employee): void
     {
         if (!$request->boolean('create_account')) {
             return;
         }
 
-        $accountData = $request->validate([
-            'account_email' => 'required|email',
-            'account_role' => 'required|in:admin,agent,leader',
-            'account_password' => $employee->user_id ? 'nullable|min:6' : 'required|min:6',
-        ]);
+        $role = Role::findOrFail($request->input('account_role_id'));
 
         if ($employee->user_id && $employee->user) {
             $userData = [
-                'email' => $accountData['account_email'],
-                'role' => $accountData['account_role'],
+                'email' => $request->input('account_email'),
+                'role' => $role->name,
+                'role_id' => $role->id,
             ];
-            if (!empty($accountData['account_password'])) {
-                $userData['password'] = Hash::make($accountData['account_password']);
+            if ($request->filled('account_password')) {
+                $userData['password'] = Hash::make($request->input('account_password'));
             }
             $employee->user->update($userData);
         } else {
             $user = User::create([
                 'name' => $employee->first_name . ' ' . $employee->last_name,
-                'email' => $accountData['account_email'],
-                'password' => Hash::make($accountData['account_password']),
-                'role' => $accountData['account_role'],
+                'email' => $request->input('account_email'),
+                'password' => Hash::make($request->input('account_password')),
+                'role' => $role->name,
+                'role_id' => $role->id,
             ]);
             $employee->update(['user_id' => $user->id]);
         }

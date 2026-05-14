@@ -7,11 +7,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE listings MODIFY bedrooms VARCHAR(255) NULL");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE listings MODIFY bedrooms VARCHAR(255) NULL"); }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE listings MODIFY bedrooms INT NULL");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE listings MODIFY bedrooms INT NULL"); }
     }
 };

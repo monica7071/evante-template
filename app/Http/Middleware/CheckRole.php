@@ -10,7 +10,18 @@ class CheckRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user() || !in_array($request->user()->role, $roles)) {
+        $user = $request->user();
+
+        if (!$user) {
+            abort(403, 'Unauthorized.');
+        }
+
+        // Check dynamic role first, then fallback to ENUM
+        $currentRole = $user->role_id && $user->dynamicRole
+            ? $user->dynamicRole->name
+            : $user->role;
+
+        if (!in_array($currentRole, $roles)) {
             abort(403, 'Unauthorized.');
         }
 

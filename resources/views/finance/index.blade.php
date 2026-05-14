@@ -328,7 +328,9 @@
                                 <th>Payment Type</th>
                                 <th>Readiness</th>
                                 <th>Bank / Details</th>
+                                @permission('finance.transfer')
                                 <th style="text-align: right;">Action</th>
+                                @endpermission
                             </tr>
                         </thead>
                         <tbody>
@@ -364,11 +366,13 @@
                                             —
                                         @endif
                                     </td>
+                                    @permission('finance.transfer')
                                     <td style="text-align: right;">
                                         <button class="btn-edit-transfer" onclick="openTransferModal({{ json_encode($tc) }})">
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </button>
                                     </td>
+                                    @endpermission
                                 </tr>
                             @endforeach
                         </tbody>

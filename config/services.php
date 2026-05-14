@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'promptpay' => [
+        'id' => env('PROMPTPAY_ID', ''),
+    ],
+
 ];

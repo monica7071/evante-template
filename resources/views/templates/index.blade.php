@@ -121,9 +121,11 @@
 @section('content')
     <div class="page-header">
         <h3 class="fw-bold mb-0">PDF Templates</h3>
+        @permission('templates.upload')
         <a href="{{ route('upload-template.create') }}" class="btn-add">
             <i class="bi bi-upload me-1"></i> Upload Template
         </a>
+        @endpermission
     </div>
 
     @if($templates->isEmpty())
@@ -131,9 +133,11 @@
             <i class="bi bi-file-earmark-pdf" style="font-size:2.5rem; color:var(--text-light);"></i>
             <h5 class="mt-3 text-muted fw-semibold">No templates uploaded yet</h5>
             <p class="text-muted mb-3">Upload a PDF template to get started with contract generation.</p>
+            @permission('templates.upload')
             <a href="{{ route('upload-template.create') }}" class="btn-add">
                 <i class="bi bi-upload me-1"></i> Upload Template
             </a>
+            @endpermission
         </div>
     @else
         <div class="tpl-grid">
@@ -150,15 +154,19 @@
                     </div>
 
                     <div class="tpl-card-footer">
+                        @permission('templates.manage_mappings')
                         <a href="{{ route('templates.mappings.show', $template) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-sliders me-1"></i>Mappings
                         </a>
+                        @endpermission
+                        @permission('templates.delete')
                         <form action="{{ route('templates.destroy', $template) }}" method="POST" class="flex-fill" onsubmit="return confirm('Delete this template? This will remove its PDF and mappings.')">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger w-100">
                                 <i class="bi bi-trash me-1"></i>Delete
                             </button>
                         </form>
+                        @endpermission
                     </div>
                 </div>
             @endforeach

@@ -82,11 +82,13 @@
                     </div>
                 </div>
 
+                @permission('employee_company.edit')
                 <div class="mt-4">
                     <button type="submit" class="btn btn-dark px-4">
                         <i class="bi bi-check-lg me-1"></i> Save
                     </button>
                 </div>
+                @endpermission
             </form>
         </div>
     </div>

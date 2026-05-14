@@ -8,6 +8,35 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    private function isSqlite(): bool
+    {
+        return DB::connection()->getDriverName() === 'sqlite';
+    }
+
+    private function monthExpr(string $column): string
+    {
+        return $this->isSqlite()
+            ? "CAST(strftime('%m', {$column}) AS INTEGER)"
+            : "MONTH({$column})";
+    }
+
+    private function scopeMonth($query, string $column, int $month, int $year)
+    {
+        if ($this->isSqlite()) {
+            return $query->whereRaw("CAST(strftime('%m', {$column}) AS INTEGER) = ?", [$month])
+                         ->whereRaw("CAST(strftime('%Y', {$column}) AS INTEGER) = ?", [$year]);
+        }
+        return $query->whereMonth($column, $month)->whereYear($column, $year);
+    }
+
+    private function scopeYear($query, string $column, int $year)
+    {
+        if ($this->isSqlite()) {
+            return $query->whereRaw("CAST(strftime('%Y', {$column}) AS INTEGER) = ?", [$year]);
+        }
+        return $query->whereYear($column, $year);
+    }
+
     public function index(Request $request)
     {
         $now = Carbon::now();
@@ -22,8 +51,7 @@ class DashboardController extends Controller
                 ->where('sales.status', $status);
 
             if ($status === 'transferred') {
-                $query->whereMonth('sales.created_at', $currentMonth)
-                    ->whereYear('sales.created_at', $currentYear);
+                $this->scopeMonth($query, 'sales.created_at', $currentMonth, $currentYear);
             }
 
             $row = $query->select(
@@ -49,23 +77,25 @@ class DashboardController extends Controller
         $yearlyTotal = 0;
 
         foreach ($chartStatuses as $status) {
-            $rawValues = DB::table('sales')
+            $monthExpr = $this->monthExpr('sales.created_at');
+            $valQuery = DB::table('sales')
                 ->join('listings', 'sales.listing_id', '=', 'listings.id')
-                ->where('sales.status', $status)
-                ->whereYear('sales.created_at', $currentYear)
-                ->select(
-                    DB::raw('MONTH(sales.created_at) as m'),
+                ->where('sales.status', $status);
+            $this->scopeYear($valQuery, 'sales.created_at', $currentYear);
+            $rawValues = $valQuery->select(
+                    DB::raw("{$monthExpr} as m"),
                     DB::raw('SUM(listings.price_per_room) as val')
                 )
                 ->groupBy('m')
                 ->pluck('val', 'm')
                 ->toArray();
 
-            $rawCounts = DB::table('sales')
-                ->where('status', $status)
-                ->whereYear('created_at', $currentYear)
-                ->select(
-                    DB::raw('MONTH(created_at) as m'),
+            $cntExpr = $this->monthExpr('created_at');
+            $cntQuery = DB::table('sales')
+                ->where('status', $status);
+            $this->scopeYear($cntQuery, 'created_at', $currentYear);
+            $rawCounts = $cntQuery->select(
+                    DB::raw("{$cntExpr} as m"),
                     DB::raw('COUNT(*) as cnt')
                 )
                 ->groupBy('m')
@@ -107,9 +137,9 @@ class DashboardController extends Controller
             ->where('users.role', '!=', 'agent')
             ->where('sales.status', 'transferred');
 
-        $top5Transferred = $top5BaseJoin()
-            ->whereMonth('sales.created_at', $currentMonth)
-            ->whereYear('sales.created_at', $currentYear)
+        $top5TransferredQuery = $top5BaseJoin();
+        $this->scopeMonth($top5TransferredQuery, 'sales.created_at', $currentMonth, $currentYear);
+        $top5Transferred = $top5TransferredQuery
             ->select('users.id as user_id', 'users.name', 'teams.name as team_name', DB::raw('SUM(listings.price_per_room) as total_value'))
             ->groupBy('users.id', 'users.name', 'teams.name')
             ->orderByDesc('total_value')

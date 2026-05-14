@@ -185,9 +185,11 @@
 @section('content')
     <div class="page-header">
         <h3 class="fw-bold mb-0">Teams</h3>
+        @permission('employee_teams.manage')
         <button class="btn-add" data-bs-toggle="modal" data-bs-target="#teamModal" onclick="resetTeamForm()">
             <i class="bi bi-plus-lg me-1"></i> Add Team
         </button>
+        @endpermission
     </div>
 
     @if($teams->count())
@@ -196,6 +198,7 @@
                 <div class="team-card">
                     <div class="team-card-top">
                         <span class="team-icon"><i class="bi bi-people-fill"></i></span>
+                        @permission('employee_teams.manage')
                         <form action="{{ route('employee.teams.toggle', $team) }}" method="POST">
                             @csrf
                             <button type="submit" class="status-toggle">
@@ -204,6 +207,11 @@
                                 </span>
                             </button>
                         </form>
+                        @else
+                        <span class="{{ $team->is_active ? 'status-active' : 'status-inactive' }}">
+                            {{ $team->is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                        @endpermission
                     </div>
                     <div class="team-name">{{ $team->name }}</div>
                     @if($team->name_th)
@@ -227,6 +235,7 @@
                         </div>
                     </div>
 
+                    @permission('employee_teams.manage')
                     <div class="team-card-footer">
                         <button class="btn btn-sm btn-outline-primary" onclick="editTeam({{ $team->toJson() }})">
                             <i class="bi bi-pencil me-1"></i>Edit
@@ -240,6 +249,7 @@
                             </form>
                         @endif
                     </div>
+                    @endpermission
                 </div>
             @endforeach
         </div>

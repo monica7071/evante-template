@@ -263,12 +263,16 @@
     <div class="page-header">
         <h3 class="mb-0 fw-bold">Listings (Units)</h3>
         <div class="d-flex gap-2">
+            @permission('listing_units.import')
             <a href="{{ route('units.import.form') }}" class="btn-import">
                 <i class="bi bi-file-earmark-arrow-up me-1"></i> Import Excel
             </a>
+            @endpermission
+            @permission('listing_units.create')
             <a href="{{ route('units.create') }}" class="btn-add">
                 <i class="bi bi-plus me-1"></i> Add Listing
             </a>
+            @endpermission
         </div>
     </div>
 
@@ -379,9 +383,11 @@
 
                     {{-- Card Footer --}}
                     <div class="listing-card-footer">
+                        @permission('listing_units.edit')
                         <a href="{{ route('units.edit', $unit) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-pencil me-1"></i>See Detail
                         </a>
+                        @endpermission
                         <button type="button" class="btn btn-sm btn-copy-link" onclick="copyLink(this, '{{ route('public.listing.show', $unit) }}')">
                             <i class="bi bi-link-45deg me-1"></i>Copy Link
                         </button>

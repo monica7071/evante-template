@@ -90,9 +90,11 @@
 @section('content')
     <div class="page-header">
         <h3 class="mb-0 fw-bold">Locations</h3>
+        @permission('listing_locations.create')
         <a href="{{ route('locations.create') }}" class="btn-create">
             <i class="bi bi-plus me-1"></i> Add Location
         </a>
+        @endpermission
     </div>
 
     <form method="GET" class="row g-2 mb-3">
@@ -116,16 +118,20 @@
                             <h5 class="card-title mb-0">
                                 <a href="{{ route('locations.show', $location) }}">{{ $location->project_name }}</a>
                             </h5>
+                            @if(auth()->user()->hasAnyPermission(['listing_locations.edit', 'listing_locations.delete']))
                             <div class="dropdown">
                                 <button class="btn-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-actions">
+                                    @permission('listing_locations.edit')
                                     <li>
                                         <a class="dropdown-item" href="{{ route('locations.edit', $location) }}">
                                             <i class="bi bi-pencil me-2"></i>Edit
                                         </a>
                                     </li>
+                                    @endpermission
+                                    @permission('listing_locations.delete')
                                     <li>
                                         <form action="{{ route('locations.destroy', $location) }}" method="POST" onsubmit="return confirm('Delete this location?')">
                                             @csrf @method('DELETE')
@@ -134,8 +140,10 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endpermission
                                 </ul>
                             </div>
+                            @endif
                         </div>
 
                         <div class="mt-3">
