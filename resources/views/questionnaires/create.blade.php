@@ -468,7 +468,7 @@
                     @enderror
                 </div>
                 <div class="form-group">
-                    <label data-th="อีเมล" data-en="Email">อีเมล</label>
+                    <label data-th="อีเมล์" data-en="Email">อีเมล์</label>
                     <input type="email" name="email" value="{{ old('email') }}" class="@error('email') is-invalid @enderror" data-placeholder-th="อีเมล" data-placeholder-en="Email" placeholder="อีเมล">
                     @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>

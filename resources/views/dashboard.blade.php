@@ -37,6 +37,9 @@
     .s-card-body { padding: 1.25rem; }
     @media (max-width: 768px) {
         .s-card-hdr { flex-wrap: wrap; gap: 0.4rem; }
+        .questionnaire-banner {
+            flex-direction: column;
+        }
     }
 
     /* Toggle pills */
@@ -105,7 +108,7 @@
         content: ''; position: absolute; bottom: -60%; left: 10%; width: 150px; height: 150px;
         background: rgba(255,255,255,0.05); border-radius: 50%;
     }
-    .questionnaire-banner:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(245,158,11,0.4); color: #fff; }
+    .questionnaire-banner:hover { box-shadow: 0 8px 25px rgba(245,158,11,0.4); }
     .questionnaire-banner > * { position: relative; z-index: 1; }
     .questionnaire-banner-icon {
         width: 52px; height: 52px; border-radius: 14px; background: rgba(255,255,255,.22);
@@ -115,14 +118,26 @@
     .questionnaire-banner-text { flex: 1; min-width: 0; }
     .questionnaire-banner-title { font-weight: 800; font-size: 1.05rem; letter-spacing: 0.01em; }
     .questionnaire-banner-desc { font-size: 0.8rem; opacity: 0.9; margin-top: 3px; }
+    .questionnaire-banner-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .questionnaire-banner-btn {
-        display: inline-flex; align-items: center; gap: 6px;
-        background: rgba(255,255,255,.22); backdrop-filter: blur(4px);
-        border-radius: 999px; padding: 8px 18px;
-        font-size: 0.78rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;
-        transition: background 0.2s;
+        display: inline-flex; 
+        align-items: center; 
+        gap: 6px;
+        background: #fff; 
+        backdrop-filter: blur(4px);
+        border-radius: 999px; 
+        padding: 8px 18px;
+        font-size: 0.78rem; 
+        font-weight: 700; 
+        white-space: nowrap; 
+        flex-shrink: 0;
+        transition: background 0.2s; 
+        border: none; 
+        color: #d97706; 
+        cursor: pointer;
+        text-decoration: none;
     }
-    .questionnaire-banner:hover .questionnaire-banner-btn { background: rgba(255,255,255,.32); }
+    .questionnaire-banner-btn:hover { background: rgba(255,255,255,.32); color: #fff; }
 </style>
 @endsection
 
@@ -136,7 +151,7 @@
     </div>
 
     {{-- ═══ Questionnaire Banner ═══ --}}
-    <a href="/questionnaire?ref={{ Auth::id() }}" class="questionnaire-banner" target="_blank">
+    <div class="questionnaire-banner">
         <div class="questionnaire-banner-icon">
             <i class="bi bi-clipboard2-check"></i>
         </div>
@@ -144,10 +159,15 @@
             <div class="questionnaire-banner-title">Customer Questionnaire</div>
             <div class="questionnaire-banner-desc">Collect feedback from your customers — create and send questionnaires anytime</div>
         </div>
-        <div class="questionnaire-banner-btn">
-            Open <i class="bi bi-arrow-right"></i>
+        <div class="questionnaire-banner-actions">
+            <button type="button" class="questionnaire-banner-btn" onclick="copyQuestionnaireLink(this)">
+                <i class="bi bi-copy"></i> Copy Link
+            </button>
+            <a href="/questionnaire?ref={{ Auth::id() }}" class="questionnaire-banner-btn" target="_blank">
+                Open <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
-    </a>
+    </div>
 
     {{-- ═══ SECTION 1: KPI Cards ═══ --}}
     <div class="kpi-row">
@@ -431,5 +451,13 @@ document.querySelectorAll('#top5Toggle button').forEach(function(btn) {
         document.getElementById('top5-units').style.display = tab === 'units' ? '' : 'none';
     });
 });
+function copyQuestionnaireLink(btn) {
+    const url = window.location.origin + '/questionnaire?ref={{ Auth::id() }}';
+    navigator.clipboard.writeText(url).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+        setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    });
+}
 </script>
 @endsection

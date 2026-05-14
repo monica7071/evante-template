@@ -269,7 +269,7 @@
 
         @media (max-width: 640px) {
             #main-content {
-                padding: 28px 20px;
+                padding: 20px 0;
             }
         }
 
